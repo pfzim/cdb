@@ -45,7 +45,7 @@
 
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
 	{
-		echo $row['COMP_NAME'].", ".$row['PTNUPDTIME'].", ".$row['SCRIPT_PTN'].", ".$row['AS_PSTIME']."<br />\r\n";
+		echo $row['COMP_NAME'].", ".$row['PTNUPDTIME'].", ".$row['SCRIPT_PTN'].", ".$row['AS_PSTIME']."\r\n";
 		$db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`) VALUES (!, !, #, !) ON DUPLICATE KEY UPDATE `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !", $row['COMP_NAME'], $row['PTNUPDTIME'], $row['SCRIPT_PTN'], $row['AS_PSTIME'], $row['PTNUPDTIME'], $row['SCRIPT_PTN'], $row['AS_PSTIME']));
 	}
 

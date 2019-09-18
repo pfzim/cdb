@@ -45,7 +45,7 @@
 					$records = ldap_get_entries($ldap, $sr);
 					foreach($records as $account)
 					{
-						echo $account['cn'][0]."<br />\r\n";
+						echo $account['cn'][0]."\r\n";
 						//print_r($account);
 						$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = `flags` | #", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
 					}
