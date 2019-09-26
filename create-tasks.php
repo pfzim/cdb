@@ -6,6 +6,9 @@
 	SELECT * FROM c_computers WHERE ao_script_ptn < @current_pattern AND ao_script_ptn <> 0 OR (name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2);
 
 	SELECT name, ao_script_ptn, ee_encryptionstatus FROM c_computers WHERE ao_script_ptn < (SELECT MAX(ao_script_ptn) FROM c_computers) - 200 AND ao_script_ptn <> 0 OR (name regexp '[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2)
+	
+	TMME:
+	SELECT * FROM c_computers WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 */
 
 	if(!defined('ROOTDIR'))
@@ -111,9 +114,11 @@ EOT;
 
 	$table .= '</table>';
 	$html .= '<p>Всего: '.$i.'</p>';
-	$html .= $table.'</body>';
+	$html .= $table;
+	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="http://web.contoso.com/cdb/ad-sync.php">Выполнить синхронизацию с AD</a><br />2. <a href="http://web.contoso.com/cdb/tmao-sync.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="http://web.contoso.com/cdb/tmee-sync.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="http://web.contoso.com/cdb/create-tasks.php">Сформировать отчёт</a></small>';
+	$html .= '</body>';
 	
-	if(php_mailer('dvz@contoso.com', 'dvz', 'Audit antivirus protection', $html, 'You client does not support HTML'))
+	if(php_mailer(MAIL_TO, MAIL_TO, 'Audit antivirus protection', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

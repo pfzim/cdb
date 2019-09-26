@@ -1,4 +1,8 @@
 <?php
+	/*
+		TODO:
+			+ Clear flag 0x01 if computer account was enabled again
+	*/
 
 	if(!defined('ROOTDIR'))
 	{
@@ -21,6 +25,8 @@
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	header("Content-Type: text/plain; charset=utf-8");
+	
+	$i = 0;
 	
 	$ldap = ldap_connect(LDAP_HOST, LDAP_PORT);
 	if($ldap)
@@ -47,7 +53,8 @@
 					{
 						//echo $account['cn'][0]."\r\n";
 						//print_r($account);
-						$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = `flags` | #", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
+						$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = ((`flags` & ~0x01) | #)", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
+						$i++;
 					}
 					ldap_control_paged_result_response($ldap, $sr, $cookie);
 					ldap_free_result($sr);
@@ -59,4 +66,6 @@
 			ldap_unbind($ldap);
 		}
 	}
+
+	echo 'Count: '.$i."\r\n";
 

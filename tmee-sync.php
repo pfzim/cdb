@@ -48,11 +48,15 @@
   FROM [**SECRET**].[dbo].[Device] WHERE IsDeleted = 0");
 
 
+	$i = 0;
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
 	{
 		//echo $row['DeviceName'].", ".$row['LastSync'].", ".$row['EncryptionStatus']."\r\n";
 		$db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `ee_lastsync` = !, `ee_encryptionstatus` = #", $row['DeviceName'], $row['LastSync'], $row['EncryptionStatus'], $row['LastSync'], $row['EncryptionStatus']));
+		$i++;
 	}
+
+	echo 'Count: '.$i."\r\n";
 
 	sqlsrv_free_stmt($result);
 	sqlsrv_close($conn);
