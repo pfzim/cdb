@@ -1,4 +1,5 @@
 <?php
+	// Retrieve information from TMAO database
 
 	if(!defined('ROOTDIR'))
 	{

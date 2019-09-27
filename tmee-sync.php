@@ -1,10 +1,14 @@
 <?php
-/*
-	1 - Not Encrypted
-	2 - Encrypted
-	3 - Encrypting
-	4 - Decrypting
-*/
+	// Retrieve information from TMEE database
+
+	/*
+		TMEE status:
+
+			1 - Not Encrypted
+			2 - Encrypted
+			3 - Encrypting
+			4 - Decrypting
+	*/
 
 	if(!defined('ROOTDIR'))
 	{

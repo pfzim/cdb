@@ -1,5 +1,6 @@
 <?php
-
+	// Create new and close resolved tasks
+	
 	/*
 		flags:
 			0x01 - DISABLED
@@ -22,7 +23,7 @@
 		SELECT * 
 		  FROM c_computers
 		  WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
-		    AND (`flags` & (0x01 | 0x02)) <> (0x01 | 0x02))
+		    AND (`flags` & (0x01 | 0x02)) = 0
 		    AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 	*/
 
@@ -48,23 +49,23 @@
 
 	header("Content-Type: text/plain; charset=utf-8");
 
+	// Open new tasks
+	
 	$i = 0;
-
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02)) <> (0x01 | 0x02)) AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
 	{
 		foreach($result as &$row)
 		{
-			echo $row['name']."\r\n";
-
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=test&Action=new&Host='.urlencode($row['name']).'&Problem='.urlencode('Описание проблемы здесь'));
+			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\r\nПК: ".$row['name']."\r\nСтатус шифрования: ".$row['ee_encryptionstatus']));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
-					$db->put(rpv("UPDATE @computers SET `operid` = # WHERE `id` = #, `flags` = (`flags` | 0x02) LIMIT 1", $xml->extAlert->event['number'], $row['id']));
+					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					$db->put(rpv("UPDATE @computers SET `operid` = !, `opernum` = !, `flags` = (`flags` | 0x02) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -72,5 +73,28 @@
 		}
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Created: '.$i."\r\n";
 
+	// Close resolved tasks
+	
+	$i = 0;
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & 0x02) AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & 0x01)))")))
+	{
+		foreach($result as &$row)
+		{
+			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			if($answer !== FALSE)
+			{
+				$xml = @simplexml_load_string($answer);
+				if($xml !== FALSE)
+				{
+					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x02) WHERE `id` = # LIMIT 1", $row['id']));
+					$i++;
+				}
+			}
+			break;
+		}
+	}
+
+	echo 'Closed: '.$i."\r\n";

@@ -1,4 +1,6 @@
 <?php
+	// Retrieve information from Active Directory
+
 	/*
 		TODO:
 			+ Clear flag 0x01 if computer account was enabled again
