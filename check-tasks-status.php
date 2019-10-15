@@ -5,7 +5,7 @@
 		flags:
 			0x01 - DISABLED
 			0x02 - Task was created
-			0x04 - 
+			0x04 - Hide from report
 			0x08 -
 
 		TMME:

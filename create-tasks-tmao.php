@@ -100,7 +100,7 @@ EOT;
 	
 	$i = 0;
 
-	if($db->select_assoc_ex($result, "SELECT name, ao_script_ptn, ee_encryptionstatus FROM c_computers WHERE ao_script_ptn < (SELECT MAX(ao_script_ptn) FROM c_computers) - 200 AND name regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'"))
+	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, `ee_encryptionstatus` FROM @computers WHERE (`flags` & (0x01 | 0x04)) = 0 `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 200 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'")))
 	{
 		foreach($result as &$row)
 		{
@@ -115,7 +115,7 @@ EOT;
 	$table .= '</table>';
 	$html .= '<p>Всего: '.$i.'</p>';
 	$html .= $table;
-	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="http://web.contoso.com/cdb/ad-sync.php">Выполнить синхронизацию с AD</a><br />2. <a href="http://web.contoso.com/cdb/tmao-sync.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="http://web.contoso.com/cdb/tmee-sync.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="http://web.contoso.com/cdb/create-tasks.php">Сформировать отчёт</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="http://web.contoso.com/cdb/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="http://web.contoso.com/cdb/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="http://web.contoso.com/cdb/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="http://web.contoso.com/cdb/create-tasks-tmao.php">Сформировать отчёт</a></small>';
 	$html .= '</body>';
 	
 	if(php_mailer(MAIL_TO, MAIL_TO, 'Audit antivirus protection', $html, 'You client does not support HTML'))

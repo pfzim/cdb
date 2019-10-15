@@ -5,7 +5,7 @@
 		flags:
 			0x01 - DISABLED
 			0x02 - Task was created
-			0x04 - 
+			0x04 - Hide from report
 			0x08 -
 
 		1. Сбор информации - закрытие заявок, если статус изменился на ОК
@@ -52,7 +52,7 @@
 	// Open new tasks
 	
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02 | 0x04)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
 	{
 		foreach($result as &$row)
 		{
