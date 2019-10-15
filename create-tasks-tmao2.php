@@ -32,7 +32,7 @@
 		{
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmao&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMAO\r\nПК: ".$row['name']."\r\nВерсия антивирусной базы: ".$row['ao_script_ptn']));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmao&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMAO\r\nПК: ".$row['name']."\r\nВерсия антивирусной базы: ".$row['ao_script_ptn']));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -56,7 +56,7 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmao&Id='.urlencode($row['ao_operid']).'&Num='.urlencode($row['ao_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmao&Id='.urlencode($row['ao_operid']).'&Num='.urlencode($row['ao_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

@@ -33,7 +33,7 @@
 
 	$fields_string = http_build_query($fields);
 
-	$ch = curl_init('http://helpdesk.contoso.com/Logon.aspx');
+	$ch = curl_init(HELPDESK_URL.'/Logon.aspx');
 
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
@@ -45,7 +45,7 @@
 	
 	//echo $result;
 	
-	if(preg_match('/Set-Cookie:\s+(OperuITAuthCookiehelpdeskcontosoru=[^; ]+)/', $result, $matches) !== FALSE)
+	if(preg_match('/Set-Cookie:\s+('.HELPDESK_COOKIE.'=[^; ]+)/', $result, $matches) !== FALSE)
 	{
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
@@ -62,7 +62,7 @@
 				$flags = 0;
 				foreach($tasks as $task_id)
 				{
-					$ch = curl_init('http://helpdesk.contoso.com/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
+					$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
 					
 					curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 

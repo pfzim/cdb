@@ -52,7 +52,7 @@
 		{
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\r\nПК: ".$row['name']."\r\nСтатус шифрования: ".$row['ee_encryptionstatus']));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\r\nПК: ".$row['name']."\r\nСтатус шифрования: ".$row['ee_encryptionstatus']));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -76,7 +76,7 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['ee_operid']).'&Num='.urlencode($row['ee_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['ee_operid']).'&Num='.urlencode($row['ee_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
