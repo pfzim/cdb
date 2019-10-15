@@ -50,18 +50,18 @@
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
 
-		$flags = array(0x02, 0x04);
+		$task_flags = array(0x02, 0x04);
 		$i = 0;
 
 		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ee_operid` FROM @computers WHERE `flags` & 0x02")))
 		{
 			foreach($result as &$row)
 			{
-				$tasks = array($row['ee_operid'], $row['ao_operid'])
+				$tasks = array($row['ee_operid'], $row['ao_operid']);
 				$task = 0;
+				$flags = 0;
 				foreach($tasks as $task_id)
 				{
-					$task++
 					$ch = curl_init('http://helpdesk.contoso.com/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
 					
 					curl_setopt($ch, CURLOPT_COOKIE, $cookie);
@@ -89,12 +89,18 @@
 							echo $row['name'].' -> '.$xml->docbody->params['stateID']."\r\n";
 							if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
 							{
-								echo "    closed\r\n";
-								$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~#) WHERE `id` = # LIMIT 1", $flags[$task], $row['id']));
-								$i++;
+								$flags |= $task_flags[$task];
 							}
 						}
 					}
+					$task++;
+				}
+
+				if($flags)
+				{
+					echo "    closed\r\n";
+					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~#) WHERE `id` = # LIMIT 1", $flags, $row['id']));
+					$i++;
 				}
 				//break;
 			}
