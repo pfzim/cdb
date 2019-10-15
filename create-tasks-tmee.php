@@ -1,13 +1,7 @@
 <?php
-	// Create new and close resolved tasks
+	// Create new and close resolved tasks (TMEE)
 	
 	/*
-		flags:
-			0x01 - DISABLED
-			0x02 - Task was created
-			0x04 - Hide from report
-			0x08 -
-
 		1. Сбор информации - закрытие заявок, если статус изменился на ОК
 		2. Создание заявок
 		3. Проверка статуса заявок. Если заявка закрыта, но статус не ОК, то эскалация.
@@ -65,7 +59,7 @@
 				if($xml !== FALSE)
 				{
 					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `operid` = !, `opernum` = !, `flags` = (`flags` | 0x02) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x02) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -78,11 +72,11 @@
 	// Close resolved tasks
 	
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & 0x02) AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & 0x01)))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & (0x01 | 0x04)))")))
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents('http://helpdesk.contoso.com/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['ee_operid']).'&Num='.urlencode($row['ee_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

@@ -1,21 +1,5 @@
 <?php
-	// Check tasks status
-
-	/*
-		flags:
-			0x01 - DISABLED
-			0x02 - Task was created
-			0x04 - Hide from report
-			0x08 -
-
-		TMME:
-		
-		SELECT * 
-		  FROM c_computers
-		  WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
-		    AND (`flags` & (0x01 | 0x02)) = 0
-		    AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
-	*/
+	// Checking HelpDesk tasks status for TMAO and TMEE
 
 	if(!defined('ROOTDIR'))
 	{
@@ -42,10 +26,8 @@
 	$fields = array(
 		'retUrl'   		=> '',
 		'autoWa'		=> 1,
-		//'userLogin'		=> 'orchestrator',
-		//'userPassword'	=> 'PaSSw0rd',
-		'userLogin'		=> 'Dmitriy.Zimin@contoso.com',
-		'userPassword'	=> '123456',
+		'userLogin'		=> HELPDESK_LOGIN,
+		'userPassword'	=> HELPDESK_PASSWD,
 		'buttonLogOn'	=> '%D0%92%D1%85%D0%BE%D0%B4+%D0%B2+%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%83'
 	);
 
@@ -68,42 +50,49 @@
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
 
+		$flags = array(0x02, 0x04);
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `operid` FROM @computers WHERE `flags` & 0x02")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ee_operid` FROM @computers WHERE `flags` & 0x02")))
 		{
 			foreach($result as &$row)
 			{
-				$ch = curl_init('http://helpdesk.contoso.com/QueryView.aspx?KeyValue='.$row['operid'].'&xml=1');
-				
-				curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-
-				$answer = curl_exec($ch);
-				if($answer !== FALSE)
+				$tasks = array($row['ee_operid'], $row['ao_operid'])
+				$task = 0;
+				foreach($tasks as $task_id)
 				{
-					//echo $answer;
-					$xml = @simplexml_load_string($answer);
-					if($xml !== FALSE)
-					{
-						// 1 Новый
-						// 2 В очереди
-						// 3 В работе
-						// 4 На согласовании
-						// 5 Приостановлен
-						// 7 Предложено решение
-						// 8 Закрыт
-						// 9 Отменен
-						// 12 Принят на ФГ
-						// 14 Согласован
-						// 15 Не согласован
+					$task++
+					$ch = curl_init('http://helpdesk.contoso.com/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
+					
+					curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
 
-						echo $row['name'].' -> '.$xml->docbody->params['stateID']."\r\n";
-						if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
+					$answer = curl_exec($ch);
+					if($answer !== FALSE)
+					{
+						//echo $answer;
+						$xml = @simplexml_load_string($answer);
+						if($xml !== FALSE)
 						{
-							echo "    closed\r\n";
-							$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x02) WHERE `id` = # LIMIT 1", $row['id']));
-							$i++;
+							// 1 Новый
+							// 2 В очереди
+							// 3 В работе
+							// 4 На согласовании
+							// 5 Приостановлен
+							// 7 Предложено решение
+							// 8 Закрыт
+							// 9 Отменен
+							// 12 Принят на ФГ
+							// 14 Согласован
+							// 15 Не согласован
+
+							echo $row['name'].' -> '.$xml->docbody->params['stateID']."\r\n";
+							if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
+							{
+								echo "    closed\r\n";
+								$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~#) WHERE `id` = # LIMIT 1", $flags[$task], $row['id']));
+								$i++;
+							}
 						}
 					}
 				}

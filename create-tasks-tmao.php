@@ -1,11 +1,23 @@
 <?php
-
+	// Create report TMAO
 /*
 	SET @current_pattern = (SELECT MAX(ao_script_ptn) FROM c_computers) - 200;
 	SELECT @current_pattern;
 	SELECT * FROM c_computers WHERE ao_script_ptn < @current_pattern AND ao_script_ptn <> 0 OR (name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2);
 
 	SELECT name, ao_script_ptn, ee_encryptionstatus FROM c_computers WHERE ao_script_ptn < (SELECT MAX(ao_script_ptn) FROM c_computers) - 200 AND ao_script_ptn <> 0 OR (name regexp '[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2)
+	
+	TMAO - Workstations:
+	SELECT
+		`name`,
+		`ao_script_ptn`,
+		DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+		DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan`,
+		`flags`
+	FROM c_computers
+	WHERE (`flags` & (0x01 | 0x04)) = 0
+		AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200
+		AND `name` regexp '^([[:digit:]]{4}-[NnWw][[:digit:]]{4})|([Pp][Cc]-[[:digit:]]{3})$';
 	
 	TMME:
 	SELECT * FROM c_computers WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
@@ -96,16 +108,45 @@ function php_mailer($to, $name, $subject, $html, $plain)
 EOT;
 	
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Pattern version</th></tr>';
+	$table .= '<tr><th>Name</th><th>Pattern version</th><th>Last update</th><th>Last full scan</th></tr>';
 	
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, `ee_encryptionstatus` FROM @computers WHERE (`flags` & (0x01 | 0x04)) = 0 `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 200 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'")))
+	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x01 | 0x04)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 200 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'")))
 	{
 		foreach($result as &$row)
 		{
 			#echo $row['name']."\r\n";
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td></tr>';
+			
+			$td = getdate();
+			$dd = &$td['mday'];
+			$dm = &$td['mon'];
+			$dy = &$td['year'];
+
+			$class1 = '';
+			$class2 = '';
+			
+			$d = explode('.', $row['last_update'], 3);
+			$nd = intval(@$d[0]);
+			$nm = intval(@$d[1]);
+			$ny = intval(@$d[2]);
+			dateadd($nd, $nm, $ny, 7);
+			if(!datecheck($nd, $nm, $ny) || (datecmp($nd, $nm, $ny, $dd, $dm, $dy) < 0))
+			{
+				$class1 = ' class="error"';
+			}
+
+			$d = explode('.', $row['last_scan'], 3);
+			$nd = intval(@$d[0]);
+			$nm = intval(@$d[1]);
+			$ny = intval(@$d[2]);
+			dateadd($nd, $nm, $ny, 7);
+			if(!datecheck($nd, $nm, $ny) || (datecmp($nd, $nm, $ny, $dd, $dm, $dy) < 0))
+			{
+				$class2 = ' class="error"';
+			}
+
+			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td'.$class1.'>'.$row['last_update'].'</td><td'.$class2.'>'.$row['last_scan'].'</td></tr>';
 			$i++;
 		}
 	}
