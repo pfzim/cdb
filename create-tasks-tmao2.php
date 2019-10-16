@@ -38,7 +38,7 @@
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
-					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['number']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `ao_operid` = !, `ao_opernum` = !, `flags` = (`flags` | 0x08) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
