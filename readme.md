@@ -4,7 +4,7 @@ Now it collect information about Trent Micro Apex One and Endpoint Encryption.
 It can create tasks in HelpDesk.
 
 
-Available `flags` bit values
+Available `flags` bit options
 
 | Bits | Description                       |
 |------|-----------------------------------|

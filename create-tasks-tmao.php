@@ -156,6 +156,22 @@ EOT;
 	$table .= '</table>';
 	$html .= '<p>Всего: '.$i.'</p>';
 	$html .= $table;
+
+	$table = '<table>';
+	$table .= '<tr><th>Name</th></tr>';
+
+	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & 0x04)")))
+	{
+		foreach($result as &$row)
+		{
+			$table .= '<tr><td>'.$row['name'].'</td></tr>';
+		}
+	}
+
+	$table .= '</table>';
+
+	$html .= '<h2>Список исключений</h2>';
+	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="'.CDB_URL.'/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="'.CDB_URL.'/create-tasks-tmao.php">Сформировать отчёт</a></small>';
 	$html .= '</body>';
 	
