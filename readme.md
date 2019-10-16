@@ -1,5 +1,10 @@
+# CDB is a database for collect information about different computers
 
-Available `flags` values
+Now it collect information about Trent Micro Apex One and Endpoint Encryption.
+It can create tasks in HelpDesk.
+
+
+Available `flags` bit values
 
 | Bits | Description                       |
 |------|-----------------------------------|
