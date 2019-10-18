@@ -1,20 +1,20 @@
 <?php
 	// Create new and close resolved tasks (TMEE)
-	
+
 	/*
 		1. Сбор информации - закрытие заявок, если статус изменился на ОК
 		2. Создание заявок
 		3. Проверка статуса заявок. Если заявка закрыта, но статус не ОК, то эскалация.
-		
+
 		SET @current_pattern = (SELECT MAX(ao_script_ptn) FROM c_computers) - 200;
 		SELECT @current_pattern;
 		SELECT * FROM c_computers WHERE ao_script_ptn < @current_pattern AND ao_script_ptn <> 0 OR (name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2);
 
 		SELECT name, ao_script_ptn, ee_encryptionstatus FROM c_computers WHERE ao_script_ptn < (SELECT MAX(ao_script_ptn) FROM c_computers) - 200 AND ao_script_ptn <> 0 OR (name regexp '[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2)
-		
+
 		TMME:
-		
-		SELECT * 
+
+		SELECT *
 		  FROM c_computers
 		  WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
 		    AND (`flags` & (0x01 | 0x02)) = 0
@@ -44,7 +44,7 @@
 	header("Content-Type: text/plain; charset=utf-8");
 
 	// Open new tasks
-	
+
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02 | 0x04)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
 	{
@@ -58,7 +58,8 @@
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
-					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					//echo $answer."\r\n";
+					echo $row['name'].' '.$xml->extAlert->query['ref']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x02) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
@@ -70,7 +71,7 @@
 	echo 'Created: '.$i."\r\n";
 
 	// Close resolved tasks
-	
+
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & (0x01 | 0x04)))")))
 	{
@@ -82,7 +83,8 @@
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
-					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					//echo $answer."\r\n";
+					echo $row['name'].' '.$row['ee_opernum']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x02) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}

@@ -39,57 +39,61 @@
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
 	curl_setopt($ch, CURLOPT_HEADER, true);
 
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 	$result = curl_exec($ch);
-	
+
 	//echo $result;
-	
+
 	if(preg_match('/Set-Cookie:\s+('.HELPDESK_COOKIE.'=[^; ]+)/', $result, $matches) !== FALSE)
 	{
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
 
-		$task_flags = array(0x02, 0x04);
+		$task_flags = array(0x02, 0x08);
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ee_operid` FROM @computers WHERE `flags` & 0x02")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x02 | 0x08)")))
 		{
 			foreach($result as &$row)
 			{
 				$tasks = array($row['ee_operid'], $row['ao_operid']);
+				$tasksnum = array($row['ee_opernum'], $row['ao_opernum']);
 				$task = 0;
 				$flags = 0;
 				foreach($tasks as $task_id)
 				{
-					$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
-					
-					curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-
-					$answer = curl_exec($ch);
-					if($answer !== FALSE)
+					if($task_flags[$task] & intval($row['flags']) && !empty($task_id))
 					{
-						//echo $answer;
-						$xml = @simplexml_load_string($answer);
-						if($xml !== FALSE)
-						{
-							// 1 Новый
-							// 2 В очереди
-							// 3 В работе
-							// 4 На согласовании
-							// 5 Приостановлен
-							// 7 Предложено решение
-							// 8 Закрыт
-							// 9 Отменен
-							// 12 Принят на ФГ
-							// 14 Согласован
-							// 15 Не согласован
+						$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
 
-							echo $row['name'].' -> '.$xml->docbody->params['stateID']."\r\n";
-							if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
+						curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+						$answer = curl_exec($ch);
+						if($answer !== FALSE)
+						{
+							//echo $answer;
+							$xml = @simplexml_load_string($answer);
+							if($xml !== FALSE)
 							{
-								$flags |= $task_flags[$task];
+								// 1 Новый
+								// 2 В очереди
+								// 3 В работе
+								// 4 На согласовании
+								// 5 Приостановлен
+								// 7 Предложено решение
+								// 8 Закрыт
+								// 9 Отменен
+								// 12 Принят на ФГ
+								// 14 Согласован
+								// 15 Не согласован
+
+								echo $row['name'].'    '.$tasksnum[$task].' -> '.$xml->docbody->params['stateID']."\r\n";
+								if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
+								{
+									$flags |= $task_flags[$task];
+								}
 							}
 						}
 					}
@@ -106,5 +110,5 @@
 			}
 		}
 
-		echo 'Count: '.$i."\r\n";
+		echo 'Closed: '.$i."\r\n";
 	}

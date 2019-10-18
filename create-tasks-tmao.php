@@ -6,7 +6,7 @@
 	SELECT * FROM c_computers WHERE ao_script_ptn < @current_pattern AND ao_script_ptn <> 0 OR (name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2);
 
 	SELECT name, ao_script_ptn, ee_encryptionstatus FROM c_computers WHERE ao_script_ptn < (SELECT MAX(ao_script_ptn) FROM c_computers) - 200 AND ao_script_ptn <> 0 OR (name regexp '[[:digit:]]{4}-[nN][[:digit:]]+' AND ee_encryptionstatus <> 2)
-	
+
 	TMAO - Workstations:
 	SELECT
 		`name`,
@@ -18,7 +18,7 @@
 	WHERE (`flags` & (0x01 | 0x04)) = 0
 		AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200
 		AND `name` regexp '^([[:digit:]]{4}-[NnWw][[:digit:]]{4})|([Pp][Cc]-[[:digit:]]{3})$';
-	
+
 	TMME:
 	SELECT * FROM c_computers WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 */
@@ -79,7 +79,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	$mail->CharSet = 'UTF-8';
 	//$mail->SMTPDebug = 4;
 
-	return $mail->send();	
+	return $mail->send();
 }
 
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
@@ -106,10 +106,10 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	<body>
 	<h1>Список серверов с устаревшей антивирусной базой</h1>
 EOT;
-	
+
 	$table = '<table>';
 	$table .= '<tr><th>Name</th><th>Pattern version</th><th>Last update</th><th>Last full scan</th></tr>';
-	
+
 	$i = 0;
 
 	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x01 | 0x04)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 200 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'")))
@@ -117,7 +117,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			#echo $row['name']."\r\n";
-			
+
 			$td = getdate();
 			$dd = &$td['mday'];
 			$dm = &$td['mon'];
@@ -125,7 +125,7 @@ EOT;
 
 			$class1 = '';
 			$class2 = '';
-			
+
 			$d = explode('.', $row['last_update'], 3);
 			$nd = intval(@$d[0]);
 			$nm = intval(@$d[1]);
@@ -174,7 +174,7 @@ EOT;
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="'.CDB_URL.'/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="'.CDB_URL.'/create-tasks-tmao.php">Сформировать отчёт</a></small>';
 	$html .= '</body>';
-	
+
 	if(php_mailer(MAIL_TO, MAIL_TO, 'Audit antivirus protection', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
