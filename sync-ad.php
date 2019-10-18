@@ -27,6 +27,11 @@
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	header("Content-Type: text/plain; charset=utf-8");
+
+	// Set temporary flag for remove not existing PC after all syncs
+	
+	$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & 0x10) WHERE (`flags` & (0x01 | 0x04)) = 0"));
+	//$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x10) | 0x01) WHERE `flags` & 0x10"));
 	
 	$i = 0;
 	
