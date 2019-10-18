@@ -1,6 +1,6 @@
 <?php
 	// Create new and close resolved tasks (TMAO)
-	
+
 	if(!defined('ROOTDIR'))
 	{
 		define('ROOTDIR', dirname(__FILE__));
@@ -24,9 +24,9 @@
 	header("Content-Type: text/plain; charset=utf-8");
 
 	// Open new tasks
-	
+
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nN])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nN])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200")))
 	{
 		foreach($result as &$row)
 		{
@@ -36,9 +36,10 @@
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
+				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
-					echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['number']."\r\n";
+					//echo $answer."\r\n";
+					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `ao_operid` = !, `ao_opernum` = !, `flags` = (`flags` | 0x08) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
@@ -50,7 +51,7 @@
 	echo 'Created: '.$i."\r\n";
 
 	// Close resolved tasks
-	
+
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x08) AND `name` regexp '^(([[:digit:]]{4}-[nN])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= (SELECT MAX(`ao_script_ptn`) FROM c_computers) OR (`flags` & (0x01 | 0x04)))")))
 	{
@@ -62,7 +63,8 @@
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
-					//echo $answer."\r\n".$row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					echo $answer."\r\n";
+					echo $row['name'].' '.$row['ao_opernum']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x08) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
