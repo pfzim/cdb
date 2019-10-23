@@ -30,7 +30,7 @@
 
 	// Set temporary flag for remove not existing PC after all syncs
 	
-	$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & 0x10) WHERE (`flags` & (0x01 | 0x04)) = 0"));
+	$db->put(rpv("UPDATE @computers SET `flags` = (`flags` | 0x10) WHERE (`flags` & (0x01 | 0x04)) = 0"));
 	//$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x10) | 0x01) WHERE `flags` & 0x10"));
 	
 	$i = 0;
@@ -60,7 +60,7 @@
 					{
 						//echo $account['cn'][0]."\r\n";
 						//print_r($account);
-						$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = ((`flags` & ~0x01) | #)", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
+						$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = ((`flags` & ~(0x01 | 0x10)) | #)", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
 						$i++;
 					}
 					ldap_control_paged_result_response($ldap, $sr, $cookie);
