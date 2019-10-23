@@ -19,6 +19,18 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
+function tmee_status($code)
+{
+	switch($code)
+	{
+		case 1: return 'Not Encrypted';
+		case 2: return 'Encrypted';
+		case 3: return 'Encrypting';
+		case 4: return 'Decrypting';
+	}
+	return 'Unknown';
+}
+
 function php_mailer($to, $name, $subject, $html, $plain)
 {
 	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
@@ -85,19 +97,19 @@ function php_mailer($to, $name, $subject, $html, $plain)
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD TMAO</th><th>HD TMEE</th></tr>';
+	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>HD TMAO</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD TMEE</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, `ee_encryptionstatus`, DATE_FORMAT(`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x02 | 0x08)")))
 	{
 		foreach($result as &$row)
 		{
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td><td>'.$row['ee_encryptionstatus'].'</td><td>'.$row['last_sync'].'</td><td>';
+			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td><td>';
 			if(intval($row['flags']) & 0x08)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ao_operid'].'">'.$row['ao_opernum'].'</a>';
 			}
-			$table .= '</td><td>';
+			$table .= '</td><td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td><td>';
 			if(intval($row['flags']) & 0x02)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ee_operid'].'">'.$row['ee_opernum'].'</a>';

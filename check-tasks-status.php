@@ -19,6 +19,25 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
+function task_status($code)
+{
+	switch($code)
+	{
+		case 1: return 'Новый';
+		case 2: return 'В очереди';
+		case 3: return 'В работе';
+		case 4: return 'На согласовании';
+		case 5: return 'Приостановлен';
+		case 7: return 'Предложено решение';
+		case 8: return 'Закрыт';
+		case 9: return 'Отменен';
+		case 12: return 'Принят на ФГ';
+		case 14: return 'Согласован';
+		case 15: return 'Не согласован';
+	}
+	return 'Unknown';
+}
+
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	header("Content-Type: text/plain; charset=utf-8");
@@ -77,19 +96,7 @@
 							$xml = @simplexml_load_string($answer);
 							if($xml !== FALSE)
 							{
-								// 1 Новый
-								// 2 В очереди
-								// 3 В работе
-								// 4 На согласовании
-								// 5 Приостановлен
-								// 7 Предложено решение
-								// 8 Закрыт
-								// 9 Отменен
-								// 12 Принят на ФГ
-								// 14 Согласован
-								// 15 Не согласован
-
-								echo $row['name'].'    '.$tasksnum[$task].' -> '.$xml->docbody->params['stateID']."\r\n";
+								echo $row['name'].'    '.$tasksnum[$task].' -> '.task_status(intval($xml->docbody->params['stateID']))."\r\n";
 								if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
 								{
 									$flags |= $task_flags[$task];

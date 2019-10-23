@@ -39,6 +39,18 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
+function tmee_status($code)
+{
+	switch($code)
+	{
+		case 1: return 'Not Encrypted';
+		case 2: return 'Encrypted';
+		case 3: return 'Encrypting';
+		case 4: return 'Decrypting';
+	}
+	return 'Unknown';
+}
+
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	header("Content-Type: text/plain; charset=utf-8");
@@ -46,31 +58,32 @@
 	// Open new tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02 | 0x04)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02 | 0x04)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x02 | 0x04)) = 0 AND `ee_encryptionstatus` <> 2")))
 	{
 		foreach($result as &$row)
 		{
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\r\nПК: ".$row['name']."\r\nСтатус шифрования: ".$row['ee_encryptionstatus']));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\nПК: ".$row['name']."\nСтатус шифрования: ".tmee_status(intval($row['ee_encryptionstatus']))."\nКод работ: FDERE\n".'http://wiki.**SECRET**/Отдел%20ИТ%20Инфраструктуры.Инструкция%20по%20восстановлению%20работы%20агента%20Full%20Disk%20Encryption.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
+				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
 					//echo $answer."\r\n";
-					echo $row['name'].' '.$xml->extAlert->query['ref']."\r\n";
+					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
 					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x02) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
-			break;
+			if($i > 9) break;
 		}
 	}
 
 	echo 'Created: '.$i."\r\n";
 
-	// Close resolved tasks
+	// Close auto resolved tasks
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & (0x01 | 0x04)))")))
@@ -89,7 +102,6 @@
 					$i++;
 				}
 			}
-			break;
 		}
 	}
 

@@ -26,7 +26,7 @@
 	// Open new tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nN])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 200)")))
 	{
 		foreach($result as &$row)
 		{
@@ -44,16 +44,16 @@
 					$i++;
 				}
 			}
-			break;
+			if($i > 5) break;
 		}
 	}
 
 	echo 'Created: '.$i."\r\n";
 
-	// Close resolved tasks
+	// Close auto resolved tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x08) AND `name` regexp '^(([[:digit:]]{4}-[nN])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= (SELECT MAX(`ao_script_ptn`) FROM c_computers) OR (`flags` & (0x01 | 0x04)))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x08) AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 200) OR (`flags` & (0x01 | 0x04)))")))
 	{
 		foreach($result as &$row)
 		{
