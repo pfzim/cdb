@@ -173,7 +173,7 @@ EOT;
 
 	$html .= '<h2>Список исключений</h2>';
 	$html .= $table;
-	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="'.CDB_URL.'/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="'.CDB_URL.'/create-tasks-tmao.php">Сформировать отчёт</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="'.CDB_URL.'/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="'.CDB_URL.'/report-tmao-servers.php">Сформировать отчёт</a></small>';
 	$html .= '</body>';
 
 	if(php_mailer(MAIL_TO, MAIL_TO, 'Audit antivirus protection', $html, 'You client does not support HTML'))
