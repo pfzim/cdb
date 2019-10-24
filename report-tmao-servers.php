@@ -113,7 +113,7 @@ EOT;
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x04)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 200 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$'")))
+	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x04)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900 AND `name` regexp '^(brc|dln|nn|rc1)-[[:alpha:]]+-[[:digit:]]+$' ORDER BY `name`")))
 	{
 		foreach($result as &$row)
 		{
