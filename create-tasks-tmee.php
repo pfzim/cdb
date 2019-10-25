@@ -77,7 +77,7 @@ function tmee_status($code)
 					$i++;
 				}
 			}
-			if($i > 9) break;
+			//if($i > 9) break;
 		}
 	}
 
@@ -86,7 +86,8 @@ function tmee_status($code)
 	// Close auto resolved tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK) OR (`flags` & (0x01 | 0x04)))")))
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x01 | 0x04)))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x02) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 OR (`flags` & (0x01 | 0x04)))")))
 	{
 		foreach($result as &$row)
 		{
