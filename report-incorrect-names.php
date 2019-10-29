@@ -104,50 +104,20 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		</style>
 	</head>
 	<body>
-	<h1>Список серверов с устаревшей антивирусной базой</h1>
-	<p>Маска для отбора серверов: [brc|dln|nn|rc1]-[имя]-[цифры]<br />В отчёте присутствуют сервера отключенные в AD</p>
+	<h1>Список ПК с некорректным именованием</h1>
+	<p>Правильное наименование:<br />[brc|dln|nn|rc1]-[имя]-[цифры]<br />[2 цифры]-[4 цифры]-[V?][цифры]<br />[4 цифры]-[NW][4 цифры]<br />В отчёте присутствуют ПК отключенные в AD</p>
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Pattern version</th><th>Last update</th><th>Last full scan</th></tr>';
+	$table .= '<tr><th>Name</th></tr>';
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x04 | 0x20)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900 AND `name` regexp '^SQL|AVAYA-MGMT|LYNC-FE|RemoteApp|(brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+$' ORDER BY `name`")))
+	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & (0x04 | 0x20)) = 0 AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|((([[:digit:]]{4}-[nNwW]))|(([Pp][Cc]-))[[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vV]{0,1}[[:digit:]]+)$' ORDER BY `name`")))
 	{
 		foreach($result as &$row)
 		{
-			#echo $row['name']."\r\n";
-
-			$td = getdate();
-			$dd = &$td['mday'];
-			$dm = &$td['mon'];
-			$dy = &$td['year'];
-
-			$class1 = '';
-			$class2 = '';
-
-			$d = explode('.', $row['last_update'], 3);
-			$nd = intval(@$d[0]);
-			$nm = intval(@$d[1]);
-			$ny = intval(@$d[2]);
-			dateadd($nd, $nm, $ny, 7);
-			if(!datecheck($nd, $nm, $ny) || (datecmp($nd, $nm, $ny, $dd, $dm, $dy) < 0))
-			{
-				$class1 = ' class="error"';
-			}
-
-			$d = explode('.', $row['last_scan'], 3);
-			$nd = intval(@$d[0]);
-			$nm = intval(@$d[1]);
-			$ny = intval(@$d[2]);
-			dateadd($nd, $nm, $ny, 7);
-			if(!datecheck($nd, $nm, $ny) || (datecmp($nd, $nm, $ny, $dd, $dm, $dy) < 0))
-			{
-				$class2 = ' class="error"';
-			}
-
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td'.$class1.'>'.$row['last_update'].'</td><td'.$class2.'>'.$row['last_scan'].'</td></tr>';
+			$table .= '<tr><td>'.$row['name'].'</td></tr>';
 			$i++;
 		}
 	}
@@ -158,29 +128,17 @@ EOT;
 	$html .= '<p>Всего: '.$i.'</p>';
 	$html .= $table;
 
-	$table = '<table>';
-	$table .= '<tr><th>Name</th></tr>';
-
-	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & 0x04)")))
-	{
-		foreach($result as &$row)
-		{
-			$table .= '<tr><td>'.$row['name'].'</td></tr>';
-		}
-	}
-
-	$table .= '</table>';
-
-	$html .= '<h2>Список исключений</h2>';
-	$html .= $table;
-	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/sync-tmao.php">Выполнить синхронизацию с Apex One</a><br />3. <a href="'.CDB_URL.'/sync-tmee.php">Выполнить синхронизацию с Endpoint Encryption</a><br />4. <a href="'.CDB_URL.'/report-tmao-servers.php">Сформировать отчёт</a></small>';
+	$html .= '<br /><small><a href="'.CDB_URL.'/report-incorrect-names.php">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(MAIL_TO, MAIL_TO, 'Audit antivirus protection', $html, 'You client does not support HTML'))
+	if($i > 0)
 	{
-		echo 'Send mail: OK';
-	}
-	else
-	{
-		echo 'Send mail: FAILED';
+		if(php_mailer(MAIL_TO, MAIL_TO, 'Computers with incorrect names', $html, 'You client does not support HTML'))
+		{
+			echo 'Send mail: OK';
+		}
+		else
+		{
+			echo 'Send mail: FAILED';
+		}
 	}

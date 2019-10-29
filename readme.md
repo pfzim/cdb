@@ -13,3 +13,4 @@ Available `flags` bit options
 | 0x04 | Manual hide from report                   |
 | 0x08 | TMAO Task was created in HelpDesk         |
 | 0x10 | Temporary flag for delete after all syncs |
+| 0x20 | Deleted in AD                             |
