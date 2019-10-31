@@ -62,9 +62,5 @@
 
 	echo 'Count: '.$i."\r\n";
 
-	// Remove not existing PC after all syncs
-	
-	$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x10) | 0x20) WHERE `flags` & 0x10"));
-	
 	sqlsrv_free_stmt($result);
 	sqlsrv_close($conn);

@@ -28,11 +28,6 @@
 
 	header("Content-Type: text/plain; charset=utf-8");
 
-	// Set temporary flag for remove not existing PC after all syncs
-	
-	$db->put(rpv("UPDATE @computers SET `flags` = (`flags` | 0x10) WHERE (`flags` & (0x20 | 0x04)) = 0"));
-	//$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x10) | 0x01) WHERE `flags` & 0x10"));
-	
 	$i = 0;
 	
 	$ldap = ldap_connect(LDAP_HOST, LDAP_PORT);
