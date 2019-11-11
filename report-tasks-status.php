@@ -121,7 +121,14 @@ EOT;
 	}
 
 	$table .= '</table>';
-	$html .= '<p>Всего: '.$i.'</p>';
+
+	$to_open = 0;
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0")))
+	{
+		$to_open = $result[0][0];
+	}
+
+	$html .= '<p>Всего открытых: '.$i.'<br />Предстоит открыть: '.$to_open.'</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/check-tasks-status.php">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/report-tasks-status.php">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
