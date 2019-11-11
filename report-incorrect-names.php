@@ -113,7 +113,7 @@ EOT;
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & (0x04 | 0x20)) = 0 AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|((([[:digit:]]{4}-[nNwW]))|(([Pp][Cc]-))[[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vV]{0,1}[[:digit:]]+)$' ORDER BY `name`")))
+	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & (0x04 | 0x20)) = 0 AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|((([[:digit:]]{4}-[nNwW]))|(([Pp][Cc]-))[[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vV]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$' ORDER BY `name`")))
 	{
 		foreach($result as &$row)
 		{
@@ -128,7 +128,7 @@ EOT;
 	$html .= '<p>Всего: '.$i.'</p>';
 	$html .= $table;
 
-	$html .= '<br /><small><a href="'.CDB_URL.'/report-incorrect-names.php">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br /><a href="'.CDB_URL.'/report-incorrect-names.php">2. Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)
