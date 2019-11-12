@@ -122,13 +122,26 @@ EOT;
 
 	$table .= '</table>';
 
-	$to_open = 0;
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0")))
+	$problems_tmao = 0;
+	$problems_tmee = 0;
+	$opened_tmao = 0;
+	$opened_tmee = 0;
+
+	if($db->select_ex($result, rpv("
+		SELECT
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
+		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x04 | 0x20)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0x08) AS `c3`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x02)) = 0x02) AS `c4`
+	")))
 	{
-		$to_open = $result[0][0];
+		$problems_tmao = $result[0][0];
+		$problems_tmee = $result[0][1];
+		$opened_tmao = $result[0][2];
+		$opened_tmee = $result[0][3];
 	}
 
-	$html .= '<p>Всего открытых: '.$i.'<br />Предстоит открыть: '.$to_open.'</p>';
+	$html .= '<p>TMAO открытых заявок: '.$opened_tmao.', всего проблемных ПК : '.$problems_tmao.'<br />TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/check-tasks-status.php">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/report-tasks-status.php">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
