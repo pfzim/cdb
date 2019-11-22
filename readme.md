@@ -16,6 +16,7 @@ Available `flags` bit options
 | 0x0100 | TMEE Task was created in HelpDesk         |
 | 0x0200 | TMAO Task was created in HelpDesk         |
 | 0x0400 | Rename Task was created in HelpDesk       |
+| 0x0800 | LAPS Task was created in HelpDesk         |
 
 
 Change flag 0x40 to 0x0400:
