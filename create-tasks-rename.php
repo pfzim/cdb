@@ -27,7 +27,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x40)) = 0x40")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020 | 0x4000)) = 0x4000")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -36,7 +36,7 @@
 		SELECT * 
 		FROM @computers
 		WHERE
-			(`flags` & (0x01 | 0x04 | 0x20 | 0x40)) = 0 
+			(`flags` & (0x0001 | 0x0004 | 0x0020 | 0x4000)) = 0 
 			AND `dn` LIKE '%".LDAP_OU_SHOPS."'
 			AND `name` NOT REGEXP '^[[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+$'
 	")))
@@ -57,7 +57,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `rn_operid` = !, `rn_opernum` = !, `flags` = (`flags` | 0x40) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("UPDATE @computers SET `rn_operid` = !, `rn_opernum` = !, `flags` = (`flags` | 0x4000) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -68,7 +68,7 @@
 		SELECT * 
 		FROM @computers
 		WHERE
-			(`flags` & (0x01 | 0x04 | 0x20 | 0x40)) = 0 
+			(`flags` & (0x0001 | 0x0004 | 0x0020 | 0x4000)) = 0 
 			AND `dn` LIKE '%".LDAP_OU_COMPANY."'
 			AND `dn` NOT LIKE '%".LDAP_OU_SHOPS."'
 			AND `name` NOT REGEXP '^(([[:digit:]]{4}-[nNwW])|(HD-EGAIS-))[[:digit:]]+$'
@@ -90,7 +90,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `rn_operid` = !, `rn_opernum` = !, `flags` = (`flags` | 0x40) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("UPDATE @computers SET `rn_operid` = !, `rn_opernum` = !, `flags` = (`flags` | 0x4000) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -103,7 +103,7 @@
 	// Close auto resolved tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x40) AND (`flags` & (0x01 | 0x04 | 0x20))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x4000) AND (`flags` & (0x0001 | 0x0004 | 0x0020))")))
 	{
 		foreach($result as &$row)
 		{
@@ -115,7 +115,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['rn_opernum']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x40) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x4000) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}

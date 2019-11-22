@@ -27,7 +27,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0x08")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x04 | 0x20 | 0x08)) = 0x08")))
 	{
 		$i = intval($result[0][0]);
 	}

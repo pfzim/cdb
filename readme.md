@@ -6,12 +6,12 @@ It can create tasks in HelpDesk.
 
 Available `flags` bit options
 
-| Bits | Description                               |
-|------|-------------------------------------------|
-| 0x01 | Disabled in AD                            |
-| 0x02 | TMEE Task was created in HelpDesk         |
-| 0x04 | Manual hide from report                   |
-| 0x08 | TMAO Task was created in HelpDesk         |
-| 0x10 | Temporary flag for delete after all syncs |
-| 0x20 | Deleted in AD                             |
-| 0x40 | Rename Task was created in HelpDesk       |
+| Bits   | Description                               |
+|--------|-------------------------------------------|
+| 0x0001 | Disabled in AD                            |
+| 0x0200 | TMEE Task was created in HelpDesk         |
+| 0x0004 | Manual hide from report                   |
+| 0x0800 | TMAO Task was created in HelpDesk         |
+| 0x0010 | Temporary flag for delete after all syncs |
+| 0x0020 | Deleted in AD                             |
+| 0x4000 | Rename Task was created in HelpDesk       |
