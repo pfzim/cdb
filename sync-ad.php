@@ -3,7 +3,7 @@
 
 	/*
 		TODO:
-			+ Clear flag 0x01 if computer account was enabled again
+			+ Clear flag 0x0001 if computer account was enabled again
 	*/
 
 	if(!defined('ROOTDIR'))
@@ -52,7 +52,7 @@
 						{
 							//echo $account['cn'][0]."\r\n";
 							//print_r($account); break;
-							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `flags`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `flags` = ((`flags` & ~(0x01 | 0x10)) | #)", $account['cn'][0], $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
+							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `flags`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `flags` = ((`flags` & ~(0x0001 | 0x0010)) | #)", $account['cn'][0], $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0, $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0));
 							$i++;
 						}
 					}

@@ -15,7 +15,7 @@
 		DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan`,
 		`flags`
 	FROM c_computers
-	WHERE (`flags` & (0x01 | 0x04)) = 0
+	WHERE (`flags` & (0x0001 | 0x0004)) = 0
 		AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM c_computers) - 200
 		AND `name` regexp '^([[:digit:]]{4}-[NnWw][[:digit:]]{4})|([Pp][Cc]-[[:digit:]]{3})$';
 
@@ -118,7 +118,7 @@ EOT;
 	SELECT `name`, `rn_operid`, `rn_opernum`, `flags`
 	FROM @computers 
 	WHERE 
-		(`flags` & (0x04 | 0x20)) = 0 
+		(`flags` & (0x0004 | 0x0020)) = 0 
 		AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|([[:digit:]]{4}-[nNwW][[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$'
 		ORDER BY `name`
 	")))
@@ -126,7 +126,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x40)
+			if(intval($row['flags']) & 0x4000)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['rn_operid'].'">'.$row['rn_opernum'].'</a>';
 				$opened++;

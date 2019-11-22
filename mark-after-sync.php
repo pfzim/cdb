@@ -25,7 +25,7 @@
 
 	// Remove not existing PC after all syncs
 	
-	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x10) | 0x20) WHERE `flags` & 0x10")))
+	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x0010) | 0x0020) WHERE `flags` & 0x0010")))
 	{
 		echo 'DONE';
 	}
