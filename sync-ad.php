@@ -37,11 +37,6 @@
 		ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
 		if(ldap_bind($ldap, LDAP_USER, LDAP_PASSWD))
 		{
-			$upload_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'photos';
-
-			$data = array();
-			$count_updated = 0;
-			$count_added = 0;
 			$cookie = '';
 			do
 			{
@@ -56,8 +51,8 @@
 						if(!empty($account['cn'][0]))
 						{
 							//echo $account['cn'][0]."\r\n";
-							//print_r($account);
-							$db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, #) ON DUPLICATE KEY UPDATE `flags` = ((`flags` & ~(0x01 | 0x10)) | #)", $account['cn'][0], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
+							//print_r($account); break;
+							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `flags`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `flags` = ((`flags` & ~(0x01 | 0x10)) | #)", $account['cn'][0], $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x01:0, $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x01:0));
 							$i++;
 						}
 					}
@@ -73,4 +68,3 @@
 	}
 
 	echo 'Count: '.$i."\r\n";
-

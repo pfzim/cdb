@@ -24,13 +24,13 @@
 	header("Content-Type: text/plain; charset=utf-8");
 
 	$params = array(
-		'Database' =>				'**SECRET**',
-		'UID' =>					'**SECRET**',
-		'PWD' =>					'**SECRET**',
+		'Database' =>				TMAO_DB_NAME,
+		'UID' =>					TMAO_DB_USER,
+		'PWD' =>					TMAO_DB_PASSWD,
 		'ReturnDatesAsStrings' =>	true
 	);
 
-	$conn = sqlsrv_connect("**SECRET**", $params);
+	$conn = sqlsrv_connect(TMAO_DB_HOST, $params);
 	if($conn === false)
 	{
 		print_r(sqlsrv_errors());
@@ -41,7 +41,7 @@
       ,[PTNUPDTIME]
       ,[SCRIPT_PTN]
       ,[AS_PSTIME]
-  FROM [**SECRET**].[dbo].[TBL_CLIENT_INFO] WHERE CLIENTTYPE = 0");
+  FROM [".TMAO_DB_NAME."].[dbo].[TBL_CLIENT_INFO] WHERE CLIENTTYPE = 0");
 
 	$i = 0;
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))

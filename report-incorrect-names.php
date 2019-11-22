@@ -105,19 +105,33 @@ function php_mailer($to, $name, $subject, $html, $plain)
 	</head>
 	<body>
 	<h1>Список ПК с некорректным именованием</h1>
-	<p>Правильное наименование:<br />[brc|dln|nn|rc1]-[имя]-[цифры]<br />[2 цифры]-[4 цифры]-[V?][цифры]<br />[4 цифры]-[NW][4 цифры]<br />В отчёте присутствуют ПК отключенные в AD</p>
+	<p>Правильное наименование:<br />[brc|dln|nn|rc1]-[имя]-[цифры]<br />[2 цифры]-[4 цифры]-[VM?][цифры]<br />[4 цифры]-[NW][4 цифры]<br />HD-EGAIS-[цифры]<br />В отчёте присутствуют ПК отключенные в AD</p>
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th></tr>';
+	$table .= '<tr><th>Name</th><th>HD Task</th></tr>';
 
 	$i = 0;
+	$opened = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name` FROM @computers WHERE (`flags` & (0x04 | 0x20)) = 0 AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|((([[:digit:]]{4}-[nNwW]))|(([Pp][Cc]-))[[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vV]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$' ORDER BY `name`")))
+	if($db->select_assoc_ex($result, rpv("
+	SELECT `name`, `rn_operid`, `rn_opernum`, `flags`
+	FROM @computers 
+	WHERE 
+		(`flags` & (0x04 | 0x20)) = 0 
+		AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|([[:digit:]]{4}-[nNwW][[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$'
+		ORDER BY `name`
+	")))
 	{
 		foreach($result as &$row)
 		{
-			$table .= '<tr><td>'.$row['name'].'</td></tr>';
+			$table .= '<tr><td>'.$row['name'].'</td><td>';
+			if(intval($row['flags']) & 0x40)
+			{
+				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['rn_operid'].'">'.$row['rn_opernum'].'</a>';
+				$opened++;
+			}
+			$table .= '</td></tr>';
 			$i++;
 		}
 	}
@@ -125,10 +139,10 @@ EOT;
 	echo 'Count: '.$i."\r\n";
 
 	$table .= '</table>';
-	$html .= '<p>Всего: '.$i.'</p>';
+	$html .= '<p>Открытых заявок: '.$opened.', всего проблемных ПК : '.$i.'</p>';
 	$html .= $table;
 
-	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br /><a href="'.CDB_URL.'/report-incorrect-names.php">2. Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/report-incorrect-names.php">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)
