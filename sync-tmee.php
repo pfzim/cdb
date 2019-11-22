@@ -56,7 +56,7 @@
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
 	{
 		//echo $row['DeviceName'].", ".$row['LastSync'].", ".$row['EncryptionStatus']."\r\n";
-		$db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = (`flags` & ~0x0010)", $row['DeviceName'], $row['LastSync'], $row['EncryptionStatus'], $row['LastSync'], $row['EncryptionStatus']));
+		$db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = (`flags` & ~0x0008)", $row['DeviceName'], $row['LastSync'], $row['EncryptionStatus'], $row['LastSync'], $row['EncryptionStatus']));
 		$i++;
 	}
 

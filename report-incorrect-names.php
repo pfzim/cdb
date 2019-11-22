@@ -118,7 +118,7 @@ EOT;
 	SELECT `name`, `rn_operid`, `rn_opernum`, `flags`
 	FROM @computers 
 	WHERE 
-		(`flags` & (0x0004 | 0x0020)) = 0 
+		(`flags` & (0x0004 | 0x0002)) = 0 
 		AND `name` not regexp '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|([[:digit:]]{4}-[nNwW][[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$'
 		ORDER BY `name`
 	")))
@@ -126,7 +126,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x4000)
+			if(intval($row['flags']) & 0x0400)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['rn_operid'].'">'.$row['rn_opernum'].'</a>';
 				$opened++;

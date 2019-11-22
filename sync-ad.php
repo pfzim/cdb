@@ -52,7 +52,7 @@
 						{
 							//echo $account['cn'][0]."\r\n";
 							//print_r($account); break;
-							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `flags`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `flags` = ((`flags` & ~(0x0001 | 0x0010)) | #)", $account['cn'][0], $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0, $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0));
+							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `flags`) VALUES (!, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `flags` = ((`flags` & ~(0x0001 | 0x0008)) | #)", $account['cn'][0], $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0, $account['dn'], ($account['useraccountcontrol'][0] & 0x02)?0x0001:0));
 							$i++;
 						}
 					}
