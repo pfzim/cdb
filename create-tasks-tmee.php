@@ -17,7 +17,7 @@
 		SELECT *
 		  FROM c_computers
 		  WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
-		    AND (`flags` & (0x0001 | 0x0200)) = 0
+		    AND (`flags` & (0x0001 | 0x0100)) = 0
 		    AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 	*/
 
@@ -58,8 +58,8 @@ function tmee_status($code)
 	// Open new tasks
 
 	$i = 0;
-	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0200 | 0x0004 | 0x0020)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0200 | 0x0004 | 0x0020)) = 0 AND `ee_encryptionstatus` <> 2")))
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND `ee_encryptionstatus` <> 2")))
 	{
 		foreach($result as &$row)
 		{
@@ -73,7 +73,7 @@ function tmee_status($code)
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x0200) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x0100) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -86,8 +86,8 @@ function tmee_status($code)
 	// Close auto resolved tasks
 
 	$i = 0;
-	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0200) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0200) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 OR (`flags` & (0x0001 | 0x0004 | 0x0020)))")))
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 OR (`flags` & (0x0001 | 0x0004 | 0x0002)))")))
 	{
 		foreach($result as &$row)
 		{
@@ -99,7 +99,7 @@ function tmee_status($code)
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['ee_opernum']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0200) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0100) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}

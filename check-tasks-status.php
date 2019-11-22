@@ -69,10 +69,10 @@ function task_status($code)
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
 
-		$task_flags = array(0x0200, 0x0800);
+		$task_flags = array(0x0100, 0x0200);
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x0200 | 0x0800)")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x0100 | 0x0200)")))
 		{
 			foreach($result as &$row)
 			{
