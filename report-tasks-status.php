@@ -100,17 +100,17 @@ EOT;
 	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>HD TMAO</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD TMEE</th></tr>';
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, `ee_encryptionstatus`, DATE_FORMAT(`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x02 | 0x08)")))
+	if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, `ee_encryptionstatus`, DATE_FORMAT(`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x0200 | 0x0800)")))
 	{
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td><td>';
-			if(intval($row['flags']) & 0x08)
+			if(intval($row['flags']) & 0x0800)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ao_operid'].'">'.$row['ao_opernum'].'</a>';
 			}
 			$table .= '</td><td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td><td>';
-			if(intval($row['flags']) & 0x02)
+			if(intval($row['flags']) & 0x0200)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ee_operid'].'">'.$row['ee_opernum'].'</a>';
 			}
@@ -129,10 +129,10 @@ EOT;
 
 	if($db->select_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
-		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x01 | 0x04 | 0x20)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0x08) AS `c3`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x02)) = 0x02) AS `c4`
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
+		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0004 | 0x0020)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020 | 0x0800)) = 0x0800) AS `c3`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020 | 0x0200)) = 0x0200) AS `c4`
 	")))
 	{
 		$problems_tmao = $result[0][0];

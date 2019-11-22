@@ -27,13 +27,13 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x04 | 0x20 | 0x08)) = 0x08")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020 | 0x0800)) = 0x0800")))
 	{
 		$i = intval($result[0][0]);
 	}
 	
-	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x01 | 0x04 | 0x20 | 0x08)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0")))
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0800)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0020 | 0x0800)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0")))
 	{
 		foreach($result as &$row)
 		{
@@ -53,7 +53,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `ao_operid` = !, `ao_opernum` = !, `flags` = (`flags` | 0x08) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("UPDATE @computers SET `ao_operid` = !, `ao_opernum` = !, `flags` = (`flags` | 0x0800) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
 					$i++;
 				}
 			}
@@ -65,7 +65,7 @@
 	// Close auto resolved tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x08) AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900) OR (`flags` & (0x01 | 0x04 | 0x20)))")))
+	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0800) AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900) OR (`flags` & (0x0001 | 0x0004 | 0x0020)))")))
 	{
 		foreach($result as &$row)
 		{
@@ -77,7 +77,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['ao_opernum']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x08) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0800) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
