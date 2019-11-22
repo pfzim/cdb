@@ -14,3 +14,4 @@ Available `flags` bit options
 | 0x08 | TMAO Task was created in HelpDesk         |
 | 0x10 | Temporary flag for delete after all syncs |
 | 0x20 | Deleted in AD                             |
+| 0x40 | Rename Task was created in HelpDesk       |

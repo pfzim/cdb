@@ -1,4 +1,6 @@
 <?php
+// Runbook starter through CURL
+
 	if(!defined('ROOTDIR'))
 	{
 		define('ROOTDIR', dirname(__FILE__));
@@ -60,7 +62,14 @@ EOT;
 	$output = curl_exec($ch);
 	$result = curl_getinfo($ch);
 
-	echo 'HTTP status code: '.$result['http_code'];
+	if(intval($result['http_code']) == 201)
+	{
+		echo 'OK';
+	}
+	else
+	{
+		echo 'ERROR: HTTP status code: '.$result['http_code'];
+	}
 	
 	//echo $request;
 	//echo "\r\n\r\n\r\n----------------------------------------------------------\r\n\r\n\r\n";

@@ -33,13 +33,13 @@
 	header("Content-Type: text/plain; charset=utf-8");
 
 	$params = array(
-		'Database' =>				'**SECRET**',
-		'UID' =>					'**SECRET**',
-		'PWD' =>					'**SECRET**',
+		'Database' =>				TMEE_DB_NAME,
+		'UID' =>					TMEE_DB_USER,
+		'PWD' =>					TMEE_DB_PASSWD,
 		'ReturnDatesAsStrings' =>	true
 	);
 
-	$conn = sqlsrv_connect("**SECRET**", $params);
+	$conn = sqlsrv_connect(TMEE_DB_HOST, $params);
 	if($conn === false)
 	{
 		print_r(sqlsrv_errors());
@@ -49,7 +49,7 @@
 	$result = sqlsrv_query($conn, "SELECT [DeviceName]
       ,[LastSync]
       ,[EncryptionStatus]
-  FROM [**SECRET**].[dbo].[Device] WHERE IsDeleted = 0");
+  FROM [".TMEE_DB_NAME."].[dbo].[Device] WHERE IsDeleted = 0");
 
 
 	$i = 0;
