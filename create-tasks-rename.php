@@ -100,7 +100,7 @@
 	echo 'Created: '.$i."\r\n";
 	
 
-	// Close auto resolved tasks
+	// Close auto resolved tasks if PC was deleted from AD
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0400) AND (`flags` & (0x0001 | 0x0004 | 0x0002))")))
