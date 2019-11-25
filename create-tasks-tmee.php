@@ -59,7 +59,17 @@ function tmee_status($code)
 
 	$i = 0;
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND `ee_encryptionstatus` <> 2")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`
+		FROM @computers AS m
+		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
+		WHERE
+			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+			AND m.`ee_encryptionstatus` <> 2
+			AND m.`name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
+		GROUP BY m.`id`
+		HAVING (BIT_OR(j1.`flags`) & 0x0100) = 0
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -73,7 +83,7 @@ function tmee_status($code)
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `ee_operid` = !, `ee_opernum` = !, `flags` = (`flags` | 0x0100) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x0100, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
@@ -87,19 +97,26 @@ function tmee_status($code)
 
 	$i = 0;
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`ee_encryptionstatus` = 2 OR (`flags` & (0x0001 | 0x0004 | 0x0002)))")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
+		FROM @tasks AS m
+		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		WHERE
+			(m.`flags` & (0x0001 | 0x0100)) = 0x0100
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ee_encryptionstatus` = 2)
+	")))
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['ee_operid']).'&Num='.urlencode($row['ee_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmee&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
 					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['ee_opernum']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0100) WHERE `id` = # LIMIT 1", $row['id']));
+					echo $row['name'].' '.$row['opernum']."\r\n";
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}

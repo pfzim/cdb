@@ -33,7 +33,17 @@
 	}
 	
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0200)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)")))
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0002 | 0x0200)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`
+		FROM @computers AS m
+		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0200)) = 0x0200
+		WHERE
+			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+			AND `ao_script_ptn` = 0
+			AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$'
+		GROUP BY m.`id`
+		HAVING (BIT_OR(j1.`flags`) & 0x0200) = 0
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -53,7 +63,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `ao_operid` = !, `ao_opernum` = !, `flags` = (`flags` | 0x0200) WHERE `id` = # LIMIT 1", $xml->extAlert->query['ref'], $xml->extAlert->query['number'], $row['id']));
+					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x0200, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
@@ -65,19 +75,26 @@
 	// Close auto resolved tasks
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0200) AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND (`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900) OR (`flags` & (0x0001 | 0x0004 | 0x0002)))")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
+		FROM @tasks AS m
+		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		WHERE
+			(m.`flags` & (0x0001 | 0x0200)) = 0x0200
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900))
+	")))
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmao&Id='.urlencode($row['ao_operid']).'&Num='.urlencode($row['ao_opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=tmao&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE)
 				{
 					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['ao_opernum']."\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0200) WHERE `id` = # LIMIT 1", $row['id']));
+					echo $row['name'].' '.$row['opernum']."\r\n";
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}

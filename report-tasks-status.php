@@ -1,5 +1,5 @@
 <?php
-	// Checking HelpDesk tasks status for TMAO and TMEE
+	// Report for opened HelpDesk tasks
 
 	if(!defined('ROOTDIR'))
 	{
@@ -18,6 +18,38 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
+
+$g_tasks_flags = array(
+	'Заявка закрыта',
+	'',
+	'',
+	'',
+	'',
+	'',
+	'',
+	'',
+	'Не установлен или не работает TMEE',
+	'Не установлен или не работает TMAO',
+	'Имя не соответствует шаблону',
+	'Не установлен или не работает LAPS'
+);
+
+function tasks_flags_to_string($flags)
+{
+	global $g_tasks_flags;
+
+	$result = '';
+	$delimiter = '';
+	for($i = 0; $i < count($g_tasks_flags); $i++)
+	{
+		if(($flags >> $i) & 0x01)
+		{
+			$result .= $g_tasks_flags[$i].$delimiter;
+			$delimiter = ' ';
+		}
+	}
+	return $result;
+}
 
 function tmee_status($code)
 {
@@ -97,25 +129,25 @@ function php_mailer($to, $name, $subject, $html, $plain)
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>HD TMAO</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD TMEE</th></tr>';
+	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD Task</th><th>Reason</th></tr>';
 
 	$i = 0;
-	if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, `ee_encryptionstatus`, DATE_FORMAT(`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x0100 | 0x0200)")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT j1.`id`, j1.`name`, j1.`ao_script_ptn`, DATE_FORMAT(j1.`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, j1.`ee_encryptionstatus`, DATE_FORMAT(j1.`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, m.`operid`, m.`opernum`, m.`flags`
+		FROM @tasks AS m
+		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		WHERE (m.`flags` & 0x0001) = 0
+		ORDER BY j1.`name`
+	")))
 	{
 		foreach($result as &$row)
 		{
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td><td>';
-			if(intval($row['flags']) & 0x0200)
-			{
-				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ao_operid'].'">'.$row['ao_opernum'].'</a>';
-			}
-			$table .= '</td><td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td><td>';
-			if(intval($row['flags']) & 0x0100)
-			{
-				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['ee_operid'].'">'.$row['ee_opernum'].'</a>';
-			}
-			$table .= '</td></tr>';
-			
+			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td>';
+			$table .= '<td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td>';
+			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
+			$table .= '<td>'.tasks_flags_to_string(intval($row['flags'])).'</td>';
+			$table .= '</tr>';
+
 			$i++;
 		}
 	}
@@ -129,10 +161,10 @@ EOT;
 
 	if($db->select_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0002)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
-		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0004 | 0x0002)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0002 | 0x0200)) = 0x0200) AS `c3`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0002 | 0x0100)) = 0x0100) AS `c4`
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
+		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `c3`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `c4`
 	")))
 	{
 		$problems_tmao = $result[0][0];
