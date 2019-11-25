@@ -19,24 +19,30 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
-function task_status($code)
+function get_status_name($strings, $code)
 {
-	switch($code)
+	if(isset($strings[$code]))
 	{
-		case 1: return 'Новый';
-		case 2: return 'В очереди';
-		case 3: return 'В работе';
-		case 4: return 'На согласовании';
-		case 5: return 'Приостановлен';
-		case 7: return 'Предложено решение';
-		case 8: return 'Закрыт';
-		case 9: return 'Отменен';
-		case 12: return 'Принят на ФГ';
-		case 14: return 'Согласован';
-		case 15: return 'Не согласован';
+		return $strings[$code];
 	}
-	return 'Unknown';
+	
+	return $strings[0];
 }
+
+	$g_task_status = array(
+		'Unknown',
+		'Новый',
+		'В очереди',
+		'В работе',
+		'На согласовании',
+		'Приостановлен',
+		'Предложено решение',
+		'Закрыт',
+		'Отменен',
+		'Принят на ФГ',
+		'Согласован',
+		'Не согласован'
+	);
 
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
@@ -69,22 +75,13 @@ function task_status($code)
 		$cookie = $matches[1];
 		//echo 'Cookie: '.$cookie."\r\n";
 
-		$task_flags = array(0x0100, 0x0200);
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `name`, `ao_operid`, `ao_opernum`, `ee_operid`, `ee_opernum`, `flags` FROM @computers WHERE `flags` & (0x0100 | 0x0200)")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `operid`, `opernum` FROM @tasks WHERE (`flags` & 0x0001) = 0")))
 		{
 			foreach($result as &$row)
 			{
-				$tasks = array($row['ee_operid'], $row['ao_operid']);
-				$tasksnum = array($row['ee_opernum'], $row['ao_opernum']);
-				$task = 0;
-				$flags = 0;
-				foreach($tasks as $task_id)
-				{
-					if($task_flags[$task] & intval($row['flags']) && !empty($task_id))
-					{
-						$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$task_id.'&xml=1');
+						$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'&xml=1');
 
 						curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -96,23 +93,15 @@ function task_status($code)
 							$xml = @simplexml_load_string($answer);
 							if($xml !== FALSE)
 							{
-								echo $row['name'].'    '.$tasksnum[$task].' -> '.task_status(intval($xml->docbody->params['stateID']))."\r\n";
+								echo $row['opernum'].' -> '.get_status_name($g_task_status, intval($xml->docbody->params['stateID']))."\r\n";
 								if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
 								{
-									$flags |= $task_flags[$task];
+									echo "   is closed\r\n";
+									$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+									$i++;
 								}
 							}
 						}
-					}
-					$task++;
-				}
-
-				if($flags)
-				{
-					echo "    closed\r\n";
-					$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~#) WHERE `id` = # LIMIT 1", $flags, $row['id']));
-					$i++;
-				}
 				//break;
 			}
 		}
