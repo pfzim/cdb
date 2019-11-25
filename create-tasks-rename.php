@@ -33,7 +33,7 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`
+		SELECT m.`id`, m.`name`, m.`dn`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0400)) = 0x0400
 		WHERE
