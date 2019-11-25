@@ -149,7 +149,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(MAIL_TO, MAIL_TO, 'Computers with incorrect names', $html, 'You client does not support HTML'))
+		if(php_mailer(MAIL_TO, MAIL_TO, 'Computers with expired LAPS password', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}
