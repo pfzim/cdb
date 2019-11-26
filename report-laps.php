@@ -128,7 +128,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x0400)
+			if(intval($row['flags']) & 0x0800)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 				$opened++;

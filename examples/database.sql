@@ -11,14 +11,6 @@ CREATE TABLE  `cdb`.`c_computers` (
   `ee_lastsync` datetime DEFAULT NULL,
   `ee_encryptionstatus` int(10) unsigned NOT NULL DEFAULT '0',
   `laps_exp` datetime NOT NULL,
-  `ee_operid` varchar(36) NOT NULL DEFAULT '',
-  `ee_opernum` varchar(10) NOT NULL DEFAULT '',
-  `ao_operid` varchar(36) NOT NULL DEFAULT '',
-  `ao_opernum` varchar(10) NOT NULL DEFAULT '',
-  `rn_operid` varchar(36) NOT NULL DEFAULT '',
-  `rn_opernum` varchar(10) NOT NULL DEFAULT '',
-  `laps_operid` varchar(36) NOT NULL,
-  `laps_opernum` varchar(10) NOT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `Index_2` (`name`)
@@ -33,4 +25,28 @@ CREATE TABLE  `cdb`.`c_tasks` (
   `operid` varchar(36) NOT NULL,
   `opernum` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `cdb`.`c_properties_date`;
+CREATE TABLE  `cdb`.`c_properties_date` (
+  `pid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `oid` int(10) unsigned NOT NULL,
+  `value` datetime NOT NULL,
+  PRIMARY KEY (`pid`,`oid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `cdb`.`c_properties_int`;
+CREATE TABLE  `cdb`.`c_properties_int` (
+  `pid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `oid` int(10) unsigned NOT NULL,
+  `value` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`pid`,`oid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `cdb`.`c_properties_str`;
+CREATE TABLE  `cdb`.`c_properties_str` (
+  `pid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `oid` int(10) unsigned NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`pid`,`oid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
