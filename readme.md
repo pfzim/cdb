@@ -1,4 +1,4 @@
-# CDB is a database for collect information about different computers
+# CDB is a database for collect information about different computers and devices
 
 Now it collect information about Trent Micro Apex One and Endpoint Encryption.
 It can create tasks in HelpDesk.
@@ -27,6 +27,12 @@ Available `flags` bit options for table `computers`
 | 0x0200 | TMAO Task was created in HelpDesk         |
 | 0x0400 | Rename Task was created in HelpDesk       |
 | 0x0800 | LAPS Task was created in HelpDesk         |
+
+Table `devices` column `type`
+| Value  | Description                               |
+|--------|-------------------------------------------|
+| 1      | 3PAR storage                              |
+
 
 Change flag 0x40 to 0x0400:
   `UPDATE c_computers SET ``flags`` = ((``flags`` & ~0x40) | 0x0400) WHERE ``flags`` & 0x40;`
