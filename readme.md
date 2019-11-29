@@ -13,6 +13,7 @@ Available `flags` bit options for table `computers`
 | 0x0008 | Temporary flag for delete after all syncs |
 
 `tasks` table `flags`
+
 | Bits   | Description                               |
 |--------|-------------------------------------------|
 | 0x0001 | Task was closed                           |
@@ -29,6 +30,7 @@ Available `flags` bit options for table `computers`
 | 0x0800 | LAPS Task was created in HelpDesk         |
 
 Table `devices` column `type`
+
 | Value  | Description                               |
 |--------|-------------------------------------------|
 | 1      | 3PAR storage                              |
@@ -36,4 +38,4 @@ Table `devices` column `type`
 
 
 Change flag 0x40 to 0x0400:
-  `UPDATE c_computers SET ``flags`` = ((``flags`` & ~0x40) | 0x0400) WHERE ``flags`` & 0x40;`
+  `UPDATE c_computers SET ```flags``` = ((```flags``` & ~0x40) | 0x0400) WHERE ```flags``` & 0x40;`
