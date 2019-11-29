@@ -21,23 +21,7 @@
 		    AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 	*/
 
-	if(!defined('ROOTDIR'))
-	{
-		define('ROOTDIR', dirname(__FILE__));
-	}
-
-	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
-	{
-		header('Location: install.php');
-		exit;
-	}
-
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
-
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
+	if(!defined('Z_PROTECTED')) exit;
 
 function tmee_status($code)
 {
@@ -50,10 +34,6 @@ function tmee_status($code)
 	}
 	return 'Unknown';
 }
-
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-
-	header("Content-Type: text/plain; charset=utf-8");
 
 	// Open new tasks
 

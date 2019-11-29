@@ -1,27 +1,7 @@
 <?php
 	// Create new and close resolved tasks (TMAO)
 
-	if(!defined('ROOTDIR'))
-	{
-		define('ROOTDIR', dirname(__FILE__));
-	}
-
-	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
-	{
-		header('Location: install.php');
-		exit;
-	}
-
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
-
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
-
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-
-	header("Content-Type: text/plain; charset=utf-8");
+	if(!defined('Z_PROTECTED')) exit;
 
 	// Open new tasks
 

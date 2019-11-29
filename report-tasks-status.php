@@ -1,23 +1,7 @@
 <?php
 	// Report for opened HelpDesk tasks
 
-	if(!defined('ROOTDIR'))
-	{
-		define('ROOTDIR', dirname(__FILE__));
-	}
-
-	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
-	{
-		header('Location: install.php');
-		exit;
-	}
-
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
-
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
+	if(!defined('Z_PROTECTED')) exit;
 
 $g_tasks_flags = array(
 	'Заявка закрыта',
@@ -63,49 +47,6 @@ function tmee_status($code)
 	return 'Unknown';
 }
 
-function php_mailer($to, $name, $subject, $html, $plain)
-{
-	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
-
-	$mail = new PHPMailer;
-
-	$mail->isSMTP();
-	$mail->Host = MAIL_HOST;
-	$mail->SMTPAuth = MAIL_AUTH;
-	if(MAIL_AUTH)
-	{
-		$mail->Username = MAIL_LOGIN;
-		$mail->Password = MAIL_PASSWD;
-	}
-
-	$mail->SMTPSecure = MAIL_SECURE;
-	$mail->Port = MAIL_PORT;
-					$mail->SMTPOptions = array(
-    					'ssl' => array(
-        					'verify_peer' => false,
-        					'verify_peer_name' => false,
-        					'allow_self_signed' => true
-    					)
-					);
-
-	$mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
-	$mail->addAddress($to, $name);
-	//$mail->addReplyTo('helpdesk@example.com', 'Information');
-
-	$mail->isHTML(true);
-
-	$mail->Subject = $subject;
-	$mail->Body    = $html;
-	$mail->AltBody = $plain;
-	//$mail->ContentType = 'text/html; charset=utf-8';
-	$mail->CharSet = 'UTF-8';
-	//$mail->SMTPDebug = 4;
-
-	return $mail->send();
-}
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-
-	header("Content-Type: text/plain; charset=utf-8");
 
 	$html = <<<'EOT'
 <html>
