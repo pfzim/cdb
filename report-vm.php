@@ -79,7 +79,7 @@ EOT;
 
 	$html .= $table;
 
-	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. Выполнить скрипт sync-vm.ps1<br />2. <a href="'.CDB_URL.'/report-vm.php">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. Выполнить скрипт sync-vm.ps1<br />2. <a href="'.CDB_URL.'/cdb.php?action=report-vm">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)

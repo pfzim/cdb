@@ -116,7 +116,7 @@ EOT;
 
 	$html .= '<p>TMAO открытых заявок: '.$opened_tmao.', всего проблемных ПК : '.$problems_tmao.'<br />TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'</p>';
 	$html .= $table;
-	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/check-tasks-status.php">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/report-tasks-status.php">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-status">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	echo 'Opened: '.$i."\r\n";
