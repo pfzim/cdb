@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\ncheck-tasks-status:\n";
+
 function get_status_name($strings, $code)
 {
 	if(isset($strings[$code]))

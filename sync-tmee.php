@@ -12,6 +12,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nsync-tmee:\n";
+
 	$params = array(
 		'Database' =>				TMEE_DB_NAME,
 		'UID' =>					TMEE_DB_USER,

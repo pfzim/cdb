@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\ncreate-tasks-tmao:\n";
+
 	// Open new tasks
 
 	$i = 0;

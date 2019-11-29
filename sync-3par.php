@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nsync-3par:\n";
+
 	//$table = '';
 	
 	$i = 0;

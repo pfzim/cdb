@@ -8,6 +8,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nsync-ad:\n";
+
 	$i = 0;
 	
 	$ldap = ldap_connect(LDAP_HOST, LDAP_PORT);

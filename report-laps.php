@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nreport-laps:\n";
+
 	$html = <<<'EOT'
 <html>
 <head>

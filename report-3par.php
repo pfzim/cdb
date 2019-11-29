@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nreport-3par:\n";
+
 	$table = '';
 
 	$i = 0;
