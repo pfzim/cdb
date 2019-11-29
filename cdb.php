@@ -128,7 +128,7 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		'sync-tmee' => array(
 			'sync-tmee.php'
 		)
-	};
+	);
 
 	header("Content-Type: text/plain; charset=utf-8");
 	
