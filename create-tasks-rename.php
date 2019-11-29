@@ -46,13 +46,13 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 1)
+			if($i >= 10)
 			{
 				echo "Limit reached: 1\r\n";
 				break;
 			}
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=rename&To=gup&Host='.urlencode($row['name']).'&Message='.urlencode("Имя ПК не соответствует шаблону.\nПереименуйте ПК: ".$row['name']."\nКод работ: RENAME\n".WIKI_URL));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=rename&To=gup&Host='.urlencode($row['name']).'&Message='.urlencode("Имя ПК не соответствует шаблону. Переименуйте ПК ".$row['name']."\nКод работ: RNM01\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Регламент-именования-ресурсов-в-каталоге-Active-Directory.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -82,13 +82,13 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 1)
+			if($i >= 10)
 			{
 				echo "Limit reached: 1\r\n";
 				break;
 			}
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=rename&To=goo&Host='.urlencode($row['name']).'&Message='.urlencode("Имя ПК не соответствует шаблону.\nПереименуйте ПК: ".$row['name']."\nКод работ: RENAME\n".WIKI_URL));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=rename&To=goo&Host='.urlencode($row['name']).'&Message='.urlencode("Имя ПК не соответствует шаблону. Переименуйте ПК ".$row['name']."\nКод работ: RNM01\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Регламент-именования-ресурсов-в-каталоге-Active-Directory.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
