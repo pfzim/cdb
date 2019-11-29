@@ -1,27 +1,7 @@
 <?php
 	// Retrieve information from TMAO database
 
-	if(!defined('ROOTDIR'))
-	{
-		define('ROOTDIR', dirname(__FILE__));
-	}
-
-	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
-	{
-		header('Location: install.php');
-		exit;
-	}
-
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
-
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
-
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-
-	header("Content-Type: text/plain; charset=utf-8");
+	if(!defined('Z_PROTECTED')) exit;
 
 	$params = array(
 		'Database' =>				TMAO_DB_NAME,
