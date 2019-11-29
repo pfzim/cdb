@@ -79,7 +79,7 @@ EOT;
 
 	$html .= $table;
 
-	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/sync-3par.php">Выполнить синхронизацию с 3PAR и сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-3par">Выполнить синхронизацию с 3PAR и сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)

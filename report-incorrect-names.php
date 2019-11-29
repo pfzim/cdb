@@ -82,7 +82,7 @@ EOT;
 	$html .= '<p>Открытых заявок: '.$opened.', всего проблемных ПК : '.$i.'</p>';
 	$html .= $table;
 
-	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/sync-ad.php">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/report-incorrect-names.php">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-ad">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-incorrect-names">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)
