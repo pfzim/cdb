@@ -25,6 +25,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nreport-incorrect-names:\n";
+
 	$html = <<<'EOT'
 <html>
 <head>

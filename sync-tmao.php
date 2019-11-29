@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nsync-tmao:\n";
+
 	$params = array(
 		'Database' =>				TMAO_DB_NAME,
 		'UID' =>					TMAO_DB_USER,

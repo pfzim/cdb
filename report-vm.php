@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nreport-vm:\n";
+
 	$table = '';
 
 	$i = 0;

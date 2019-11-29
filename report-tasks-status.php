@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\nreport-tasks-status:\n";
+
 $g_tasks_flags = array(
 	'Заявка закрыта',
 	'',

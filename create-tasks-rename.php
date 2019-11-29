@@ -3,6 +3,8 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	echo "\ncreate-tasks-rename:\n";
+
 	// Open new tasks
 
 	$i = 0;
