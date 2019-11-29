@@ -38,4 +38,4 @@ Table `devices` column `type`
 
 
 Change flag 0x40 to 0x0400:
-  `UPDATE c_computers SET ```flags``` = ((```flags``` & ~0x40) | 0x0400) WHERE ```flags``` & 0x40;`
+  ``UPDATE c_computers SET `flags` = ((`flags` & ~0x40) | 0x0400) WHERE `flags` & 0x40;``
