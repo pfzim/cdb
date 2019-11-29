@@ -1,16 +1,12 @@
 #!/bin/sh
 
-php -f /var/www/html/cdb/mark-before-sync.php
-php -f /var/www/html/cdb/sync-ad.php
-php -f /var/www/html/cdb/sync-tmao.php
-php -f /var/www/html/cdb/sync-tmee.php
-php -f /var/www/html/cdb/mark-after-sync.php
-php -f /var/www/html/cdb/report-tmao-servers.php
-php -f /var/www/html/cdb/check-tasks-status.php
-php -f /var/www/html/cdb/create-tasks-tmao.php
-php -f /var/www/html/cdb/create-tasks-tmee.php
-php -f /var/www/html/cdb/create-tasks-laps.php
-php -f /var/www/html/cdb/create-tasks-rename.php
-php -f /var/www/html/cdb/report-tasks-status.php
-php -f /var/www/html/cdb/report-incorrect-names.php
-php -f /var/www/html/cdb/report-laps.php
+php -f /var/www/html/cdb/cdb_cli.php sync-all
+php -f /var/www/html/cdb/cdb_cli.php report-tmao-servers
+php -f /var/www/html/cdb/cdb_cli.php check-tasks-status
+php -f /var/www/html/cdb/cdb_cli.php create-tasks-tmao
+php -f /var/www/html/cdb/cdb_cli.php create-tasks-tmee
+php -f /var/www/html/cdb/cdb_cli.php create-tasks-laps
+php -f /var/www/html/cdb/cdb_cli.php create-tasks-rename
+php -f /var/www/html/cdb/cdb_cli.php report-tasks-status
+php -f /var/www/html/cdb/cdb_cli.php report-incorrect-names
+php -f /var/www/html/cdb/cdb_cli.php report-laps
