@@ -28,3 +28,14 @@
 	define('HELPDESK_COOKIE', 'OperuITAuthCookie');
 
 	define('CDB_URL', 'http://web.contoso.com/cdb');
+	define('ORCHESTRATOR_URL', 'http://srv-sco-01.contoso.com:81/Orchestrator2012/Orchestrator.svc/Jobs');
+
+	define('TMEE_DB_HOST', 'srv-tmee-01');
+	define('TMEE_DB_NAME', 'MobileArmorDB');
+	define('TMEE_DB_USER', 'svc_collector');
+	define('TMEE_DB_PASSWD', 'passw0rd');
+
+	define('TMAO_DB_HOST', 'srv-ao-01');
+	define('TMAO_DB_NAME', 'SRV-AO-01-ApexOne');
+	define('TMAO_DB_USER', 'svc_collector');
+	define('TMAO_DB_PASSWD', 'passw0rd');

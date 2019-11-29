@@ -32,6 +32,7 @@ Table `devices` column `type`
 | Value  | Description                               |
 |--------|-------------------------------------------|
 | 1      | 3PAR storage                              |
+| 2      | Hyper-V cluster                           |
 
 
 Change flag 0x40 to 0x0400:

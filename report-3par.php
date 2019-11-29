@@ -1,5 +1,5 @@
 <?php
-	// Retrieve information from 3PAR virtual volumes
+	// Report about 3PAR virtual volumes
 
 	if(!defined('ROOTDIR'))
 	{
@@ -86,12 +86,13 @@ function php_mailer($to, $name, $subject, $html, $plain)
 							`name`,
 							`date`,
 							`usr_rawrsvd_mb`,
-							row_number() OVER(PARTITION BY `name` ORDER BY `date` desc) AS rn
+							row_number() OVER(PARTITION BY `name` ORDER BY `date` desc) AS `rn`
 						FROM
 							@vv_history
 						WHERE `pid` = # AND `date` > DATE_SUB((SELECT MAX(`date`) FROM @vv_history), INTERVAL 1 HOUR)
 					) AS t
-					WHERE t.rn = 1
+					WHERE t.`rn` = 1
+					ORDER BY t.`name`
 			", $row['id'])))
 			{
 				$total = 0;

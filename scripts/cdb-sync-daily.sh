@@ -9,4 +9,8 @@ php -f /var/www/html/cdb/report-tmao-servers.php
 php -f /var/www/html/cdb/check-tasks-status.php
 php -f /var/www/html/cdb/create-tasks-tmao.php
 php -f /var/www/html/cdb/create-tasks-tmee.php
+php -f /var/www/html/cdb/create-tasks-laps.php
+php -f /var/www/html/cdb/create-tasks-rename.php
 php -f /var/www/html/cdb/report-tasks-status.php
+php -f /var/www/html/cdb/report-incorrect-names.php
+php -f /var/www/html/cdb/report-laps.php

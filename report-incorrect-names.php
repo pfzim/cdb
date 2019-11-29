@@ -120,7 +120,7 @@ EOT;
 		LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & (0x0001 | 0x0400)) = 0x0400
 		WHERE
 			(m.`flags` & (0x0002 | 0x0004)) = 0
-			AND m.`name` NOT REGEXP '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)|([[:digit:]]{4}-[nNwW][[:digit:]]+)|([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)|(HD-EGAIS-[[:digit:]]+)$'
+			AND m.`name` NOT REGEXP '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)$|^([[:digit:]]{4}-[nNwW][[:digit:]]+)$|^([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)$|^(HD-EGAIS-[[:digit:]]+)$'
 		ORDER BY m.`name`
 	")))
 	{

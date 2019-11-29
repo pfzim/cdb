@@ -46,13 +46,13 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 1)
+			if($i >= 10)
 			{
 				echo "Limit reached: 1\r\n";
 				break;
 			}
 			
-			if(pcre_match('/'.LDAP_OU_SHOPS.'$/i', $row['dn']))
+			if(preg_match('/'.LDAP_OU_SHOPS.'$/i', $row['dn']))
 			{
 				$direction = 'gup';
 			}
@@ -61,7 +61,7 @@
 				$direction = 'goo';
 			}
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=laps&To='.$direction.'&Host='.urlencode($row['name']).'&Message='.urlencode("Не установлен либо не работает LAPS.\nПК: ".$row['name']."\nПоследнее обновление LAPS: ".$row['laps_exp']."\nКод работ: RENAME\n".WIKI_URL));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=laps&To='.$direction.'&Host='.urlencode($row['name']).'&Message='.urlencode("Не установлен либо не работает LAPS.\nПК: ".$row['name']."\nПоследнее обновление LAPS: ".$row['laps_exp']."\nКод работ: LPS01\n\n".WIKI_URL.'/Сервисы.laps%20troubleshooting.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -89,7 +89,7 @@
 		WHERE
 			(m.`flags` & (0x0001 | 0x0800)) = 0x0800
 			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`laps_exp` >= DATE_SUB(NOW(), INTERVAL 1 MONTH))
-	"))
+	")))
 	{
 		foreach($result as &$row)
 		{
