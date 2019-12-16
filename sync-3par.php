@@ -86,7 +86,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(MAIL_TO, MAIL_TO, '3PAR VV snapshots used space', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN), '3PAR VV snapshots used space', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}
