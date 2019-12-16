@@ -20,7 +20,7 @@
 	define('MAIL_PASSWD', 'Pa$$word');
 	define('MAIL_SECURE', '');
 	define('MAIL_PORT', 25);
-	define('MAIL_TO', 'admin@contoso.com');
+	define('MAIL_TO_ADMIN', 'admin@contoso.com');
 
 	define('HELPDESK_URL', 'http://helpdesk.contoso.com');
 	define('HELPDESK_LOGIN', 'hduser');

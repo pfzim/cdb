@@ -25,7 +25,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nreport-incorrect-names:\n";
+	echo "\nreport-incorrect-names-goo:\n";
 
 	$html = <<<'EOT'
 <html>
@@ -45,34 +45,27 @@
 		</style>
 	</head>
 	<body>
-	<h1>Список ПК с некорректным именованием</h1>
-	<p>Правильное наименование:<br />[brc|dln|nn|rc1]-[имя]-[цифры]<br />[2 цифры]-[4 цифры]-[VM?][цифры]<br />[4 цифры]-[NW][4 цифры]<br />HD-EGAIS-[цифры]<br />В отчёте присутствуют ПК отключенные в AD</p>
+	<h1>Список созданных заявок на переименование ПК (ГОО)</h1>
 EOT;
 
 	$table = '<table>';
 	$table .= '<tr><th>Name</th><th>HD Task</th></tr>';
 
 	$i = 0;
-	$opened = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & (0x0001 | 0x0400)) = 0x0400
+		SELECT j1.`id`, j1.`name`, j1.`dn`, j1.`laps_exp`, m.`flags`, m.`operid`, m.`opernum`
+		FROM @tasks AS m
+		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004)) = 0
-			AND m.`name` NOT REGEXP '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)$|^([[:digit:]]{4}-[nNwW][[:digit:]]+)$|^([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)$|^(HD-EGAIS-[[:digit:]]+)$'
-		ORDER BY m.`name`
+			(m.`flags` & (0x0001 | 0x1000)) = 0x1000
+		ORDER BY j1.`name`
 	")))
 	{
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x0400)
-			{
-				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
-				$opened++;
-			}
+			$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 			$table .= '</td></tr>';
 			$i++;
 		}
@@ -81,15 +74,15 @@ EOT;
 	echo 'Count: '.$i."\r\n";
 
 	$table .= '</table>';
-	$html .= '<p>Открытых заявок: '.$opened.', всего проблемных ПК : '.$i.'</p>';
+	$html .= '<p>Открытых заявок: '.$i.'</p>';
 	$html .= $table;
 
-	$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-ad">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-incorrect-names">Сформировать отчёт заново</a></small>';
+	//$html .= '<br /><small>Для перезапуска отчёта:<br /><br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-ad">Выполнить синхронизацию с AD</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-incorrect-names-gup">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	if($i > 0)
 	{
-		if(php_mailer(array(MAIL_TO_ADMIN), 'Computers with incorrect names', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GOO), 'Computers with incorrect names', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}

@@ -26,8 +26,9 @@ Available `flags` bit options for table `computers`
 | 0x0080 |                                           |
 | 0x0100 | TMEE Task was created in HelpDesk         |
 | 0x0200 | TMAO Task was created in HelpDesk         |
-| 0x0400 | Rename Task was created in HelpDesk       |
+| 0x0400 | Rename Task was created in HelpDesk (GUP) |
 | 0x0800 | LAPS Task was created in HelpDesk         |
+| 0x1000 | Rename Task was created in HelpDesk (GOO) |
 
 Table `devices` column `type`
 

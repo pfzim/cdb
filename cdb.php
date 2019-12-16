@@ -17,7 +17,7 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
-function php_mailer($to, $name, $subject, $html, $plain)
+function php_mailer($to, $subject, $html, $plain)
 {
 	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
 
@@ -43,7 +43,10 @@ function php_mailer($to, $name, $subject, $html, $plain)
 					);
 
 	$mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
-	$mail->addAddress($to, $name);
+	foreach($to as &$address)
+	{
+		$mail->addAddress($address, $address);
+	}
 	//$mail->addReplyTo('helpdesk@example.com', 'Information');
 
 	$mail->isHTML(true);
@@ -100,6 +103,12 @@ function php_mailer($to, $name, $subject, $html, $plain)
 		),
 		'report-incorrect-names' => array(
 			'report-incorrect-names.php'
+		),
+		'report-incorrect-names-gup' => array(
+			'report-incorrect-names-gup.php'
+		),
+		'report-incorrect-names-goo' => array(
+			'report-incorrect-names-goo.php'
 		),
 		'report-laps' => array(
 			'report-laps.php'

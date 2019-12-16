@@ -86,7 +86,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(MAIL_TO, MAIL_TO, 'Hyper-V Virtual Machines resource usage', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN), 'Hyper-V Virtual Machines resource usage', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}
