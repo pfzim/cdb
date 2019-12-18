@@ -58,7 +58,7 @@ EOT;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
 		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & (0x0001 | 0x0400)) = 0x0400
+		LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & 0x0001) = 0 AND (j1.`flags` & (0x0400 | 0x1000))
 		WHERE
 			(m.`flags` & (0x0002 | 0x0004)) = 0
 			AND m.`name` NOT REGEXP '^((brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+)$|^([[:digit:]]{4}-[nNwW][[:digit:]]+)$|^([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)$|^(HD-EGAIS-[[:digit:]]+)$'
@@ -68,7 +68,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x0400)
+			if(intval($row['flags']) & 0x1400)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 				$opened++;
