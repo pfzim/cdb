@@ -61,6 +61,29 @@ function php_mailer($to, $subject, $html, $plain)
 	return $mail->send();
 }
 
+function walk_route($route, $action)
+{
+	global $db;
+	
+	if(!isset($route[$action]))
+	{
+		echo 'Incorrect or no action defined!';
+		exit;
+	}
+
+	foreach($route[$action] as &$operation)
+	{
+		if($operation[0] == '@')
+		{
+			include(ROOTDIR.DIRECTORY_SEPARATOR.substr($operation, 1));
+		}
+		else
+		{
+			walk_route($route, $operation);
+		}
+	}
+}
+
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	$action = '';
@@ -71,83 +94,93 @@ function php_mailer($to, $subject, $html, $plain)
 
 	$route = array(
 		'sync-all' => array(
-			'mark-before-sync.php',
-			'sync-ad.php',
-			'sync-tmao.php',
-			'sync-tmee.php',
-			'mark-after-sync.php'
+			'mark-before-sync',
+			'sync-ad',
+			'sync-tmao',
+			'sync-tmee',
+			'mark-after-sync'
+		),
+		'cron-daily' => array(
+			'mark-before-sync',
+			'sync-ad',
+			'sync-tmao',
+			'sync-tmee',
+			'mark-after-sync',
+			'report-tmao-servers',
+			'check-tasks-status',
+			'create-tasks-tmao',
+			'create-tasks-tmee',
+			'create-tasks-laps',
+			'create-tasks-rename',
+			'report-tasks-status',
+			'report-incorrect-names',
+			'report-incorrect-names-goo',
+			'report-incorrect-names-gup',
+			'report-laps'
+		),
+		'cron-weekly' => array(
+			'sync-3par',
+			'report-3par'
 		),
 		'create-tasks-tmao' => array(
-			'create-tasks-tmao.php'
+			'@create-tasks-tmao.php'
 		),
 		'create-tasks-tmee' => array(
-			'create-tasks-tmee.php'
+			'@create-tasks-tmee.php'
 		),
 		'create-tasks-rename' => array(
-			'create-tasks-rename.php'
+			'@create-tasks-rename.php'
 		),
 		'create-tasks-laps' => array(
-			'create-tasks-laps.php'
+			'@create-tasks-laps.php'
 		),
 		'check-tasks-status' => array(
-			'check-tasks-status.php'
+			'@check-tasks-status.php'
 		),
 		'mark-after-sync' => array(
-			'mark-after-sync.php'
+			'@mark-after-sync.php'
 		),
 		'mark-before-sync' => array(
-			'mark-before-sync.php'
+			'@mark-before-sync.php'
 		),
 		'report-3par' => array(
-			'report-3par.php'
+			'@report-3par.php'
 		),
 		'report-incorrect-names' => array(
-			'report-incorrect-names.php'
+			'@report-incorrect-names.php'
 		),
 		'report-incorrect-names-gup' => array(
-			'report-incorrect-names-gup.php'
+			'@report-incorrect-names-gup.php'
 		),
 		'report-incorrect-names-goo' => array(
-			'report-incorrect-names-goo.php'
+			'@report-incorrect-names-goo.php'
 		),
 		'report-laps' => array(
-			'report-laps.php'
+			'@report-laps.php'
 		),
 		'report-tasks-status' => array(
-			'report-tasks-status.php'
-		),
-		'report-tasks-status' => array(
-			'report-tasks-status.php'
+			'@report-tasks-status.php'
 		),
 		'report-tmao-servers' => array(
-			'report-tmao-servers.php'
+			'@report-tmao-servers.php'
 		),
 		'report-vm' => array(
-			'report-vm.php'
+			'@report-vm.php'
 		),
 		'sync-3par' => array(
-			'sync-3par.php'
+			'@sync-3par.php'
 		),
 		'sync-ad' => array(
-			'sync-ad.php'
+			'@sync-ad.php'
 		),
 		'sync-tmao' => array(
-			'sync-tmao.php'
+			'@sync-tmao.php'
 		),
 		'sync-tmee' => array(
-			'sync-tmee.php'
+			'@sync-tmee.php'
 		)
 	);
 
 	header("Content-Type: text/plain; charset=utf-8");
-	
-	if(!isset($route[$action]))
-	{
-		echo 'Incorrect or no action defined!';
-		exit;
-	}
 
-	foreach($route[$action] as &$incfile)
-	{
-		include(ROOTDIR.DIRECTORY_SEPARATOR.$incfile);
-	}
+	walk_route($route, $action);
