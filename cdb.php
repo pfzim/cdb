@@ -79,6 +79,18 @@ function php_mailer($to, $subject, $html, $plain)
 	return $mail->send();
 }
 
+function tmee_status($code)
+{
+	switch($code)
+	{
+		case 1: return 'Not Encrypted';
+		case 2: return 'Encrypted';
+		case 3: return 'Encrypting';
+		case 4: return 'Decrypting';
+	}
+	return 'Unknown';
+}
+
 function walk_route($route, $action)
 {
 	global $db;
@@ -129,7 +141,7 @@ function walk_route($route, $action)
 			'create-tasks-tmao',
 			'create-tasks-tmee',
 			'create-tasks-laps',
-			'create-tasks-rename',
+			//'create-tasks-rename',
 			'report-tasks-status',
 			'report-incorrect-names',
 			'report-incorrect-names-goo',
