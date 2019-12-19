@@ -37,18 +37,6 @@ function tasks_flags_to_string($flags)
 	return $result;
 }
 
-function tmee_status($code)
-{
-	switch($code)
-	{
-		case 1: return 'Not Encrypted';
-		case 2: return 'Encrypted';
-		case 3: return 'Encrypting';
-		case 4: return 'Decrypting';
-	}
-	return 'Unknown';
-}
-
 
 	$html = <<<'EOT'
 <html>

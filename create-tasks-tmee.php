@@ -25,18 +25,6 @@
 
 	echo "\ncreate-tasks-tmee:\n";
 
-function tmee_status($code)
-{
-	switch($code)
-	{
-		case 1: return 'Not Encrypted';
-		case 2: return 'Encrypted';
-		case 3: return 'Encrypting';
-		case 4: return 'Decrypting';
-	}
-	return 'Unknown';
-}
-
 	// Open new tasks
 
 	$i = 0;
