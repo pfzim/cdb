@@ -5,39 +5,6 @@
 
 	echo "\nreport-tasks-status:\n";
 
-$g_tasks_flags = array(
-	'Заявка закрыта',
-	'',
-	'',
-	'',
-	'',
-	'',
-	'',
-	'',
-	'Не установлен или не работает TMEE',
-	'Не установлен или не работает TMAO',
-	'Имя не соответствует шаблону',
-	'Не установлен или не работает LAPS'
-);
-
-function tasks_flags_to_string($flags)
-{
-	global $g_tasks_flags;
-
-	$result = '';
-	$delimiter = '';
-	for($i = 0; $i < count($g_tasks_flags); $i++)
-	{
-		if(($flags >> $i) & 0x01)
-		{
-			$result .= $g_tasks_flags[$i].$delimiter;
-			$delimiter = ' ';
-		}
-	}
-	return $result;
-}
-
-
 	$html = <<<'EOT'
 <html>
 <head>
