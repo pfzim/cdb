@@ -45,11 +45,11 @@
 								$account['cn'][0],
 								$account['dn'],
 								$laps_exp,
-								($account['useraccountcontrol'][0] & 0x02)?0x0001:0, 
+								(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
 								$account['dn'], 
 								$laps_exp,
-								($account['useraccountcontrol'][0] & 0x02)?0x0001:0)
-							);
+								(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
+							));
 							$i++;
 						}
 					}

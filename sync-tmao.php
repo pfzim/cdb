@@ -48,7 +48,7 @@
 			$as_pstime = '0000-00-00 00:00:00';
 		}
 		
-		$db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`) VALUES (!, !, #, !) ON DUPLICATE KEY UPDATE `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = (`flags` & ~0x0008)", $row['COMP_NAME'], $ptnupdtime, $row['SCRIPT_PTN'], $as_pstime, $ptnupdtime, $row['SCRIPT_PTN'], $as_pstime));
+		$db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`, `flags`) VALUES (!, !, #, !, 0x0020) ON DUPLICATE KEY UPDATE `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~0x0008) | 0x0020)", $row['COMP_NAME'], $ptnupdtime, $row['SCRIPT_PTN'], $as_pstime, $ptnupdtime, $row['SCRIPT_PTN'], $as_pstime));
 		$i++;
 	}
 

@@ -11,6 +11,10 @@ Available `flags` bit options for table `computers`
 | 0x0002 | Deleted in AD                             |
 | 0x0004 | Manual hide from report                   |
 | 0x0008 | Temporary flag for delete after all syncs |
+| 0x0070 | Mask for next 3 bits (Exist)              |
+| 0x0010 | Exist in AD                               |
+| 0x0020 | Exist in TMAO                             |
+| 0x0040 | Exist in TMEE                             |
 
 `tasks` table `flags`
 
