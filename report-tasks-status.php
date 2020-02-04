@@ -78,7 +78,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN), 'Audit antivirus opened tasks', $html, 'You client does not support HTML'))
+	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Opened tasks', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}
