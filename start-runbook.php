@@ -1,5 +1,6 @@
 <?php
 // Runbook starter through CURL
+// Example: http://localhost/cdb/start-runbook.php?id=351b2d92-9564-4067-a4d7-181d07bc4f61&param[00000000-0000-0000-0000-000000000000]=param1
 
 	if(!defined('ROOTDIR'))
 	{

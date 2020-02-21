@@ -30,9 +30,9 @@ Available `flags` bit options for table `computers`
 | 0x0080 |                                           |
 | 0x0100 | TMEE Task was created in HelpDesk         |
 | 0x0200 | TMAO Task was created in HelpDesk         |
-| 0x0400 | Rename Task was created in HelpDesk (GUP) |
+| 0x0400 | Rename Task was created in HelpDesk       |
 | 0x0800 | LAPS Task was created in HelpDesk         |
-| 0x1000 | Rename Task was created in HelpDesk (GOO) |
+| 0x1000 |                                           |
 
 Table `devices` column `type`
 
@@ -44,3 +44,6 @@ Table `devices` column `type`
 
 Change flag 0x40 to 0x0400:
   ``UPDATE c_computers SET `flags` = ((`flags` & ~0x40) | 0x0400) WHERE `flags` & 0x40;``
+
+Change flag 0x1000 to 0x0400:
+  ``UPDATE c_tasks SET `flags` = ((`flags` & ~0x1000) | 0x0400) WHERE `flags` & 0x1000;``

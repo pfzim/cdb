@@ -68,7 +68,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(array(MAIL_TO_ADMIN), 'Computers with expired LAPS password', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Computers with expired LAPS password', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}

@@ -21,8 +21,8 @@
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0200)) = 0x0200
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND `ao_script_ptn` = 0
-			AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$'
+			AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)
+			AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x0200) = 0
 	")))
