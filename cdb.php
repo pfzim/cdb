@@ -102,9 +102,9 @@ $g_tasks_flags = array(
 	'',
 	'Не установлен или не работает TMEE',
 	'Не установлен или не работает TMAO',
-	'Имя не соответствует шаблону (ГУП)',
+	'Имя не соответствует шаблону',
 	'Не установлен или не работает LAPS',
-	'Имя не соответствует шаблону (ГОО)'
+	''
 );
 
 function tasks_flags_to_string($flags)
@@ -174,11 +174,10 @@ function walk_route($route, $action)
 			'create-tasks-tmao',
 			'create-tasks-tmee',
 			'create-tasks-laps',
-			//'create-tasks-rename',
+			'create-tasks-rename',
 			'report-tasks-status',
 			'report-incorrect-names',
-			'report-incorrect-names-goo',
-			'report-incorrect-names-gup',
+			'report-incorrect-names-hd',
 			'report-laps'
 		),
 		'cron-weekly' => array(
@@ -213,11 +212,8 @@ function walk_route($route, $action)
 		'report-incorrect-names' => array(
 			'@report-incorrect-names.php'
 		),
-		'report-incorrect-names-gup' => array(
-			'@report-incorrect-names-gup.php'
-		),
-		'report-incorrect-names-goo' => array(
-			'@report-incorrect-names-goo.php'
+		'report-incorrect-names-hd' => array(
+			'@report-incorrect-names-hd.php'
 		),
 		'report-laps' => array(
 			'@report-laps.php'

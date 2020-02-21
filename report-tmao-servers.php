@@ -54,7 +54,20 @@ EOT;
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `name`, `ao_script_ptn`, DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan` FROM @computers WHERE (`flags` & (0x0004 | 0x0002)) = 0 AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900 AND `name` regexp '^SQL|AVAYA-MGMT|LYNC-FE|RemoteApp|(brc|dln|nn|rc1)-[[:alnum:]]+-[[:digit:]]+$' ORDER BY `name`")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT
+			`name`,
+			`ao_script_ptn`,
+			DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+			DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan`
+		FROM
+			@computers
+		WHERE
+			(`flags` & (0x0004 | 0x0002)) = 0
+			AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900
+			AND `name` REGEXP '".CDB_REGEXP_SERVERS."'
+		ORDER BY `name`
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -117,7 +130,7 @@ EOT;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-all">Выполнить синхронизацию</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tmao-servers">Сформировать отчёт</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(array(MAIL_TO_ADMIN), 'Audit antivirus protection', $html, 'You client does not support HTML'))
+	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Audit antivirus protection', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

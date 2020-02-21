@@ -25,7 +25,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nreport-incorrect-names-gup:\n";
+	echo "\nreport-incorrect-names-goo:\n";
 
 	$html = <<<'EOT'
 <html>
@@ -45,7 +45,7 @@
 		</style>
 	</head>
 	<body>
-	<h1>Список созданных заявок на переименование ПК (ГУП)</h1>
+	<h1>Список созданных заявок на переименование ПК</h1>
 EOT;
 
 	$table = '<table>';
@@ -59,7 +59,6 @@ EOT;
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE
 			(m.`flags` & (0x0001 | 0x0400)) = 0x0400
-			AND j1.`dn` LIKE '%".LDAP_OU_SHOPS."'
 		ORDER BY j1.`name`
 	")))
 	{
@@ -83,7 +82,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GUP), 'Computers with incorrect names (GUP)', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GOO, MAIL_TO_GUP), CDB_TITLE.': Computers with incorrect names (HelpDesk)', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}

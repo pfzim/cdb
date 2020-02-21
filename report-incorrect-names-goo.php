@@ -82,7 +82,7 @@ EOT;
 
 	if($i > 0)
 	{
-		if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GOO), 'Computers with incorrect names', $html, 'You client does not support HTML'))
+		if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GOO), 'Computers with incorrect names (GOO)', $html, 'You client does not support HTML'))
 		{
 			echo 'Send mail: OK';
 		}

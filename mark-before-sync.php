@@ -9,10 +9,10 @@
 	
 	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x0070) | 0x0008) WHERE (`flags` & (0x0002 | 0x0004)) = 0")))
 	{
-		echo 'DONE';
+		echo "DONE\n";
 	}
 	else
 	{
-		echo 'FAILED';
+		echo "FAILED\n";
 	}
 
