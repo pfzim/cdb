@@ -63,7 +63,7 @@ EOT;
 		FROM
 			@computers
 		WHERE
-			(`flags` & (0x0004 | 0x0002)) = 0
+			(`flags` & (0x0002 | 0x0004)) = 0
 			AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900
 			AND `name` REGEXP '".CDB_REGEXP_SERVERS."'
 		ORDER BY `name`

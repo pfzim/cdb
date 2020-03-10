@@ -161,6 +161,7 @@ function walk_route($route, $action)
 			'sync-ad',
 			'sync-tmao',
 			'sync-tmee',
+			'sync-sccm',
 			'mark-after-sync'
 		),
 		'cron-daily' => array(
@@ -168,6 +169,7 @@ function walk_route($route, $action)
 			'sync-ad',
 			'sync-tmao',
 			'sync-tmee',
+			'sync-sccm',
 			'mark-after-sync',
 			'report-tmao-servers',
 			'check-tasks-status',
@@ -238,6 +240,9 @@ function walk_route($route, $action)
 		),
 		'sync-tmee' => array(
 			'@sync-tmee.php'
+		),
+		'sync-sccm' => array(
+			'@sync-sccm.php'
 		)
 	);
 
