@@ -107,7 +107,48 @@ $g_tasks_flags = array(
 	''
 );
 
-function tasks_flags_to_string($flags)
+$g_comp_flags = array(
+	'Disabled',
+	'Deleted',
+	'Hide',
+	'Temp sync flag',
+	'Active Directory',
+	'Apex One',
+	'Encription Endpoint',
+	'Configuration Manager'
+);
+
+$g_comp_short_flags = array(
+	'D',
+	'R',
+	'H',
+	'T',
+	'A',
+	'O',
+	'E',
+	'C'
+);
+
+function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
+{
+	$result = '';
+	$delim = '';
+	for($i = 0; $i < count($texts); $i++)
+	{
+		if(($flags >> $i) & 0x01)
+		{
+			$result .= $delim.$texts[$i];
+			$delim = $delimiter;
+		}
+		else
+		{
+			$result .= $notset;
+		}
+	}
+	return $result;
+}
+
+function tasks_flags_to_string($flags)  // replace with flags_to_string() later
 {
 	global $g_tasks_flags;
 
@@ -117,7 +158,7 @@ function tasks_flags_to_string($flags)
 	{
 		if(($flags >> $i) & 0x01)
 		{
-			$result .= $g_tasks_flags[$i].$delimiter;
+			$result .= $delimiter.$g_tasks_flags[$i];
 			$delimiter = ' ';
 		}
 	}

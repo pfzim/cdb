@@ -27,9 +27,16 @@
 	define('HELPDESK_PASSWD', 'Pa$$word');
 	define('HELPDESK_COOKIE', 'OperuITAuthCookie');
 
-	define('CDB_URL', 'http://web.contoso.com/cdb');
-	define('ORCHESTRATOR_URL', 'http://srv-sco-01.contoso.com:81/Orchestrator2012/Orchestrator.svc/Jobs');
+	define('WIKI_URL', 'http://wiki.contoso.com');
 
+	define('CDB_TITLE', 'CDB');
+	define('CDB_URL', 'http://web.contoso.com/cdb');
+	define('ORCHESTRATOR_URL', 'http://srv-sco-01:81/Orchestrator2012/Orchestrator.svc/Jobs');
+	define('CDB_REGEXP_SERVERS', '^(srv|dt|db)-[[:alnum:]]+-[[:digit:]]+$');
+	define('CDB_REGEXP_VALID_NAMES', '^((srv|dt|db)-[[:alnum:]]+-[[:digit:]]+)$|^([[:digit:]]{4}-[nNwW][[:digit:]]+)$|^([[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+)$');
+	define('CDB_REGEXP_SHOPS', '^[[:digit:]]{2}-[[:digit:]]{4}-[vVmM]{0,1}[[:digit:]]+$');
+
+	// SQL permissions for svc_collector: Server - [Connect SQL], DB - [db_datareader, public]
 	define('TMEE_DB_HOST', 'srv-tmee-01');
 	define('TMEE_DB_NAME', 'MobileArmorDB');
 	define('TMEE_DB_USER', 'svc_collector');
@@ -39,3 +46,8 @@
 	define('TMAO_DB_NAME', 'SRV-AO-01-ApexOne');
 	define('TMAO_DB_USER', 'svc_collector');
 	define('TMAO_DB_PASSWD', 'passw0rd');
+
+	define('SCCM_DB_HOST', 'srv-dbs-01');
+	define('SCCM_DB_NAME', 'CM_M01');
+	define('SCCM_DB_USER', 'svc_collector');
+	define('SCCM_DB_PASSWD', 'passw0rd');

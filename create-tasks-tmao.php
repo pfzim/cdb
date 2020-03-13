@@ -5,6 +5,8 @@
 
 	echo "\ncreate-tasks-tmao:\n";
 
+	global $g_comp_flags;
+
 	// Open new tasks
 
 	$i = 0;
@@ -16,7 +18,7 @@
 	
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0200)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)")))
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`ao_script_ptn`
+		SELECT m.`id`, m.`name`, m.`dn`, m.`ao_script_ptn`, m.`flags`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0200)) = 0x0200
 		WHERE
@@ -37,7 +39,7 @@
 
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmao&To=byname&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMAO\nПК: ".$row['name']."\nВерсия антивирусной базы: ".$row['ao_script_ptn']."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmao&To=byname&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMAO\nПК: ".$row['name']."\nВерсия антивирусной базы: ".$row['ao_script_ptn']."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

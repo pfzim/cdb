@@ -5,6 +5,8 @@
 
 	echo "\ncreate-tasks-rename:\n";
 
+	global $g_comp_flags;
+
 	// Open new tasks
 
 	$i = 0;
@@ -15,7 +17,7 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`
+		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0400)) = 0x0400
 		WHERE
@@ -43,6 +45,7 @@
 				'&Message='.urlencode(
 					"Имя ПК не соответствует шаблону. Переименуйте ПК ".$row['name'].
 					"\nDN: ".$row['dn'].
+					"\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ').
 					"\nКод работ: RNM01\n\n".
 					WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Регламент-именования-ресурсов-в-каталоге-Active-Directory.ashx'
 				)
