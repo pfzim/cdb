@@ -5,6 +5,8 @@
 
 	echo "\ncreate-tasks-laps:\n";
 
+	global $g_comp_flags;
+
 	// Open new tasks
 
 	$i = 0;
@@ -15,7 +17,7 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`
+		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, m.`flags`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0800)) = 0x0800
 		WHERE
@@ -43,7 +45,7 @@
 				$direction = 'goo';
 			}
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=laps&To='.$direction.'&Host='.urlencode($row['name']).'&Message='.urlencode("Не установлен либо не работает LAPS.\nПК: ".$row['name']."\nПоследнее обновление LAPS: ".$row['laps_exp']."\nКод работ: LPS01\n\n".WIKI_URL.'/Сервисы.laps%20troubleshooting.ashx'));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=laps&To='.$direction.'&Host='.urlencode($row['name']).'&Message='.urlencode("Не установлен либо не работает LAPS.\nПК: ".$row['name']."\nПоследнее обновление LAPS: ".$row['laps_exp']."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')."\nКод работ: LPS01\n\n".WIKI_URL.'/Сервисы.laps%20troubleshooting.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

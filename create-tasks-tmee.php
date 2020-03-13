@@ -25,12 +25,14 @@
 
 	echo "\ncreate-tasks-tmee:\n";
 
+	global $g_comp_flags;
+
 	// Open new tasks
 
 	$i = 0;
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`ee_encryptionstatus`
+		SELECT m.`id`, m.`name`, m.`dn`, m.`ee_encryptionstatus`, m.`flags`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
 		WHERE
@@ -45,7 +47,7 @@
 		{
 			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&To=byname&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\nПК: ".$row['name']."\nСтатус шифрования: ".tmee_status(intval($row['ee_encryptionstatus']))."\nКод работ: FDERE\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция%20по%20восстановлению%20работы%20агента%20Full%20Disk%20Encryption.ashx'));
+			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=tmee&To=byname&Host='.urlencode($row['name']).'&Message='.urlencode("Выявлена проблема с TMEE\nПК: ".$row['name']."\nСтатус шифрования: ".tmee_status(intval($row['ee_encryptionstatus']))."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')."\nКод работ: FDERE\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция%20по%20восстановлению%20работы%20агента%20Full%20Disk%20Encryption.ashx'));
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
