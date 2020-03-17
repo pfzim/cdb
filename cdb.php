@@ -104,7 +104,7 @@ $g_tasks_flags = array(
 	'Не установлен или не работает TMAO',
 	'Имя не соответствует шаблону',
 	'Не установлен или не работает LAPS',
-	''
+	'Не установлен или не работает агент SCCM'
 );
 
 $g_comp_flags = array(
@@ -114,7 +114,7 @@ $g_comp_flags = array(
 	'Temp sync flag',
 	'Active Directory',
 	'Apex One',
-	'Encription Endpoint',
+	'Encryption Endpoint',
 	'Configuration Manager'
 );
 
@@ -240,6 +240,9 @@ function walk_route($route, $action)
 		'create-tasks-laps' => array(
 			'@create-tasks-laps.php'
 		),
+		'create-tasks-sccm' => array(
+			'@create-tasks-sccm.php'
+		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
 		),
@@ -284,6 +287,9 @@ function walk_route($route, $action)
 		),
 		'sync-sccm' => array(
 			'@sync-sccm.php'
+		),
+		'get-computer-info' => array(
+			'@get-computer-info.php'
 		)
 	);
 

@@ -33,7 +33,7 @@ Available `flags` bit options for table `computers`
 | 0x0200 | TMAO Task was created in HelpDesk         |
 | 0x0400 | Rename Task was created in HelpDesk       |
 | 0x0800 | LAPS Task was created in HelpDesk         |
-| 0x1000 |                                           |
+| 0x1000 | SCCM Task was created in HelpDesk         |
 
 Table `devices` column `type`
 
