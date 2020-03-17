@@ -82,7 +82,17 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=rename&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(
+				HELPDESK_URL.'/ExtAlert.aspx/'
+				.'?Source=cdb'
+				.'&Action=resolved'
+				.'&Type=rename'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
+			);
+
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

@@ -45,7 +45,21 @@
 				$direction = 'goo';
 			}
 
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=new&Type=laps&To='.$direction.'&Host='.urlencode($row['name']).'&Message='.urlencode("Не установлен либо не работает LAPS.\nПК: ".$row['name']."\nПоследнее обновление LAPS: ".$row['laps_exp']."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')."\nКод работ: LPS01\n\n".WIKI_URL.'/Сервисы.laps%20troubleshooting.ashx'));
+			$answer = @file_get_contents(
+				HELPDESK_URL.'/ExtAlert.aspx/'
+				.'?Source=cdb'
+				.'&Action=new'
+				.'&Type=laps'
+				.'&To='.$direction
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.urlencode(
+					'Не установлен либо не работает LAPS.'
+					."\nПК: ".$row['name']
+					."\nПоследнее обновление LAPS: ".$row['laps_exp']
+					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+					."\nКод работ: LPS01\n\n".WIKI_URL.'/Сервисы.laps%20troubleshooting.ashx'
+				)
+			);
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -77,7 +91,17 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(HELPDESK_URL.'/ExtAlert.aspx/?Source=cdb&Action=resolved&Type=rename&Id='.urlencode($row['operid']).'&Num='.urlencode($row['opernum']).'&Host='.urlencode($row['name']).'&Message='.urlencode("Заявка более не актуальна"));
+			$answer = @file_get_contents(
+				HELPDESK_URL.'/ExtAlert.aspx/'
+				.'?Source=cdb'
+				.'&Action=resolved'
+				.'&Type=rename'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
+			);
+
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);

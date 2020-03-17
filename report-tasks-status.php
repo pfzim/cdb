@@ -27,11 +27,22 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD Task</th><th>Reason</th><th>Source</th></tr>';
+	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD Task</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT j1.`id`, j1.`name`, j1.`ao_script_ptn`, DATE_FORMAT(j1.`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, j1.`ee_encryptionstatus`, DATE_FORMAT(j1.`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, m.`operid`, m.`opernum`, m.`flags`, j1.`flags` AS j1_flags
+		SELECT
+			j1.`id`,
+			j1.`name`,
+			j1.`ao_script_ptn`,
+			DATE_FORMAT(j1.`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+			j1.`ee_encryptionstatus`,
+			DATE_FORMAT(j1.`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`,
+			m.`operid`,
+			m.`opernum`,
+			m.`flags`,
+			j1.`flags` AS j1_flags,
+			(SELECT COUNT(*) FROM @tasks AS i1 WHERE i1.`pid` = m.`pid` AND i1.`flags` & m.`flags`) AS `issues`
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE (m.`flags` & 0x0001) = 0
@@ -42,11 +53,14 @@ EOT;
 
 		foreach($result as &$row)
 		{
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td>';
+			$table .= '<tr>';
+			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-computer-info&id='.$row['id'].'">'.$row['name'].'</a></td>';
+			$table .= '<td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td>';
 			$table .= '<td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['flags'])).'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['j1_flags']) & 0x00F0, $g_comp_short_flags, '', '-').'</td>';
+			$table .= '<td'.((intval($row['issues']) > 3)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
 
 			$i++;
