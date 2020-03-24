@@ -34,10 +34,7 @@ EOT;
 		exit;
 	}
 
-	if(!$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id'])))
-	{
-		exit;
-	}
+	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));
 	
 	$html .= '<p>Name: '.$computer[0]['name'].'</p>';
 	$html .= '<p>DN: '.$computer[0]['dn'].'</p>';

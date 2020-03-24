@@ -56,6 +56,7 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
+			`id`,
 			`name`,
 			`ao_script_ptn`,
 			DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
@@ -101,7 +102,12 @@ EOT;
 				$class2 = ' class="error"';
 			}
 
-			$table .= '<tr><td>'.$row['name'].'</td><td>'.$row['ao_script_ptn'].'</td><td'.$class1.'>'.$row['last_update'].'</td><td'.$class2.'>'.$row['last_scan'].'</td></tr>';
+			$table .= '<tr>';
+			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-computer-info&id='.$row['id'].'">'.$row['name'].'</a></td>';
+			$table .= '<td>'.$row['ao_script_ptn'].'</td>';
+			$table .= '<td'.$class1.'>'.$row['last_update'].'</td>';
+			$table .= '<td'.$class2.'>'.$row['last_scan'].'</td>';
+			$table .= '</tr>';
 			$i++;
 		}
 	}
