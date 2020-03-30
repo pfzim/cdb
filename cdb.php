@@ -104,7 +104,8 @@ $g_tasks_flags = array(
 	'Не установлен или не работает TMAO',
 	'Имя не соответствует шаблону',
 	'Не установлен или не работает LAPS',
-	'Не установлен или не работает агент SCCM'
+	'Не установлен или не работает агент SCCM',
+	'Возможна установка пустого пароля'
 );
 
 $g_comp_flags = array(
@@ -242,6 +243,9 @@ function walk_route($route, $action)
 		),
 		'create-tasks-sccm' => array(
 			'@create-tasks-sccm.php'
+		),
+		'create-tasks-epwd' => array(
+			'@create-tasks-epwd.php'
 		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
