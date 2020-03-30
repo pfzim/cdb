@@ -7,7 +7,7 @@
 
 	// Set temporary flag for remove not existing PC after all syncs
 	
-	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x0070) | 0x0008) WHERE (`flags` & (0x0002 | 0x0004)) = 0")))
+	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x00F0) | 0x0008) WHERE (`flags` & (0x0002 | 0x0004)) = 0")))
 	{
 		echo "DONE\n";
 	}

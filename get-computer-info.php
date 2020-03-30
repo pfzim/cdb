@@ -29,9 +29,19 @@
 	<h1>Информация о ПК</h1>
 EOT;
 
-	if(!$db->select_assoc_ex($computer, rpv("SELECT m.`id`, m.`name`, m.`dn`, m.`ao_ptnupdtime`, m.`ao_script_ptn`, m.`ao_as_pstime`, m.`ee_lastsync`, m.`ee_encryptionstatus`, m.`laps_exp`, m.`flags` FROM @computers AS m WHERE m.`id` = #", $_GET['id'])))
+	if(!empty($_GET['id']))
 	{
-		exit;
+		if(!$db->select_assoc_ex($computer, rpv("SELECT m.`id`, m.`name`, m.`dn`, m.`ao_ptnupdtime`, m.`ao_script_ptn`, m.`ao_as_pstime`, m.`ee_lastsync`, m.`ee_encryptionstatus`, m.`laps_exp`, m.`flags` FROM @computers AS m WHERE m.`id` = #", $_GET['id'])))
+		{
+			exit;
+		}
+	}
+	else
+	{
+		if(!$db->select_assoc_ex($computer, rpv("SELECT m.`id`, m.`name`, m.`dn`, m.`ao_ptnupdtime`, m.`ao_script_ptn`, m.`ao_as_pstime`, m.`ee_lastsync`, m.`ee_encryptionstatus`, m.`laps_exp`, m.`flags` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $_GET['name'])))
+		{
+			exit;
+		}
 	}
 
 	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));

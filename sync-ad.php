@@ -11,7 +11,7 @@
 	echo "\nsync-ad:\n";
 
 	$i = 0;
-	
+
 	$ldap = ldap_connect(LDAP_HOST, LDAP_PORT);
 	if($ldap)
 	{
@@ -41,15 +41,44 @@
 								$laps_exp = date("Y-m-d H:i:s", $account['ms-mcs-admpwdexpirationtime'][0]/10000000-11644473600);
 							}
 
-							$db->put(rpv("INSERT INTO @computers (`name`, `dn`, `laps_exp`, `flags`) VALUES (!, !, !, #) ON DUPLICATE KEY UPDATE `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~(0x0001 | 0x0008)) | #)", 
-								$account['cn'][0],
-								$account['dn'],
-								$laps_exp,
-								(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
-								$account['dn'], 
-								$laps_exp,
-								(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
-							));
+							$db->start_transaction();
+
+							$row_id = 0;
+							if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $account['cn'][0])))
+							{
+								if($db->put(rpv("INSERT INTO @computers (`name`, `dn`, `laps_exp`, `flags`) VALUES (!, !, !, #)",
+									$account['cn'][0],
+									$account['dn'],
+									$laps_exp,
+									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
+								)))
+								{
+									$row_id = $db->last_id();
+								}
+							}
+							else
+							{
+								$row_id = $result[0][0];
+								$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~(0x0001 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
+									$account['dn'],
+									$laps_exp,
+									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
+									$row_id
+								));
+							}
+
+							if($row_id)
+							{
+								$db->put(rpv("INSERT INTO @properties_int (`pid`, `oid`, `value`) VALUES (#, #, #) ON DUPLICATE KEY UPDATE `value` = #",
+									$row_id,
+									CDB_PROP_USERACCOUNTCONTROL,
+									$account['useraccountcontrol'][0],
+									$account['useraccountcontrol'][0]
+								));
+							}
+
+							$db->commit();
+
 							$i++;
 						}
 					}

@@ -34,6 +34,7 @@ Available `flags` bit options for table `computers`
 | 0x0400 | Rename Task was created in HelpDesk       |
 | 0x0800 | LAPS Task was created in HelpDesk         |
 | 0x1000 | SCCM Task was created in HelpDesk         |
+| 0x2000 | PASSWD Task was created in HelpDesk       |
 
 Table `devices` column `type`
 
@@ -41,6 +42,14 @@ Table `devices` column `type`
 |--------|-------------------------------------------|
 | 1      | 3PAR storage                              |
 | 2      | Hyper-V cluster                           |
+
+
+Table `properties_*` column `oid`
+| Value  | PHP constant                              | Description                               |
+|--------|-------------------------------------------|-------------------------------------------|
+| 101    | CDB_PROP_USERACCOUNTCONTROL               | AD UserAccountControl                     |
+|        |                                           |                                           |
+|        |                                           |                                           |
 
 
 Change flag 0x40 to 0x0400:

@@ -28,10 +28,14 @@
 		exit;
 	}
 
-	$result = sqlsrv_query($conn, "SELECT [DeviceName]
-      ,[LastSync]
-      ,[EncryptionStatus]
-  FROM [".TMEE_DB_NAME."].[dbo].[Device] WHERE IsDeleted = 0");
+	$result = sqlsrv_query($conn, "
+		SELECT
+			[DeviceName],
+			[LastSync],
+			[EncryptionStatus]
+		FROM [".TMEE_DB_NAME."].[dbo].[Device]
+		WHERE IsDeleted = 0
+	");
 
 
 	$i = 0;

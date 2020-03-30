@@ -27,11 +27,15 @@
 			j1.LastPolicyRequest,
 			j1.LastOnline,
 			j1.LastSW,
-			j1.LastHealthEvaluation
+			j1.LastHealthEvaluation,
+			j1.LastStatusMessage,
+			j1.LastHW
 		FROM [".SCCM_DB_NAME."].[dbo].[System_DISC] AS m  
 		LEFT JOIN [".SCCM_DB_NAME."].[dbo].[CH_ClientSummary] AS j1 ON m.ItemKey = j1.MachineID
+		WHERE ISNULL(m.Obsolete0, 0) <> 1 AND ISNULL(m.Decommissioned0, 0) <> 1 AND m.Client0 = 1
 	");
 
+	$columns = array('LastDDR', 'LastPolicyRequest', 'LastSW', 'LastHealthEvaluation', 'LastStatusMessage', 'LastHW');
 
 	$i = 0;
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
@@ -41,53 +45,16 @@
 		$lastsync = '0000-00-00 00:00:00';
 		$max_date = strtotime($lastsync);
 
-		if(!empty($row['LastDDR']))
+		foreach($columns as &$col)
 		{
-			$tmp_date = strtotime($row['LastDDR']);
-			if($tmp_date > $max_date)
+			if(!empty($row[$col]))
 			{
-				$max_date = $tmp_date;
-				$lastsync = $row['LastDDR'];
-			}
-		}
-
-		if(!empty($row['LastPolicyRequest']))
-		{
-			$tmp_date = strtotime($row['LastPolicyRequest']);
-			if($tmp_date > $max_date)
-			{
-				$max_date = $tmp_date;
-				$lastsync = $row['LastPolicyRequest'];
-			}
-		}
-
-		if(!empty($row['LastOnline']))
-		{
-			$tmp_date = strtotime($row['LastOnline']);
-			if($tmp_date > $max_date)
-			{
-				$max_date = $tmp_date;
-				$lastsync = $row['LastOnline'];
-			}
-		}
-
-		if(!empty($row['LastSW']))
-		{
-			$tmp_date = strtotime($row['LastSW']);
-			if($tmp_date > $max_date)
-			{
-				$max_date = $tmp_date;
-				$lastsync = $row['LastSW'];
-			}
-		}
-
-		if(!empty($row['LastHealthEvaluation']))
-		{
-			$tmp_date = strtotime($row['LastHealthEvaluation']);
-			if($tmp_date > $max_date)
-			{
-				$max_date = $tmp_date;
-				$lastsync = $row['LastHealthEvaluation'];
+				$tmp_date = strtotime($row[$col]);
+				if($tmp_date > $max_date)
+				{
+					$max_date = $tmp_date;
+					$lastsync = $row[$col];
+				}
 			}
 		}
 
