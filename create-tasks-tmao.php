@@ -31,9 +31,9 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 70)
+			if($i >= 100)
 			{
-				echo "Limit reached: 70\r\n";
+				echo "Limit reached: 100\r\n";
 				break;
 			}
 

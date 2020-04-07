@@ -24,7 +24,7 @@
 			{
 				ldap_control_paged_result($ldap, 200, true, $cookie);
 
-				$sr = ldap_search($ldap, LDAP_BASE_DN, '(objectCategory=computer)', explode(',', 'samaccountname,cn,useraccountcontrol,ms-mcs-admpwdexpirationtime'));
+				$sr = ldap_search($ldap, LDAP_BASE_DN, '(objectCategory=computer)', explode(',', 'samaccountname,cn,useraccountcontrol,ms-mcs-admpwdexpirationtime,operatingsystem,operatingsystemversion'));
 				if($sr)
 				{
 					$records = ldap_get_entries($ldap, $sr);
@@ -75,6 +75,26 @@
 									$account['useraccountcontrol'][0],
 									$account['useraccountcontrol'][0]
 								));
+								
+								if(!empty($account['operatingsystem'][0]))
+								{
+									$db->put(rpv("INSERT INTO @properties_str (`pid`, `oid`, `value`) VALUES (#, #, !) ON DUPLICATE KEY UPDATE `value` = !",
+										$row_id,
+										CDB_PROP_OPERATINGSYSTEM,
+										$account['operatingsystem'][0],
+										$account['operatingsystem'][0]
+									));
+								}
+
+								if(!empty($account['operatingsystemversion'][0]))
+								{
+									$db->put(rpv("INSERT INTO @properties_str (`pid`, `oid`, `value`) VALUES (#, #, !) ON DUPLICATE KEY UPDATE `value` = !",
+										$row_id,
+										CDB_PROP_OPERATINGSYSTEMVERSION,
+										$account['operatingsystemversion'][0],
+										$account['operatingsystemversion'][0]
+									));
+								}
 							}
 
 							$db->commit();

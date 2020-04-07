@@ -48,6 +48,8 @@ Table `properties_*` column `oid`
 | Value  | PHP constant                              | Description                               |
 |--------|-------------------------------------------|-------------------------------------------|
 | 101    | CDB_PROP_USERACCOUNTCONTROL               | AD UserAccountControl                     |
+| 102    | CDB_PROP_OPERATINGSYSTEM                  | Operation System name                     |
+| 103    | CDB_PROP_OPERATINGSYSTEMVERSION           | Operation System version                  |
 |        |                                           |                                           |
 |        |                                           |                                           |
 
