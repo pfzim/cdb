@@ -1,9 +1,9 @@
 <?php
-	// Create new and close resolved tasks (TMAO)
+	// Create new and close resolved tasks (empty password allowed)
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\ncreate-tasks-tmao:\n";
+	echo "\ncreate-tasks-os:\n";
 
 	global $g_comp_flags;
 
@@ -11,51 +11,47 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0200)) = 0x0200")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x4000)) = 0x4000")))
 	{
 		$i = intval($result[0][0]);
 	}
 	
-	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0200)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|(OFF[Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)")))
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`ao_script_ptn`, m.`flags`
+		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`, j_os.`value` AS `os`
 		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0200)) = 0x0200
+		LEFT JOIN @tasks AS t ON t.`pid` = m.`id` AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
+		LEFT JOIN @properties_str AS j_os ON j_os.`pid` = m.`id` AND j_os.`oid` = #
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)
+			AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
 			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
 		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & 0x0200) = 0
-	")))
+		HAVING (BIT_OR(t.`flags`) & 0x4000) = 0
+	", CDB_PROP_OPERATINGSYSTEM)))
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 100)
+			if($i >= 50)
 			{
-				echo "Limit reached: 100\r\n";
+				echo "Limit reached: 1\r\n";
 				break;
 			}
-
-			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
-
+			
 			$answer = @file_get_contents(
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=new'
-				.'&Type=tmao'
+				.'&Type=update'
 				.'&To=byname'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Выявлена проблема с TMAO'
+					'Требуется установить операционную систему .'
 					."\nПК: ".$row['name']
-					."\nВерсия антивирусной базы: "
-					.$row['ao_script_ptn']
+					."\nТекущая версия ОС: ".$row['os']
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
-					."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"
+					."\nКод работ: OSUP\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Сброс-флага-разрещающего-установить-пустой-пароль.ashx'
 				)
 			);
-
 			if($answer !== FALSE)
 			{
 				$xml = @simplexml_load_string($answer);
@@ -63,7 +59,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x0200, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x4000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
@@ -72,17 +68,19 @@
 
 	echo 'Created: '.$i."\r\n";
 
+
 	// Close auto resolved tasks
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
-		FROM @tasks AS m
-		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c ON c.`id` = t.`pid`
+		LEFT JOIN @properties_str AS j_os ON j_os.`pid` = t.`pid` AND j_os.`oid` = #
 		WHERE
-			(m.`flags` & (0x0001 | 0x0200)) = 0x0200
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900))
-	")))
+			(t.`flags` & (0x0001 | 0x4000)) = 0x4000
+			AND (c.`flags` & (0x0001 | 0x0002 | 0x0004) OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная'))
+	", CDB_PROP_OPERATINGSYSTEM)))
 	{
 		foreach($result as &$row)
 		{
@@ -90,7 +88,7 @@
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=resolved'
-				.'&Type=tmao'
+				.'&Type=update'
 				.'&Id='.urlencode($row['operid'])
 				.'&Num='.urlencode($row['opernum'])
 				.'&Host='.urlencode($row['name'])
@@ -113,3 +111,4 @@
 	}
 
 	echo 'Closed: '.$i."\r\n";
+
