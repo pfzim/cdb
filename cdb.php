@@ -247,6 +247,9 @@ function walk_route($route, $action)
 		'create-tasks-epwd' => array(
 			'@create-tasks-epwd.php'
 		),
+		'create-tasks-os' => array(
+			'@create-tasks-os.php'
+		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
 		),

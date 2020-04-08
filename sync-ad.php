@@ -58,8 +58,9 @@
 							}
 							else
 							{
+								// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
 								$row_id = $result[0][0];
-								$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~(0x0001 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
+								$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~(0x0001 | 0x0002 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
 									$account['dn'],
 									$laps_exp,
 									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
