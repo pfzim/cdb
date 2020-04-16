@@ -8,7 +8,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nsync-ad:\n";
+	echo "\nsync-ad-computers:\n";
 
 	$i = 0;
 
@@ -70,7 +70,7 @@
 
 							if($row_id)
 							{
-								$db->put(rpv("INSERT INTO @properties_int (`pid`, `oid`, `value`) VALUES (#, #, #) ON DUPLICATE KEY UPDATE `value` = #",
+								$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES (1, #, #, #) ON DUPLICATE KEY UPDATE `value` = #",
 									$row_id,
 									CDB_PROP_USERACCOUNTCONTROL,
 									$account['useraccountcontrol'][0],
@@ -79,7 +79,7 @@
 								
 								if(!empty($account['operatingsystem'][0]))
 								{
-									$db->put(rpv("INSERT INTO @properties_str (`pid`, `oid`, `value`) VALUES (#, #, !) ON DUPLICATE KEY UPDATE `value` = !",
+									$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES (1, #, #, !) ON DUPLICATE KEY UPDATE `value` = !",
 										$row_id,
 										CDB_PROP_OPERATINGSYSTEM,
 										$account['operatingsystem'][0],
@@ -89,7 +89,7 @@
 
 								if(!empty($account['operatingsystemversion'][0]))
 								{
-									$db->put(rpv("INSERT INTO @properties_str (`pid`, `oid`, `value`) VALUES (#, #, !) ON DUPLICATE KEY UPDATE `value` = !",
+									$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES (1, #, #, !) ON DUPLICATE KEY UPDATE `value` = !",
 										$row_id,
 										CDB_PROP_OPERATINGSYSTEMVERSION,
 										$account['operatingsystemversion'][0],

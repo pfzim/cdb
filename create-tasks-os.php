@@ -19,8 +19,13 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`, j_os.`value` AS `os`
 		FROM @computers AS m
-		LEFT JOIN @tasks AS t ON t.`pid` = m.`id` AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
-		LEFT JOIN @properties_str AS j_os ON j_os.`pid` = m.`id` AND j_os.`oid` = #
+		LEFT JOIN @tasks AS t
+			ON t.`pid` = m.`id`
+			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
+		LEFT JOIN @properties_str AS j_os
+			ON j_os.`tid` = 1
+			AND j_os.`pid` = m.`id`
+			AND j_os.`oid` = #
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
@@ -75,11 +80,18 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
 		FROM @tasks AS t
-		LEFT JOIN @computers AS c ON c.`id` = t.`pid`
-		LEFT JOIN @properties_str AS j_os ON j_os.`pid` = t.`pid` AND j_os.`oid` = #
+		LEFT JOIN @computers AS c
+			ON c.`id` = t.`pid`
+		LEFT JOIN @properties_str AS j_os
+			ON j_os.`tid` = 1
+			AND j_os.`pid` = t.`pid`
+			AND j_os.`oid` = #
 		WHERE
 			(t.`flags` & (0x0001 | 0x4000)) = 0x4000
-			AND (c.`flags` & (0x0001 | 0x0002 | 0x0004) OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная'))
+			AND (
+				c.`flags` & (0x0001 | 0x0002 | 0x0004)
+				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+			)
 	", CDB_PROP_OPERATINGSYSTEM)))
 	{
 		foreach($result as &$row)
