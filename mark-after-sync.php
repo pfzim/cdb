@@ -16,3 +16,12 @@
 		echo "FAILED\n";
 	}
 
+	if($db->put(rpv("UPDATE @persons SET `flags` = ((`flags` & ~0x0008) | 0x0002) WHERE `flags` & 0x0008")))
+	{
+		echo "DONE\n";
+	}
+	else
+	{
+		echo "FAILED\n";
+	}
+

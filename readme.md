@@ -54,6 +54,13 @@ Table `properties_*` column `oid`
 |        |                                           |                                           |
 |        |                                           |                                           |
 
+Table `properties_*` column `tid`
+| Value  | Description                               |
+|--------|-------------------------------------------|
+| 1      | `pid` from `computers` table              |
+| 2      | `pid` from `persons` table                |
+|        |                                           |
+
 
 Change flag 0x40 to 0x0400:
   ``UPDATE c_computers SET `flags` = ((`flags` & ~0x40) | 0x0400) WHERE `flags` & 0x40;``

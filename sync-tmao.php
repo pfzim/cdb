@@ -29,11 +29,14 @@
 			exit;
 		}
 
-		$result = sqlsrv_query($conn, "SELECT [COMP_NAME]
-		  ,[PTNUPDTIME]
-		  ,[SCRIPT_PTN]
-		  ,[AS_PSTIME]
-	  FROM [".$params['Database']."].[dbo].[TBL_CLIENT_INFO] WHERE [CLIENTTYPE] = 0");
+		$result = sqlsrv_query($conn, "
+			SELECT [COMP_NAME]
+				,[PTNUPDTIME]
+				,[SCRIPT_PTN]
+				,[AS_PSTIME]
+			FROM [".$params['Database']."].[dbo].[TBL_CLIENT_INFO] WHERE [CLIENTTYPE] = 0
+			ORDER BY [SCRIPT_PTN]
+		");
 
 		$i = 0;
 		while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))

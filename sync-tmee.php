@@ -35,6 +35,7 @@
 			[EncryptionStatus]
 		FROM [".TMEE_DB_NAME."].[dbo].[Device]
 		WHERE IsDeleted = 0
+		ORDER BY [LastSync]
 	");
 
 
