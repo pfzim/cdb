@@ -284,7 +284,8 @@ function walk_route($route, $action)
 			'@sync-3par.php'
 		),
 		'sync-ad' => array(
-			'@sync-ad.php'
+			'@sync-ad-computers.php',
+			'@sync-ad-persons.php'
 		),
 		'sync-tmao' => array(
 			'@sync-tmao.php'
