@@ -35,12 +35,12 @@
 							$row_id = 0;
 							if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @persons AS m WHERE m.`login` = ! LIMIT 1", $account['samaccountname'][0])))
 							{
-								if($db->put(rpv("INSERT INTO @persons (`login`, `dn`, `fname`, `mname`, `lname`, `flags`) VALUES (!, !, !, #)",
+								if($db->put(rpv("INSERT INTO @persons (`login`, `dn`, `fname`, `mname`, `lname`, `flags`) VALUES (!, !, !, !, !, #)",
 									$account['samaccountname'][0],
 									$account['dn'],
-									$account['givenname'],
-									$account['initials'],
-									$account['sn'],
+									@$account['givenname'][0],
+									@$account['initials'][0],
+									@$account['sn'][0],
 									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
 								)))
 								{
@@ -53,9 +53,9 @@
 								$row_id = $result[0][0];
 								$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~(0x0001 | 0x0002 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
 									$account['dn'],
-									$account['givenname'],
-									$account['initials'],
-									$account['sn'],
+									@$account['givenname'][0],
+									@$account['initials'][0],
+									@$account['sn'][0],
 									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
 									$row_id
 								));
