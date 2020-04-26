@@ -105,7 +105,8 @@ $g_tasks_flags = array(
 	'Имя не соответствует шаблону',
 	'Не установлен или не работает LAPS',
 	'Не установлен или не работает агент SCCM',
-	'Возможна установка пустого пароля'
+	'Возможна установка пустого пароля',
+	'Устаревшая ОС'
 );
 
 $g_comp_flags = array(
@@ -219,6 +220,7 @@ function walk_route($route, $action)
 			'create-tasks-tmee',
 			'create-tasks-laps',
 			'create-tasks-rename',
+			'create-tasks-sccm',
 			'report-tasks-status',
 			'report-incorrect-names',
 			'report-incorrect-names-hd',
@@ -246,6 +248,9 @@ function walk_route($route, $action)
 		),
 		'create-tasks-epwd' => array(
 			'@create-tasks-epwd.php'
+		),
+		'create-tasks-epwd-persons' => array(
+			'@create-tasks-epwd-persons.php'
 		),
 		'create-tasks-os' => array(
 			'@create-tasks-os.php'
@@ -284,7 +289,13 @@ function walk_route($route, $action)
 			'@sync-3par.php'
 		),
 		'sync-ad' => array(
+			'sync-ad-computers',
+			'sync-ad-persons'
+		),
+		'sync-ad-computers' => array(
 			'@sync-ad-computers.php',
+		),
+		'sync-ad-persons' => array(
 			'@sync-ad-persons.php'
 		),
 		'sync-tmao' => array(

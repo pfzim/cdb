@@ -42,7 +42,13 @@ EOT;
 			m.`opernum`,
 			m.`flags`,
 			j1.`flags` AS j1_flags,
-			(SELECT COUNT(*) FROM @tasks AS i1 WHERE i1.`pid` = m.`pid` AND i1.`flags` & m.`flags`) AS `issues`
+			(
+				SELECT COUNT(*)
+				FROM @tasks AS i1
+				WHERE i1.`pid` = m.`pid`
+					AND (i1.`flags` & (m.`flags` | 0x0001)) = (m.`flags` | 0x0001)
+					AND i1.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+			) AS `issues`
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE (m.`flags` & 0x0001) = 0
@@ -74,24 +80,49 @@ EOT;
 	$problems_tmee = 0;
 	$opened_tmao = 0;
 	$opened_tmee = 0;
+	$problems_laps = 0;
+	$opened_laps = 0;
+	$problems_sccm = 0;
+	$opened_sccm = 0;
+	$problems_name = 0;
+	$opened_name = 0;
 
-	if($db->select_ex($result, rpv("
+	if($db->select_assoc_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `c1`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `c2`,
-		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `c3`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `c4`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `c5`
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `p_tmao`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `p_tmao_tt`,
+		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
+		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)) AS `p_laps`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
+		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."') AS `p_sccm`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
+		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`name` NOT REGEXP '".CDB_REGEXP_VALID_NAMES."') AS `p_name`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`
 	")))
 	{
-		$problems_tmao = $result[0][0];
-		$problems_tmao_tt = $result[0][1];
-		$problems_tmee = $result[0][2];
-		$opened_tmao = $result[0][3];
-		$opened_tmee = $result[0][4];
+		$problems_tmao = $result[0]['p_tmao'];
+		$problems_tmao_tt = $result[0]['p_tmao_tt'];
+		$problems_tmee = $result[0]['p_tmee'];
+		$opened_tmao = $result[0]['o_tmao'];
+		$opened_tmee = $result[0]['o_tmee'];
+		$problems_laps = $result[0]['p_laps'];
+		$opened_laps = $result[0]['o_laps'];
+		$problems_sccm = $result[0]['p_sccm'];
+		$opened_sccm = $result[0]['o_sccm'];
+		$problems_name = $result[0]['p_name'];
+		$opened_name = $result[0]['o_name'];
 	}
 
-	$html .= '<p>TMAO открытых заявок: '.$opened_tmao.', всего проблемных ПК : '.$problems_tmao.' (ТТ: '.$problems_tmao_tt.', Остальные: '.(intval($problems_tmao) - intval($problems_tmao_tt)).')<br />TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'</p>';
+	$html .= '<p>';
+	$html .= 'TMAO открытых заявок: '.$opened_tmao.', всего проблемных ПК : '.$problems_tmao.' (ТТ: '.$problems_tmao_tt.', Остальные: '.(intval($problems_tmao) - intval($problems_tmao_tt)).')<br />';
+	$html .= 'TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'<br />';
+	$html .= 'LAPS открытых заявок: '.$opened_laps.', всего проблемных ПК : '.$problems_laps.'<br />';
+	$html .= 'SCCM открытых заявок: '.$opened_sccm.', всего проблемных ПК : '.$problems_sccm.'<br />';
+	$html .= 'NAME открытых заявок: '.$opened_name.', всего проблемных ПК : '.$problems_name;
+	$html .= '</p>';
+	
 	$html .= '<p>Обозначения: D - Отключен в AD, R - удалён, H - скрыт, T - временный флаг синхронизации, A - Active Directory, O - Apex One, E - Encryption Endpoint, C - Configuration Manager</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-status">Сформировать отчёт заново</a></small>';

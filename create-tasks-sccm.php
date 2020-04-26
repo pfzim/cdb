@@ -10,6 +10,13 @@
 	// Open new tasks
 
 	$i = 0;
+	$limit = 20;
+
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x1000)) = 0x1000")))
+	{
+		$i = intval($result[0][0]);
+	}
+
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`name`, m.`dn`, m.`sccm_lastsync`, m.`flags`
 		FROM @computers AS m
@@ -17,13 +24,19 @@
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
-			AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
+			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x1000) = 0
 	")))
 	{
 		foreach($result as &$row)
 		{
+			if($i >= $limit)
+			{
+				echo 'Limit reached: '.$limit."\r\n";
+				break;
+			}
+
 			$answer = @file_get_contents(
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
@@ -50,7 +63,6 @@
 					$i++;
 				}
 			}
-			if($i >= 10) break;
 		}
 	}
 
@@ -65,7 +77,7 @@
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE
 			(m.`flags` & (0x0001 | 0x1000)) = 0x1000
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR m.`sccm_lastsync` >= DATE_SUB(NOW(), INTERVAL 1 MONTH))
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`sccm_lastsync` >= DATE_SUB(NOW(), INTERVAL 1 MONTH))
 	")))
 	{
 		foreach($result as &$row)
