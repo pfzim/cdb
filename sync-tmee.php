@@ -53,7 +53,27 @@
 			$lastsync = '0000-00-00 00:00:00';
 		}
 
-		$db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`, `flags`) VALUES (!, !, #, 0x0040) ON DUPLICATE KEY UPDATE `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~0x0008) | 0x0040)", $row['DeviceName'], $lastsync, $row['EncryptionStatus'], $lastsync, $row['EncryptionStatus']));
+		$row_id = 0;
+		if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['DeviceName'])))
+		{
+			if($db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`, `flags`) VALUES (!, !, #, 0x0040)",
+				$row['DeviceName'], 
+				$lastsync, 
+				$row['EncryptionStatus']
+			)))
+			{
+				$row_id = $db->last_id();
+			}
+		}
+		else
+		{
+			$row_id = $res[0][0];
+			$db->put(rpv("UPDATE @computers SET `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~0x0008) | 0x0040) WHERE `id` = # LIMIT 1",
+				$lastsync, 
+				$row['EncryptionStatus'],
+				$row_id
+			));
+		}
 		$i++;
 	}
 
