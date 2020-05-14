@@ -27,6 +27,48 @@
 
 	global $g_comp_flags;
 
+	// Close auto resolved tasks
+
+	$i = 0;
+	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
+	if($db->select_assoc_ex($result, rpv("
+		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
+		FROM @tasks AS m
+		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		WHERE
+			(m.`flags` & (0x0001 | 0x0100)) = 0x0100
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ee_encryptionstatus` = 2)
+	")))
+	{
+		foreach($result as &$row)
+		{
+			$answer = @file_get_contents(
+				HELPDESK_URL.'/ExtAlert.aspx/'
+				.'?Source=cdb'
+				.'&Action=resolved'
+				.'&Type=tmee'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
+			);
+
+			if($answer !== FALSE)
+			{
+				$xml = @simplexml_load_string($answer);
+				if($xml !== FALSE)
+				{
+					//echo $answer."\r\n";
+					echo $row['name'].' '.$row['opernum']."\r\n";
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$i++;
+				}
+			}
+		}
+	}
+
+	echo 'Closed: '.$i."\r\n";
+
 	// Open new tasks
 
 	$i = 0;
@@ -79,45 +121,3 @@
 	}
 
 	echo 'Created: '.$i."\r\n";
-
-	// Close auto resolved tasks
-
-	$i = 0;
-	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & 0x0100) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
-	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
-		FROM @tasks AS m
-		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
-		WHERE
-			(m.`flags` & (0x0001 | 0x0100)) = 0x0100
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ee_encryptionstatus` = 2)
-	")))
-	{
-		foreach($result as &$row)
-		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Type=tmee'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Host='.urlencode($row['name'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
-
-			if($answer !== FALSE)
-			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
-			}
-		}
-	}
-
-	echo 'Closed: '.$i."\r\n";

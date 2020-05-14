@@ -205,15 +205,11 @@ function walk_route($route, $action)
 			'sync-tmao',
 			'sync-tmee',
 			'sync-sccm',
+			'sync-itinvent',
 			'mark-after-sync'
 		),
 		'cron-daily' => array(
-			'mark-before-sync',
-			'sync-ad',
-			'sync-tmao',
-			'sync-tmee',
-			'sync-sccm',
-			'mark-after-sync',
+			'sync-all',
 			'report-tmao-servers',
 			'check-tasks-status',
 			'create-tasks-tmao',
@@ -221,6 +217,8 @@ function walk_route($route, $action)
 			'create-tasks-laps',
 			'create-tasks-rename',
 			'create-tasks-sccm',
+			'create-tasks-epwd',
+			'create-tasks-epwd-persons',
 			'report-tasks-status',
 			'report-incorrect-names',
 			'report-incorrect-names-hd',
@@ -307,8 +305,14 @@ function walk_route($route, $action)
 		'sync-sccm' => array(
 			'@sync-sccm.php'
 		),
+		'sync-itinvent' => array(
+			'@sync-itinvent.php'
+		),
 		'get-computer-info' => array(
 			'@get-computer-info.php'
+		),
+		'import-mac' => array(
+			'@import-mac.php'
 		)
 	);
 

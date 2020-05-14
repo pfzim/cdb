@@ -37,12 +37,25 @@ Available `flags` bit options for table `computers`
 | 0x2000 | PASSWD Task was created in HelpDesk       |
 | 0x4000 | OS Task was created in HelpDesk           |
 
+`mac` table `flags`
+
+| Bits   | Description                               |
+|--------|-------------------------------------------|
+| 0x0001 |                                           |
+| 0x0002 |                                           |
+| 0x0004 |                                           |
+| 0x0008 |                                           |
+| 0x0010 | Exist in IT Invent                        |
+| 0x0020 | Imported from netdev                      |
+| 0x0040 | Active in IT Invent                       |
+
 Table `devices` column `type`
 
 | Value  | Description                               |
 |--------|-------------------------------------------|
 | 1      | 3PAR storage                              |
 | 2      | Hyper-V cluster                           |
+| 3      | netdev                                    |
 
 
 Table `properties_*` column `oid`
