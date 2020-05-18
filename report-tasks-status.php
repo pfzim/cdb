@@ -51,7 +51,9 @@ EOT;
 			) AS `issues`
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
-		WHERE (m.`flags` & 0x0001) = 0
+		WHERE
+			m.`tid` = 1
+			AND (m.`flags` & 0x0001) = 0
 		ORDER BY j1.`name`
 	")))
 	{

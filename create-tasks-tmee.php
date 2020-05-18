@@ -34,9 +34,11 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
 		FROM @tasks AS m
-		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		LEFT JOIN @computers AS j1
+			ON j1.`id` = m.`pid`
 		WHERE
-			(m.`flags` & (0x0001 | 0x0100)) = 0x0100
+			m.`tid` = 1
+			AND (m.`flags` & (0x0001 | 0x0100)) = 0x0100
 			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ee_encryptionstatus` = 2)
 	")))
 	{
@@ -76,7 +78,11 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`name`, m.`dn`, m.`ee_encryptionstatus`, m.`flags`
 		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
+		LEFT JOIN @tasks AS j1
+			ON
+				j1.`tid` = 1
+				AND j1.pid = m.id
+				AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND m.`ee_encryptionstatus` <> 2
@@ -112,7 +118,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x0100, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x0100, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
