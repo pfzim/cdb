@@ -14,14 +14,14 @@
 		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`login`
 		FROM @tasks AS m
 		LEFT JOIN @persons AS j1
-			ON j1.`tid` = 2
-			AND j1.`id` = m.`pid`
+			ON j1.`id` = m.`pid`
 		LEFT JOIN @properties_int AS j2
-			ON `tid` = 2
+			ON j2.`tid` = 2
 			AND j2.`pid` = m.`pid`
 			AND j2.`oid` = #
 		WHERE
-			(m.`flags` & (0x0001 | 0x2000)) = 0x2000
+			m.`tid` = 2
+			AND(m.`flags` & (0x0001 | 0x2000)) = 0x2000
 			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR (j2.`value` & 0x020) = 0)
 	", CDB_PROP_USERACCOUNTCONTROL)))
 	{
@@ -110,7 +110,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`pid`, `tid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 2, 0x2000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (2, #, 0x2000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
