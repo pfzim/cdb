@@ -20,7 +20,8 @@
 			AND j_os.`pid` = t.`pid`
 			AND j_os.`oid` = #
 		WHERE
-			(t.`flags` & (0x0001 | 0x4000)) = 0x4000
+			t.`tid` = 1
+			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
 			AND (
 				c.`flags` & (0x0001 | 0x0002 | 0x0004)
 				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
@@ -70,7 +71,9 @@
 		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`, j_os.`value` AS `os`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS t
-			ON t.`pid` = m.`id`
+			ON
+			t.`tid` = 1
+			AND t.`pid` = m.`id`
 			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
 		LEFT JOIN @properties_str AS j_os
 			ON j_os.`tid` = 1
@@ -114,7 +117,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x4000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x4000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

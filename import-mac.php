@@ -37,6 +37,7 @@
 		}
 	}
 
+	error_log(date('c').'  Start import from device: '.$net_dev."\n", 3, '/var/log/cdb/import-mac.log');
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
@@ -52,7 +53,7 @@
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect format. Line '.$i.';';
 				
-				error_log('Warning: Incorrect format: '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+				error_log(date('c').'  Warning: Incorrect format ('.$i.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 
 				$line = strtok("\n");
 				continue;
