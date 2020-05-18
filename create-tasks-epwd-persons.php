@@ -14,7 +14,8 @@
 		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`login`
 		FROM @tasks AS m
 		LEFT JOIN @persons AS j1
-			ON j1.`id` = m.`pid`
+			ON j1.`tid` = 2
+			AND j1.`id` = m.`pid`
 		LEFT JOIN @properties_int AS j2
 			ON `tid` = 2
 			AND j2.`pid` = m.`pid`
@@ -43,7 +44,7 @@
 				if($xml !== FALSE)
 				{
 					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['opernum']."\r\n";
+					echo $row['login'].' '.$row['opernum']."\r\n";
 					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
@@ -67,7 +68,8 @@
 		SELECT m.`id`, m.`login`, m.`dn`, m.`flags`
 		FROM @persons AS m
 		LEFT JOIN @tasks AS j1
-			ON j1.`pid` = m.`id`
+			ON j1.`tid` = 2
+			AND j1.`pid` = m.`id`
 			AND (j1.`flags` & (0x0001 | 0x2000)) = 0x2000
 		LEFT JOIN @properties_int AS j2
 			ON j2.`tid` = 2
@@ -108,7 +110,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`pid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 0x2000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`pid`, `tid`, `flags`, `date`, `operid`, `opernum`) VALUES (#, 2, 0x2000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
