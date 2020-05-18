@@ -51,7 +51,7 @@
 	{
 		for($k = 1; $k <= 3; $k++)
 		{
-			$mac = strtolower(str_replace(array(':', '.', ' '), '', $row['mac'.$k]));
+			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 			if(!empty($mac))
 			{
 				$row_id = 0;
