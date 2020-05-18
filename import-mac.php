@@ -20,6 +20,23 @@
 	$code = 0;
 	$error_msg = '';
 
+	$pid = 0;
+	$last_sw_id = '';
+	
+	$net_dev = $_POST['netdev'];
+	$dev_id = 0;
+	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $net_dev)))
+	{
+		$dev_id = $result[0][0];
+	}
+	else
+	{
+		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES (3, !, 0)", $net_dev)))
+		{
+			$dev_id = $db->last_id();
+		}
+	}
+
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
@@ -29,44 +46,51 @@
 		
 		if(!empty($line))
 		{
-			$row = explode(',', $line);
-			if(count($row) != 4)
+			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port
+			if(count($row) != 5)
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect format. Line '.$i.';';
+				
+				error_log('Warning: Incorrect format: '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 
 				$line = strtok("\n");
 				continue;
 			}
 
-			$db->start_transaction();
+			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
 
-			$dev_id = 0;
-			if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`name` = ! LIMIT 1", $_POST['netdev'])))
+			if($row[3] === $net_dev)
 			{
-				$dev_id = $result[0][0];
+				$last_sw_id = $net_dev;
+				$pid = $dev_id;
 			}
-			else
+			else if($last_sw_id !== $row[3])
 			{
-				if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES (3, !, 0)",
-					$_POST['netdev']
-				)))
+				$pid = 0;
+				$last_sw_id = $row[3];
+				if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[3])))
 				{
-					$dev_id = $db->last_id();
+					$pid = $result[0][0];
+				}
+				else
+				{
+					if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES (3, #, !, 0)", $dev_id, $row[3])))
+					{
+						$pid = $db->last_id();
+					}
 				}
 			}
-
-			$mac = strtolower(str_replace(array(':', '.', ' '), '', $row[0]));
 
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! LIMIT 1", $mac)))
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), #)",
-					$dev_id,
+					$pid,
 					$row[1],
 					$mac,
 					$row[2],
-					$row[3],
+					$row[4],
 					0x0020
 				)))
 				{
@@ -77,15 +101,13 @@
 			{
 				$row_id = $result[0][0];
 				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `date` = NOW(), `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
-					$dev_id,
+					$pid,
 					$row[1],
 					$row[2],
-					$row[3],
+					$row[4],
 					0x0020
 				));
 			}
-
-			$db->commit();
 		}
 
 		$line = strtok("\n");
