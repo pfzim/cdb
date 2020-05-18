@@ -3,7 +3,7 @@
 Now it collect information about Trent Micro Apex One and Endpoint Encryption.
 It can create tasks in HelpDesk.
 
-Available `flags` bit options for table `computers`
+Available `flags` bit options for table `computers` (? and `persons`)
 
 | Bits   | Description                               |
 |--------|-------------------------------------------|
@@ -11,7 +11,7 @@ Available `flags` bit options for table `computers`
 | 0x0002 | Deleted                                   |
 | 0x0004 | Manual hide from report                   |
 | 0x0008 | Temporary flag for delete after all syncs |
-| 0x00F0 | Mask for next 4 bits (Exist)              |
+| 0x00F0 | *Mask for next 4 bits (Exist)*            |
 | 0x0010 | Exist in AD                               |
 | 0x0020 | Exist in TMAO                             |
 | 0x0040 | Exist in TMEE                             |
@@ -36,6 +36,7 @@ Available `flags` bit options for table `computers`
 | 0x1000 | SCCM Task was created in HelpDesk         |
 | 0x2000 | PASSWD Task was created in HelpDesk       |
 | 0x4000 | OS Task was created in HelpDesk           |
+| 0x8000 | IT Invent Task was created in HelpDesk    |
 
 `mac` table `flags`
 
@@ -67,12 +68,12 @@ Table `properties_*` column `oid`
 |        |                                           |                                           |
 |        |                                           |                                           |
 
-Table `properties_*` column `tid`
+Table `task` and `properties_*` column `tid`
 | Value  | Description                               |
 |--------|-------------------------------------------|
-| 1      | `pid` from `computers` table              |
-| 2      | `pid` from `persons` table                |
-|        |                                           |
+| 1      | Then `pid` from `computers` table         |
+| 2      | Then `pid` from `persons` table           |
+| 3      | Then `pid` from `mac` table               |
 
 
 Change flag 0x40 to 0x0400:

@@ -253,6 +253,9 @@ function walk_route($route, $action)
 		'create-tasks-os' => array(
 			'@create-tasks-os.php'
 		),
+		'create-tasks-itinvent' => array(
+			'@create-tasks-itinvent.php'
+		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
 		),

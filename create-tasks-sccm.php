@@ -27,7 +27,7 @@
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=resolved'
-				.'&Type=tmee'
+				.'&Type=sccm'
 				.'&Id='.urlencode($row['operid'])
 				.'&Num='.urlencode($row['opernum'])
 				.'&Host='.urlencode($row['name'])

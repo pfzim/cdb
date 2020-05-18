@@ -37,7 +37,7 @@
 		}
 	}
 
-	error_log(date('c').'  Start import from device: '.$net_dev."\n", 3, '/var/log/cdb/import-mac.log');
+	error_log(date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-mac.log');
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
