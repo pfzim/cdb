@@ -31,10 +31,8 @@
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=resolved'
-				.'&Type=epwd'
 				.'&Id='.urlencode($row['operid'])
 				.'&Num='.urlencode($row['opernum'])
-				.'&Host='.urlencode($row['login'])
 				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
 			);
 

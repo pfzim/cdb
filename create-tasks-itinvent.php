@@ -50,7 +50,7 @@
 	// Open new tasks
 
 	$i = 0;
-	$limit = 2;
+	$limit = 1;
 
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x8000)) = 0x8000")))
 	{
@@ -58,7 +58,7 @@
 	}
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, d.`name` AS `netdev`, m.`name`, m.`mac`, m.`ip`, m.`port`, m.`flags`
+		SELECT m.`id`, d.`name` AS `netdev`, m.`name`, m.`mac`, m.`ip`, m.`port`, DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`, m.`flags`
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid`
@@ -86,16 +86,17 @@
 				.'?Source=cdb'
 				.'&Action=new'
 				.'&Type=test'
-				.'&To=byname'
-				.'&Host='.urlencode($row['name'])
+				.'&To=bynetdev'
+				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
 					'Обнаружено сетевое устройство MAC адрес которого не зафиксирован в IT Invent'
-					."\nMAC: ".$row['mac']
+					."\n\nMAC: ".implode(':', str_split($row['mac'], 2))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
-					."\nИсточник информации о устройстве: ".$row['netdev']
-					."\nНомер порта: ".$row['port']
-					."\nКод работ: IN001\n\nСледует актуализировать данные по указанному устройству и заполнить атрибут MAC адрес в соответствии с инструкцией п. 2.7 ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Заполнение-карточки-учетнои-единицы-при-первичном-внесении-в-базу.ashx'
+					."\nУстройство подключено к: ".$row['netdev']
+					."\nПорт: ".$row['port']
+					."\nВремя регистрации: ".$row['regtime']
+					."\n\nКод работ: INV01\n\nСледует актуализировать данные по указанному устройству и заполнить атрибут MAC адрес в соответствии с инструкцией п. 2.7 ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Заполнение-карточки-учетнои-единицы-при-первичном-внесении-в-базу.ashx'
 				)
 			);
 

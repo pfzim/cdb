@@ -27,10 +27,8 @@
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=resolved'
-				.'&Type=tmao'
 				.'&Id='.urlencode($row['operid'])
 				.'&Num='.urlencode($row['opernum'])
-				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
 			);
 
