@@ -88,10 +88,10 @@
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), #)",
 					$pid,
-					$row[1],
+					$row[1],  // name
 					$mac,
-					$row[2],
-					$row[4],
+					$row[2],  // ip
+					$row[4],  // port
 					0x0020
 				)))
 				{
@@ -103,10 +103,11 @@
 				$row_id = $result[0][0];
 				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `date` = NOW(), `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 					$pid,
-					$row[1],
-					$row[2],
-					$row[4],
-					0x0020
+					$row[1],  // name
+					$row[2],  // ip
+					$row[4],  // port
+					0x0020,
+					$row_id
 				));
 			}
 		}

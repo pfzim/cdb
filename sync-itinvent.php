@@ -52,7 +52,7 @@
 		for($k = 1; $k <= 3; $k++)
 		{
 			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
-			if(!empty($mac))
+			if(!empty($mac) && strlen($mac) == 12)
 			{
 				$row_id = 0;
 				if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! LIMIT 1", $mac)))
@@ -71,7 +71,8 @@
 					$row_id = $result[0][0];
 					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 						$row['INV_NO'],
-						0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000)
+						0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000),
+						$row_id
 					));
 				}
 				$i++;
