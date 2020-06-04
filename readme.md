@@ -28,7 +28,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0010 |                                           |
 | 0x0020 |                                           |
 | 0x0040 |                                           |
-| 0x0080 |                                           |
+| 0x0080 | Application Control Task was created      |
 | 0x0100 | TMEE Task was created in HelpDesk         |
 | 0x0200 | TMAO Task was created in HelpDesk         |
 | 0x0400 | Rename Task was created in HelpDesk       |
@@ -37,6 +37,15 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x2000 | PASSWD Task was created in HelpDesk       |
 | 0x4000 | OS Task was created in HelpDesk           |
 | 0x8000 | IT Invent Task was created in HelpDesk    |
+
+`ac_log` table `flags`
+
+| Bits   | Description                               |
+|--------|-------------------------------------------|
+| 0x0001 |                                           |
+| 0x0002 | Problem fixed                             |
+| 0x0004 |                                           |
+| 0x0008 |                                           |
 
 `mac` table `flags`
 
@@ -74,6 +83,7 @@ Table `task` and `properties_*` column `tid`
 | 1      | Then `pid` from `computers` table         |
 | 2      | Then `pid` from `persons` table           |
 | 3      | Then `pid` from `mac` table               |
+| 4      | Then `pid` from `ac_log` table            |
 
 
 Change flag 0x40 to 0x0400:

@@ -79,6 +79,29 @@ function php_mailer($to, $subject, $html, $plain)
 	return $mail->send();
 }
 
+function sql_date_cmp($date1, $date2)
+{
+	$d1 = preg_split('/[-:\.T\s]/', $date1, 6);
+	$d2 = preg_split('/[-:\.T\s]/', $date2, 6);
+	
+	for($i = 0; $i < 6; $i++)
+	{
+		$i1 = intval($d1[$i]);
+		$i2 = intval($d2[$i]);
+
+		if($i1 < $i2)
+		{
+			return -1;
+		}
+		else if($i1 > $i2)
+		{
+			return 1;
+		}
+	}
+	
+	return 0;	
+}
+
 function tmee_status($code)
 {
 	switch($code)
