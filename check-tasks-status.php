@@ -60,7 +60,7 @@ function get_status_name($strings, $code)
 
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `operid`, `opernum` FROM @tasks WHERE (`flags` & 0x0001) = 0")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `tid`, `pid`, `operid`, `opernum` FROM @tasks WHERE (`flags` & 0x0001) = 0")))
 		{
 			foreach($result as &$row)
 			{
@@ -81,6 +81,12 @@ function get_status_name($strings, $code)
 								{
 									echo "   is closed\r\n";
 									$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+
+									// Application Contol problem mark as Solved
+									if(intval($row['tid']) == 4)
+									{
+										$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $row['pid']));
+									}
 									$i++;
 								}
 							}

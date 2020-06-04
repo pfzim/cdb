@@ -90,5 +90,101 @@
 		echo 'Count ['.$server.']: '.$i."\n";
 		
 		sqlsrv_free_stmt($result);
+
+		// Load Application Control logs
+
+		$result = sqlsrv_query($conn, "
+			SELECT
+				[SLF_ClientHostName]
+				,MAX([SLF_LogGenLocalDatetime]) AS last_event
+				,[SLF_ApplicationPath]
+				,[SLF_ApplicationProcessCommandline]
+			FROM
+				[iac].[DetectionLog]
+			WHERE
+				SLF_LogGenLocalDatetime > DATEADD(DAY, -7, GETDATE())
+			GROUP BY
+				[SLF_ClientHostName]
+				,[SLF_ApplicationPath]
+				,[SLF_ApplicationProcessCommandline]
+			ORDER BY
+				[SLF_ClientHostName]
+				, last_event DESC
+		");
+
+		$i = 0;
+		$client = NULL;
+		$client_id = 0;
+
+		while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
+		{
+			//echo $row['COMP_NAME'].", ".$row['PTNUPDTIME'].", ".$row['SCRIPT_PTN'].", ".$row['AS_PSTIME']."\r\n";
+			if($client !== $row['SLF_ClientHostName'])
+			{
+				if($db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['SLF_ClientHostName'])))
+				{
+					$client = $row['SLF_ClientHostName'];
+					$client_id = $res[0][0];
+				}
+				else
+				{
+					//echo 'Skip. Client '.$row['SLF_ClientHostName']." does not exist in table `computers`\n";
+					continue;
+				}
+			}
+			
+			if(!$db->select_ex($res, rpv("SELECT al.`id`, al.`last` FROM @ac_log AS al WHERE al.`pid` = # AND al.`app_path` = ! LIMIT 1", $client_id, $row['SLF_ApplicationPath'])))
+			{
+				if($db->put(rpv("
+						INSERT INTO @ac_log (
+							`pid`,
+							`last`,
+							`app_path`,
+							`cmdln`,
+							`flags`
+						)
+						VALUES (#, !, !, !, 0x0000)",
+					$client_id,
+					$row['last_event'],
+					$row['SLF_ApplicationPath'],
+					$row['SLF_ApplicationProcessCommandline']
+				)))
+				{
+					$row_id = $db->last_id();
+				}
+			}
+			else
+			{
+				$row_id = $res[0][0];
+				if(sql_date_cmp($row['last_event'], $res[0][1]) > 0)
+				{
+					$db->put(rpv("
+							UPDATE @ac_log
+							SET
+								`last` = !,
+								`cmdln` = !,
+								`flags` = (`flags` & ~0x0002)
+							WHERE
+								`id` = #
+							LIMIT 1
+						",
+						$row['last_event'],
+						$row['SLF_ApplicationProcessCommandline'],
+						$row_id
+					));
+					//echo 'UPDATE: '.$row['last_event'].' in szdb: '.$res[0][1].' == '.$c."\n";
+				}
+				//else
+				//{
+				//	echo 'Skip. Already exist newer: '.$row['last_event'].' in szdb: '.$res[0][1].' == '.$c."\n";
+				//}
+			}
+			$i++;
+		}
+
+		echo 'Count AC ['.$server.']: '.$i."\n";
+
+		sqlsrv_free_stmt($result);
+
 		sqlsrv_close($conn);
 	}
