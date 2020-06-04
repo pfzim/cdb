@@ -5,13 +5,19 @@
 
 	echo "\ncreate-tasks-os:\n";
 
+	$limit = 10;
+
 	global $g_comp_flags;
 
 	// Close auto resolved tasks
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
+		SELECT
+			t.`id`,
+			t.`operid`,
+			t.`opernum`,
+			c.`name`
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
@@ -66,7 +72,12 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`, j_os.`value` AS `os`
+		SELECT
+			m.`id`,
+			m.`name`,
+			m.`dn`,
+			m.`flags`,
+			j_os.`value` AS `os`
 		FROM @computers AS m
 		LEFT JOIN @tasks AS t
 			ON
@@ -87,9 +98,9 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 50)
+			if($i >= $limit)
 			{
-				echo "Limit reached: 1\r\n";
+				echo 'Limit reached: '.$limit."\r\n";
 				break;
 			}
 			
@@ -105,7 +116,7 @@
 					."\nПК: ".$row['name']
 					."\nТекущая версия ОС: ".$row['os']
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
-					."\nКод работ: OSUP\n\n".WIKI_URL.'/Инструкцию_вставить_здесь.ashx'
+					."\nКод работ: OSUP\n\n".WIKI_URL.'/Департамент%20ИТ%20Отдел%20ИТ%20поддержки%20Регионов%20(ТСА).Установка-ОС-с-использованием-SCCM.ashx'
 				)
 			);
 			if($answer !== FALSE)

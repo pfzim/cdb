@@ -1,6 +1,25 @@
 <?php
 	// Retrieve information from IT Invent database
 
+	/*
+
+		List all fields:
+
+		SELECT [FIELD_NO]
+			  ,[ITEM_NO]
+			  ,[FIELD_NAME]
+			  ,[FIELD_TYPE]
+			  ,[FIELD_DESCR]
+			  ,[SORT_NO]
+			  ,[LIST_VALUES]
+			  ,[REQUIRED]
+			  ,[TAB_NO]
+			  ,[SQL_QUERY]
+			  ,[USE_ON_TABLE]
+		  FROM [ITINVENT].[dbo].[FIELDS]
+  
+  */
+	
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-itinvent:\n";
@@ -33,14 +52,23 @@
 			,m1.[FIELD_VALUE] AS mac1
 			,m2.[FIELD_VALUE] AS mac2
 			,m3.[FIELD_VALUE] AS mac3
+			,m4.[FIELD_VALUE] AS mac4
+			,m5.[FIELD_VALUE] AS mac5
+			,m6.[FIELD_VALUE] AS mac6
 		FROM [ITEMS] AS item
 		LEFT JOIN [FIELDS_VALUES] AS m1 ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m2 ON m2.[ITEM_ID] = item.[ID] AND m2.[FIELD_NO] = 107 AND m2.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m3 ON m3.[ITEM_ID] = item.[ID] AND m3.[FIELD_NO] = 133 AND m3.[ITEM_NO] = 1
-		WHERE 
+		LEFT JOIN [FIELDS_VALUES] AS m4 ON m4.[ITEM_ID] = item.[ID] AND m4.[FIELD_NO] = 149 AND m4.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m5 ON m5.[ITEM_ID] = item.[ID] AND m5.[FIELD_NO] = 150 AND m5.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m6 ON m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1
+		WHERE
 			m1.[FIELD_VALUE] IS NOT NULL
 			OR m2.[FIELD_VALUE] IS NOT NULL
 			OR m3.[FIELD_VALUE] IS NOT NULL
+			OR m4.[FIELD_VALUE] IS NOT NULL
+			OR m5.[FIELD_VALUE] IS NOT NULL
+			OR m6.[FIELD_VALUE] IS NOT NULL
 	");
 
 	// before sync remove mark: 0x0010 - Exist in IT Invent, 0x0040 - Active
@@ -49,7 +77,7 @@
 	$i = 0;
 	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 	{
-		for($k = 1; $k <= 3; $k++)
+		for($k = 1; $k <= 6; $k++)    // mac* fields count
 		{
 			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 			if(!empty($mac) && strlen($mac) == 12)

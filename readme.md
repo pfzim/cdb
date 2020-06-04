@@ -43,7 +43,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | Bits   | Description                               |
 |--------|-------------------------------------------|
 | 0x0001 |                                           |
-| 0x0002 | Deleted                                   |
+| 0x0002 | Deleted (excluded)                        |
 | 0x0004 |                                           |
 | 0x0008 |                                           |
 | 0x0010 | Exist in IT Invent                        |
