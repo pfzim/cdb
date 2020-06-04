@@ -5,6 +5,8 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
+	$limit = 20;
+
 	global $g_comp_flags;
 
 	// Close auto resolved tasks
@@ -50,7 +52,6 @@
 	// Open new tasks
 
 	$i = 0;
-	$limit = 1;
 
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x8000)) = 0x8000")))
 	{
@@ -58,7 +59,15 @@
 	}
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, d.`name` AS `netdev`, m.`name`, m.`mac`, m.`ip`, m.`port`, DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`, m.`flags`
+		SELECT 
+			m.`id`,
+			d.`name` AS `netdev`,
+			m.`name`,
+			m.`mac`,
+			m.`ip`,
+			m.`port`,
+			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
+			m.`flags`
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid`
@@ -69,6 +78,7 @@
 				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
 		WHERE
 			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent
+			AND d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
 	")))
@@ -85,7 +95,7 @@
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=new'
-				.'&Type=test'
+				.'&Type=itinvent'
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(

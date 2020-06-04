@@ -106,7 +106,8 @@ $g_tasks_flags = array(
 	'Не установлен или не работает LAPS',
 	'Не установлен или не работает агент SCCM',
 	'Возможна установка пустого пароля',
-	'Устаревшая ОС'
+	'Устаревшая ОС',
+	'Отсутствует в IT Invent'
 );
 
 $g_comp_flags = array(
@@ -129,6 +130,26 @@ $g_comp_short_flags = array(
 	'O',
 	'E',
 	'C'
+);
+
+$g_mac_flags = array(
+	'',
+	'Deleted',
+	'',
+	'',
+	'IT Invent',
+	'netdev',
+	'Active'
+);
+
+$g_mac_short_flags = array(
+	'',
+	'R',
+	'',
+	'',
+	'I',
+	'N',
+	'A'
 );
 
 function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
@@ -219,7 +240,10 @@ function walk_route($route, $action)
 			'create-tasks-sccm',
 			'create-tasks-epwd',
 			'create-tasks-epwd-persons',
+			'create-tasks-itinvent',
+			'create-tasks-os',
 			'report-tasks-status',
+			'report-tasks-itinvent',
 			'report-incorrect-names',
 			'report-incorrect-names-hd',
 			'report-laps'
@@ -282,6 +306,9 @@ function walk_route($route, $action)
 		),
 		'report-tmao-servers' => array(
 			'@report-tmao-servers.php'
+		),
+		'report-tasks-itinvent' => array(
+			'@report-tasks-itinvent.php'
 		),
 		'report-vm' => array(
 			'@report-vm.php'
