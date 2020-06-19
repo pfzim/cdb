@@ -5,6 +5,9 @@
 
 	echo "\ncreate-tasks-tmao:\n";
 
+	$limit_gup = 15;
+	$limit_goo = 100;
+
 	global $g_comp_flags;
 
 	// Close auto resolved tasks
@@ -18,7 +21,7 @@
 		WHERE
 			m.`tid` = 1
 			AND (m.`flags` & (0x0001 | 0x0200)) = 0x0200
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900))
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG."))
 	")))
 	{
 		foreach($result as &$row)
@@ -53,8 +56,6 @@
 
 	$count_gup = 0;
 	$count_goo = 0;
-	$limit_gup = 75;
-	$limit_goo = 50;
 
 	/*
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0200)) = 0x0200")))
@@ -100,7 +101,7 @@
 				AND (j1.flags & (0x0001 | 0x0200)) = 0x0200
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)
+			AND m.`ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")
 			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x0200) = 0

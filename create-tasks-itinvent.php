@@ -5,7 +5,7 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
-	$limit = 20;
+	$limit = 50;
 
 	global $g_comp_flags;
 
@@ -78,7 +78,11 @@
 				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
 		WHERE
 			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent
-			AND d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
+			AND (
+				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
+				OR
+				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
+			)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
 	")))

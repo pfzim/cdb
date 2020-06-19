@@ -55,6 +55,7 @@ EOT;
 	$html .= '<p>Encryption Endpoint status: '.tmee_status(intval($computer[0]['ee_encryptionstatus'])).'</p>';
 	$html .= '<p>LAPS expire time: '.$computer[0]['laps_exp'].'</p>';
 	$html .= '<p>Flags: '.flags_to_string(intval($computer[0]['flags']), $g_comp_flags, ', ').'</p>';
+	$html .= '<p>Action: '.((intval($computer[0]['flags']) & 0x0004) ? '<a href="'.CDB_URL.'/cdb.php?action=computer&do=show&id='.$computer[0]['id'].'">Show</a>':'<a href="'.CDB_URL.'/cdb.php?action=computer&do=hide&id='.$computer[0]['id'].'">Hide</a>').'</p>';
 	
 	$table = '<table>';
 	$table .= '<tr><th>Date</th><th>HD Task</th><th>Reason</th></tr>';
