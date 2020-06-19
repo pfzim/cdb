@@ -88,11 +88,13 @@ EOT;
 	$opened_sccm = 0;
 	$problems_name = 0;
 	$opened_name = 0;
+	$problems_osup = 0;
+	$opened_osup = 0;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `p_tmao`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - 2900)) AS `p_tmao_tt`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
 		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
 		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
 		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
@@ -101,7 +103,24 @@ EOT;
 		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."') AS `p_sccm`,
 		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
 		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`name` NOT REGEXP '".CDB_REGEXP_VALID_NAMES."') AS `p_name`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`,
+		(
+			SELECT
+				COUNT(*)
+			FROM @properties_str AS os
+			LEFT JOIN @computers AS c
+				ON
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
+				AND os.`pid` = c.`id`
+			WHERE
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
+				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+				AND c.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
+		) AS `p_os`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x4000)) = 0x4000) AS `o_os`
 	")))
 	{
 		$problems_tmao = $result[0]['p_tmao'];
@@ -115,6 +134,8 @@ EOT;
 		$opened_sccm = $result[0]['o_sccm'];
 		$problems_name = $result[0]['p_name'];
 		$opened_name = $result[0]['o_name'];
+		$problems_osup = $result[0]['p_os'];
+		$opened_osup = $result[0]['o_os'];
 	}
 
 	$html .= '<p>';
@@ -122,9 +143,10 @@ EOT;
 	$html .= 'TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'<br />';
 	$html .= 'LAPS открытых заявок: '.$opened_laps.', всего проблемных ПК : '.$problems_laps.'<br />';
 	$html .= 'SCCM открытых заявок: '.$opened_sccm.', всего проблемных ПК : '.$problems_sccm.'<br />';
-	$html .= 'NAME открытых заявок: '.$opened_name.', всего проблемных ПК : '.$problems_name;
+	$html .= 'NAME открытых заявок: '.$opened_name.', всего проблемных ПК : '.$problems_name.'<br />';
+	$html .= 'OS   открытых заявок: '.$opened_osup.', всего проблемных ПК : '.$problems_osup;
 	$html .= '</p>';
-	
+
 	$html .= '<p>Обозначения: D - Отключен в AD, R - удалён, H - скрыт, T - временный флаг синхронизации, A - Active Directory, O - Apex One, E - Encryption Endpoint, C - Configuration Manager</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-status">Сформировать отчёт заново</a></small>';

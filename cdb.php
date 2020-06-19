@@ -267,8 +267,6 @@ function walk_route($route, $action)
 			'create-tasks-os',
 			'report-tasks-status',
 			'report-tasks-itinvent',
-			'report-incorrect-names',
-			'report-incorrect-names-hd',
 			'report-laps'
 		),
 		'cron-weekly' => array(
@@ -366,6 +364,9 @@ function walk_route($route, $action)
 		),
 		'import-mac' => array(
 			'@import-mac.php'
+		),
+		'computer' => array(
+			'@computer.php'
 		)
 	);
 
