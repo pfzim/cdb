@@ -51,15 +51,35 @@
 			if(count($row) != 5)
 			{
 				$code = 1;
-				$error_msg .= 'Warning: Incorrect format. Line '.$line_no.';';
+				$error_msg .= 'Warning: Incorrect line format. Line '.$line_no.';';
 				
-				error_log(date('c').'  Warning: Incorrect format ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 
 				$line = strtok("\n");
 				continue;
 			}
 
-			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
+			$is_sn = false;
+			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
+			{
+				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
+			}
+			else
+			{
+				$is_sn = true;
+				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
+			}
+
+			if(empty($mac) || (!$is_sn && strlen($mac) != 12))
+			{
+				$code = 1;
+				$error_msg .= 'Warning: Invalid MAC. Line '.$line_no.';';
+
+				error_log(date('c').'  Warning: Invalid MAC ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+
+				$line = strtok("\n");
+				continue;
+			}
 
 			if($row[3] === $net_dev)
 			{
@@ -86,7 +106,8 @@
 			$excluded = 0x0000;
 			
 			if(
-				(
+				!$is_sn
+				&& (
 					(
 						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
 						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_PORT.'#i', $row[4])
@@ -103,7 +124,7 @@
 			}
 
 			$row_id = 0;
-			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! LIMIT 1", $mac)))
+			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), #)",
 					$pid,
@@ -111,7 +132,7 @@
 					$mac,
 					$row[2],  // ip
 					$row[4],  // port
-					0x0020 | $excluded
+					0x0020 | $excluded | ($is_sn ? 0x0080 : 0x0000)
 				)))
 				{
 					$row_id = $db->last_id();

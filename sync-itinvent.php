@@ -48,6 +48,7 @@
 			[ID]
 			,[INV_NO]
 			,[STATUS_NO]
+			,[SERIAL_NO]
 			,[MAC_ADDRESS] AS mac0
 			,m1.[FIELD_VALUE] AS mac1
 			,m2.[FIELD_VALUE] AS mac2
@@ -55,20 +56,24 @@
 			,m4.[FIELD_VALUE] AS mac4
 			,m5.[FIELD_VALUE] AS mac5
 			,m6.[FIELD_VALUE] AS mac6
-		FROM [ITEMS] AS item
-		LEFT JOIN [FIELDS_VALUES] AS m1 ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
-		LEFT JOIN [FIELDS_VALUES] AS m2 ON m2.[ITEM_ID] = item.[ID] AND m2.[FIELD_NO] = 107 AND m2.[ITEM_NO] = 1
-		LEFT JOIN [FIELDS_VALUES] AS m3 ON m3.[ITEM_ID] = item.[ID] AND m3.[FIELD_NO] = 133 AND m3.[ITEM_NO] = 1
-		LEFT JOIN [FIELDS_VALUES] AS m4 ON m4.[ITEM_ID] = item.[ID] AND m4.[FIELD_NO] = 149 AND m4.[ITEM_NO] = 1
-		LEFT JOIN [FIELDS_VALUES] AS m5 ON m5.[ITEM_ID] = item.[ID] AND m5.[FIELD_NO] = 150 AND m5.[ITEM_NO] = 1
-		LEFT JOIN [FIELDS_VALUES] AS m6 ON m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1
+		FROM [ITEMS] AS item WITH (NOLOCK)
+		LEFT JOIN [FIELDS_VALUES] AS m1 WITH (NOLOCK) ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m2 WITH (NOLOCK) ON m2.[ITEM_ID] = item.[ID] AND m2.[FIELD_NO] = 107 AND m2.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m3 WITH (NOLOCK) ON m3.[ITEM_ID] = item.[ID] AND m3.[FIELD_NO] = 133 AND m3.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m4 WITH (NOLOCK) ON m4.[ITEM_ID] = item.[ID] AND m4.[FIELD_NO] = 149 AND m4.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m5 WITH (NOLOCK) ON m5.[ITEM_ID] = item.[ID] AND m5.[FIELD_NO] = 150 AND m5.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m6 WITH (NOLOCK) ON m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1
 		WHERE
-			m1.[FIELD_VALUE] IS NOT NULL
-			OR m2.[FIELD_VALUE] IS NOT NULL
-			OR m3.[FIELD_VALUE] IS NOT NULL
-			OR m4.[FIELD_VALUE] IS NOT NULL
-			OR m5.[FIELD_VALUE] IS NOT NULL
-			OR m6.[FIELD_VALUE] IS NOT NULL
+			[CI_TYPE] = 1
+			AND (
+				[SERIAL_NO] IS NOT NULL
+				OR m1.[FIELD_VALUE] IS NOT NULL
+				OR m2.[FIELD_VALUE] IS NOT NULL
+				OR m3.[FIELD_VALUE] IS NOT NULL
+				OR m4.[FIELD_VALUE] IS NOT NULL
+				OR m5.[FIELD_VALUE] IS NOT NULL
+				OR m6.[FIELD_VALUE] IS NOT NULL
+			)
 	");
 
 	// before sync remove mark: 0x0010 - Exist in IT Invent, 0x0040 - Active
@@ -77,13 +82,42 @@
 	$i = 0;
 	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 	{
+		// Load SN
+		$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
+		if(!empty($mac))
+		{
+			$row_id = 0;
+			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0x0080 LIMIT 1", $mac)))
+			{
+				if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `flags`) VALUES (!, !, #)",
+					$mac,
+					$row['INV_NO'],
+					0x0010 | 0x0080 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000)
+				)))
+				{
+					$row_id = $db->last_id();
+				}
+			}
+			else
+			{
+				$row_id = $result[0][0];
+				$db->put(rpv("UPDATE @mac SET `inv_no` = !, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+					$row['INV_NO'],
+					0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000),
+					$row_id
+				));
+			}
+			$i++;
+		}
+
+		// Load MACs
 		for($k = 1; $k <= 6; $k++)    // mac* fields count
 		{
 			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 			if(!empty($mac) && strlen($mac) == 12)
 			{
 				$row_id = 0;
-				if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! LIMIT 1", $mac)))
+				if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0 LIMIT 1", $mac)))
 				{
 					if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `flags`) VALUES (!, !, #)",
 						$mac,

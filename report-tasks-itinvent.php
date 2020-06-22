@@ -29,7 +29,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>Reason</th><th>Source</th></tr>';
+	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>Reason</th><th>Source</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -85,7 +85,7 @@ EOT;
 		$html .= '</p>';
 	}
 	
-	$html .= '<p>Обозначения: R - удалён, I - from IT Invent, N - from netdev, A - active in IT Invent</p>';
+	$html .= '<p>Обозначения: R - удалён, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-itinvent">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';

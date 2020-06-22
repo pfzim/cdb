@@ -5,7 +5,7 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
-	$limit = 50;
+	$limit = 10;
 
 	global $g_comp_flags;
 
@@ -104,7 +104,7 @@
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
 					'Обнаружено сетевое устройство MAC адрес которого не зафиксирован в IT Invent'
-					."\n\nMAC: ".implode(':', str_split($row['mac'], 2))
+					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора' : 'MAC').': '.implode(':', str_split($row['mac'], 2))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']

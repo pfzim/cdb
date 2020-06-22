@@ -162,7 +162,8 @@ $g_mac_flags = array(
 	'',
 	'IT Invent',
 	'netdev',
-	'Active'
+	'Active',
+	'Serial number'
 );
 
 $g_mac_short_flags = array(
@@ -172,7 +173,8 @@ $g_mac_short_flags = array(
 	'',
 	'I',
 	'N',
-	'A'
+	'A',
+	'S'
 );
 
 function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
