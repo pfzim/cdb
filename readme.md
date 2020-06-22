@@ -58,6 +58,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0010 | Exist in IT Invent                        |
 | 0x0020 | Imported from netdev                      |
 | 0x0040 | Active in IT Invent                       |
+| 0x0080 | `mac` field is serial number              |
 
 Table `devices` column `type`
 
