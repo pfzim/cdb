@@ -75,7 +75,36 @@
 				OR m6.[FIELD_VALUE] IS NOT NULL
 			)
 	");
-
+/*
+	$invent_result = sqlsrv_query($conn, "
+		SELECT *
+		FROM (
+			SELECT 
+				[ID]
+				,[INV_NO]
+				,[STATUS_NO]
+				,[SERIAL_NO]
+				,[MAC_ADDRESS] AS mac0
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m1 WITH (NOLOCK) WHERE m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1) AS mac1
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m2 WITH (NOLOCK) WHERE m2.[ITEM_ID] = item.[ID] AND m2.[FIELD_NO] = 107 AND m2.[ITEM_NO] = 1) AS mac2
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m3 WITH (NOLOCK) WHERE m3.[ITEM_ID] = item.[ID] AND m3.[FIELD_NO] = 133 AND m3.[ITEM_NO] = 1) AS mac3
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m4 WITH (NOLOCK) WHERE m4.[ITEM_ID] = item.[ID] AND m4.[FIELD_NO] = 149 AND m4.[ITEM_NO] = 1) AS mac4
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m5 WITH (NOLOCK) WHERE m5.[ITEM_ID] = item.[ID] AND m5.[FIELD_NO] = 150 AND m5.[ITEM_NO] = 1) AS mac5
+				,(SELECT [FIELD_VALUE] FROM [FIELDS_VALUES] AS m6 WITH (NOLOCK) WHERE m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1) AS mac6
+			FROM [ITEMS] AS item WITH (NOLOCK)
+			WHERE
+				[CI_TYPE] = 1
+		) AS t
+		WHERE
+			[SERIAL_NO] IS NOT NULL
+			OR mac1 IS NOT NULL
+			OR mac2 IS NOT NULL
+			OR mac3 IS NOT NULL
+			OR mac4 IS NOT NULL
+			OR mac5 IS NOT NULL
+			OR mac6 IS NOT NULL
+	");
+*/
 	// before sync remove mark: 0x0010 - Exist in IT Invent, 0x0040 - Active
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040)) WHERE `flags` & (0x0010 | 0x0040)"));
 

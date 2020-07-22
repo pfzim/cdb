@@ -364,6 +364,9 @@ function walk_route($route, $action)
 		'get-computer-info' => array(
 			'@get-computer-info.php'
 		),
+		'get-mac-info' => array(
+			'@get-mac-info.php'
+		),
 		'import-mac' => array(
 			'@import-mac.php'
 		),

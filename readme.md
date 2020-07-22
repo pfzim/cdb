@@ -78,7 +78,7 @@ Table `properties_*` column `oid`
 |        |                                           |                                           |
 |        |                                           |                                           |
 
-Table `task` and `properties_*` column `tid`
+Table `tasks` and `properties_*` column `tid`
 | Value  | Description                               |
 |--------|-------------------------------------------|
 | 1      | Then `pid` from `computers` table         |

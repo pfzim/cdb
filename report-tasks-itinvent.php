@@ -29,7 +29,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>Reason</th><th>Source</th></tr>';
+	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -43,7 +43,15 @@ EOT;
 			t.`opernum`,
 			t.`operid`,
 			t.`flags` AS `t_flags`,
-			m.`flags` AS `m_flags`
+			m.`flags` AS `m_flags`,
+			(
+				SELECT COUNT(*)
+				FROM @tasks AS t2
+				WHERE t2.`pid` = t.`pid`
+					AND t2.`tid` = 3
+					AND (t2.`flags` & (t.`flags` | 0x0001)) = (t.`flags` | 0x0001)
+					AND t2.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+			) AS `issues`
 		FROM @tasks AS t
 		LEFT JOIN @mac AS m ON m.`id` = t.`pid`
 		LEFT JOIN @devices AS d ON d.`id` = m.`pid`
@@ -59,12 +67,13 @@ EOT;
 			$table .= '<tr>';
 			$table .= '<td>'.$row['d_name'].'</td>';
 			$table .= '<td>'.$row['m_name'].'</td>';
-			$table .= '<td>'.$row['mac'].'</td>';
+			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id'].'">'.$row['mac'].'</a></td>';
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['last_seen'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['t_flags'])).'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['m_flags']) & 0x00F0, $g_mac_short_flags, '', '-').'</td>';
+			$table .= '<td'.((intval($row['issues']) > 3)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
 
 			$i++;
@@ -92,7 +101,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_INVENT), CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
+	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_INVENT, MAIL_TO_RITM), CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

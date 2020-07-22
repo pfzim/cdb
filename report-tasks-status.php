@@ -46,6 +46,7 @@ EOT;
 				SELECT COUNT(*)
 				FROM @tasks AS i1
 				WHERE i1.`pid` = m.`pid`
+					AND i1.`tid` = 1
 					AND (i1.`flags` & (m.`flags` | 0x0001)) = (m.`flags` | 0x0001)
 					AND i1.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
