@@ -5,7 +5,7 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
-	$limit = 10;
+	$limit = 50;
 
 	global $g_comp_flags;
 
@@ -82,6 +82,12 @@
 				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
 				OR
 				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
+				OR
+				d.`name` LIKE 'RU-77-%'                                            -- Temporary filter by region 77
+				OR
+				d.`name` LIKE 'RU-13-%'                                            -- Temporary filter by region 13
+				OR
+				d.`name` LIKE 'RU-11-%'                                            -- Temporary filter by region 11
 			)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
@@ -104,13 +110,14 @@
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
 					'Обнаружено сетевое устройство MAC адрес которого не зафиксирован в IT Invent'
-					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора' : 'MAC').': '.implode(':', str_split($row['mac'], 2))
+					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$mac : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']
 					."\nПорт: ".$row['port']
 					."\nВремя регистрации: ".$row['regtime']
-					."\n\nКод работ: INV01\n\nСледует актуализировать данные по указанному устройству и заполнить атрибут MAC адрес в соответствии с инструкцией п. 2.7 ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Заполнение-карточки-учетнои-единицы-при-первичном-внесении-в-базу.ashx'
+					."\n\nКод работ: INV01"
+					."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
 				)
 			);
 

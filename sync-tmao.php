@@ -1,5 +1,10 @@
 <?php
 	// Retrieve information from TMAO database
+	
+	// As I can see:
+	// SCAN_TYPE = 1 - Smart scan, 0 - Conventional scan
+	// SCRIPT_PTN = Smart scan pattern version
+	// PTNFILE = Conventional scan pattern version
 
 	if(!defined('Z_PROTECTED')) exit;
 
@@ -32,10 +37,12 @@
 		$result = sqlsrv_query($conn, "
 			SELECT [COMP_NAME]
 				,[PTNUPDTIME]
+				,[SCAN_TYPE]
+				,[PTNFILE]
 				,[SCRIPT_PTN]
 				,[AS_PSTIME]
 			FROM [".$params['Database']."].[dbo].[TBL_CLIENT_INFO] WHERE [CLIENTTYPE] = 0
-			ORDER BY [SCRIPT_PTN]
+			ORDER BY [SCRIPT_PTN], [PTNFILE]
 		");
 
 		$i = 0;
@@ -61,13 +68,22 @@
 				$as_pstime = '0000-00-00 00:00:00';
 			}
 			
+			if(intval($row['SCAN_TYPE']) == 1)
+			{
+				$script_ptn = $row['SCRIPT_PTN'];
+			}
+			else
+			{
+				$script_ptn = $row['PTNFILE'];
+			}
+			
 			$row_id = 0;
 			if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['COMP_NAME'])))
 			{
 				if($db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`, `flags`) VALUES (!, !, #, !, 0x0020)",
 					$row['COMP_NAME'],
 					$ptnupdtime,
-					$row['SCRIPT_PTN'],
+					$script_ptn,
 					$as_pstime
 				)))
 				{
@@ -79,7 +95,7 @@
 				$row_id = $res[0][0];
 				$db->put(rpv("UPDATE @computers SET `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~0x0008) | 0x0020) WHERE `id` = # LIMIT 1",
 					$ptnupdtime,
-					$row['SCRIPT_PTN'],
+					$script_ptn,
 					$as_pstime,
 					$row_id
 				));

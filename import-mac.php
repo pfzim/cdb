@@ -109,14 +109,21 @@
 				!$is_sn
 				&& (
 					(
-						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
-						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_PORT.'#i', $row[4])
+						(preg_match('/'.MAC_EXCLUDE_REGEX.'/i', $mac) === 0)
+						&& (
+							(
+								preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
+								&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_PORT.'#i', $row[4])
+							) || (
+								preg_match('/'.NETDEV_TOF_REGEX.'/i', $last_sw_id)
+								&& preg_match('#'.NETDEV_EXCLUDE_TOF_PORT.'#i', $row[4])
+							)
+						)
 					) || (
-						preg_match('/'.NETDEV_TOF_REGEX.'/i', $last_sw_id)
-						&& preg_match('#'.NETDEV_EXCLUDE_TOF_PORT.'#i', $row[4])
+						preg_match('/'.NETDEV_SHOPS_FA_REGEX.'/i', $last_sw_id)
+						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_FA_PORT.'#i', $row[4])
 					)
 				)
-				&& (preg_match('/'.MAC_EXCLUDE_REGEX.'/i', $mac) === 0)
 			)
 			{
 				$excluded = 0x0002;
