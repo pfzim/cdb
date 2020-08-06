@@ -73,7 +73,7 @@ EOT;
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['t_flags'])).'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['m_flags']) & 0x00F0, $g_mac_short_flags, '', '-').'</td>';
-			$table .= '<td'.((intval($row['issues']) > 3)?' class="error"':'').'>'.$row['issues'].'</td>';
+			$table .= '<td'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
 
 			$i++;
@@ -101,7 +101,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_INVENT, MAIL_TO_RITM), CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
+	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_NET, MAIL_TO_INVENT, MAIL_TO_RITM), CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

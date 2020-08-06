@@ -2,9 +2,9 @@
 	// Retrieve information from TMAO database
 	
 	// As I can see:
-	// SCAN_TYPE = 1 - Smart scan, 0 - Conventional scan
-	// SCRIPT_PTN = Smart scan pattern version
-	// PTNFILE = Conventional scan pattern version
+	//   SCAN_TYPE   = 1 - Smart scan, 0 - Conventional scan
+	//   SCRIPT_PTN  = Smart scan pattern version
+	//   PTNFILE     = Conventional scan pattern version
 
 	if(!defined('Z_PROTECTED')) exit;
 

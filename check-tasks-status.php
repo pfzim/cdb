@@ -60,37 +60,39 @@ function get_status_name($strings, $code)
 
 		$i = 0;
 
-		if($db->select_assoc_ex($result, rpv("SELECT `id`, `tid`, `pid`, `operid`, `opernum` FROM @tasks WHERE (`flags` & 0x0001) = 0")))
+		if($db->select_assoc_ex($result, rpv("SELECT `id`, `tid`, `pid`, `operid`, `opernum`, `flags` FROM @tasks WHERE (`flags` & 0x0001) = 0")))
 		{
 			foreach($result as &$row)
 			{
-						$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'&xml=1');
+				$ch = curl_init(HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'&xml=1');
 
-						curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-						$answer = curl_exec($ch);
-						if($answer !== FALSE)
+				$answer = curl_exec($ch);
+				if($answer !== FALSE)
+				{
+					//echo $answer;
+					$xml = @simplexml_load_string($answer);
+					if($xml !== FALSE)
+					{
+						echo $row['opernum'].' -> '.get_status_name($g_task_status, intval($xml->docbody->params['stateID']))."\r\n";
+						if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
 						{
-							//echo $answer;
-							$xml = @simplexml_load_string($answer);
-							if($xml !== FALSE)
-							{
-								echo $row['opernum'].' -> '.get_status_name($g_task_status, intval($xml->docbody->params['stateID']))."\r\n";
-								if(in_array($xml->docbody->params['stateID'], array(7, 8, 9, 15)))
-								{
-									echo "   is closed\r\n";
-									$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+							echo "   is closed\r\n";
+							$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
 
-									// Application Contol problem mark as Solved
-									if(intval($row['tid']) == 4)
-									{
-										$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $row['pid']));
-									}
-									$i++;
-								}
+							// Application Contol problem mark as Solved
+							if(intval($row['flags']) & 0x0080)
+							{
+								$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE (`flags` & 0x0002) = 0 AND `pid` = #", $row['pid']));
 							}
+							$i++;
 						}
+					}
+				}
+
+				curl_close($ch);
 				//break;
 			}
 		}
