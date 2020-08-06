@@ -7,6 +7,7 @@
 
 	global $g_comp_flags;
 	global $g_tasks_flags;
+	global $g_ac_flags;
 	
 	$html = <<<'EOT'
 <html>
@@ -38,13 +39,14 @@ EOT;
 	}
 	else
 	{
-		if(!$db->select_assoc_ex($computer, rpv("SELECT m.`id`, m.`name`, m.`dn`, m.`ao_ptnupdtime`, m.`ao_script_ptn`, m.`ao_as_pstime`, m.`ee_lastsync`, m.`ee_encryptionstatus`, m.`laps_exp`, m.`flags` FROM @computers AS m WHERE m.`tid` = 1 AND m.`name` = ! LIMIT 1", $_GET['name'])))
+		if(!$db->select_assoc_ex($computer, rpv("SELECT m.`id`, m.`name`, m.`dn`, m.`ao_ptnupdtime`, m.`ao_script_ptn`, m.`ao_as_pstime`, m.`ee_lastsync`, m.`ee_encryptionstatus`, m.`laps_exp`, m.`flags` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $_GET['name'])))
 		{
 			exit;
 		}
 	}
 
-	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date`", $computer[0]['id']));
+	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));
+	$db->select_assoc_ex($ac_log, rpv("SELECT m.`id`, m.`app_path`, m.`cmdln`, m.`last`, m.`flags` FROM @ac_log AS m WHERE m.`pid` = # ORDER BY m.`last` DESC", $computer[0]['id']));
 	
 	$html .= '<p>Name: '.$computer[0]['name'].'</p>';
 	$html .= '<p>DN: '.$computer[0]['dn'].'</p>';
@@ -56,10 +58,11 @@ EOT;
 	$html .= '<p>LAPS expire time: '.$computer[0]['laps_exp'].'</p>';
 	$html .= '<p>Flags: '.flags_to_string(intval($computer[0]['flags']), $g_comp_flags, ', ').'</p>';
 	$html .= '<p>Action: '.((intval($computer[0]['flags']) & 0x0004) ? '<a href="'.CDB_URL.'/cdb.php?action=computer&do=show&id='.$computer[0]['id'].'">Show</a>':'<a href="'.CDB_URL.'/cdb.php?action=computer&do=hide&id='.$computer[0]['id'].'">Hide</a>').'</p>';
+
+	$html .= '<h1>История заявок</h1>';
 	
 	$table = '<table>';
 	$table .= '<tr><th>Date</th><th>HD Task</th><th>Reason</th></tr>';
-
 
 	foreach($tasks as &$row)
 	{
@@ -72,6 +75,25 @@ EOT;
 
 	$table .= '</table>';
 	$html .= $table;
+
+	$html .= '<h1>Срабатываения блокировки ПО Application Control</h1>';
+
+	$table = '<table>';
+	$table .= '<tr><th>Date</th><th>Blocked app path</th><th>Command line</th><th>Flags</th></tr>';
+
+	foreach($ac_log as &$row)
+	{
+		$table .= '<tr>';
+		$table .= '<td>'.$row['last'].'</td>';
+		$table .= '<td>'.$row['app_path'].'</td>';
+		$table .= '<td>'.$row['cmdln'].'</td>';
+		$table .= '<td>'.flags_to_string(intval($row['flags']), $g_ac_flags, ', ').'</td>';
+		$table .= '</tr>';
+	}
+
+	$table .= '</table>';
+	$html .= $table;
+
 	$html .= '</body>';
 
 	echo $html;

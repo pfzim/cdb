@@ -5,7 +5,7 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
-	$limit = 50;
+	$limit = 100;
 
 	global $g_comp_flags;
 
@@ -51,6 +51,20 @@
 
 	// Open new tasks
 
+/*
+			AND (
+				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
+				OR
+				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
+				OR
+				d.`name` LIKE 'RU-77-%'                                            -- Temporary filter by region 77
+				OR
+				d.`name` LIKE 'RU-13-%'                                            -- Temporary filter by region 13
+				OR
+				d.`name` LIKE 'RU-11-%'                                            -- Temporary filter by region 11
+			)
+*/
+
 	$i = 0;
 
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x8000)) = 0x8000")))
@@ -78,17 +92,6 @@
 				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
 		WHERE
 			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent
-			AND (
-				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
-				OR
-				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
-				OR
-				d.`name` LIKE 'RU-77-%'                                            -- Temporary filter by region 77
-				OR
-				d.`name` LIKE 'RU-13-%'                                            -- Temporary filter by region 13
-				OR
-				d.`name` LIKE 'RU-11-%'                                            -- Temporary filter by region 11
-			)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
 	")))
@@ -101,16 +104,22 @@
 				break;
 			}
 
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
+			//echo 'MAC: '.$row['mac']."\n";
+
+			$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
+
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+			curl_setopt($ch, CURLOPT_POSTFIELDS,
+				'Source=cdb'
 				.'&Action=new'
 				.'&Type=itinvent'
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
 					'Обнаружено сетевое устройство MAC адрес которого не зафиксирован в IT Invent'
-					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$mac : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']
@@ -118,19 +127,28 @@
 					."\nВремя регистрации: ".$row['regtime']
 					."\n\nКод работ: INV01"
 					."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
+					."\nВ решении укажите инвентарный номер оборудования."
 				)
 			);
 
-			if($answer !== FALSE)
+			$answer = curl_exec($ch);
+
+			if($answer === FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
-				{
-					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x8000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
-					$i++;
-				}
+				curl_close($ch);
+				break;
 			}
+
+			$xml = @simplexml_load_string($answer);
+			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
+			{
+				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x8000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$i++;
+			}
+
+			curl_close($ch);
+			//break;
 		}
 	}
 

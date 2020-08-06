@@ -122,7 +122,7 @@ $g_tasks_flags = array(
 	'',
 	'',
 	'',
-	'',
+	'Блокировка ПО TMAC',
 	'Не установлен или не работает TMEE',
 	'Не установлен или не работает TMAO',
 	'Имя не соответствует шаблону',
@@ -176,6 +176,12 @@ $g_mac_short_flags = array(
 	'A',
 	'S'
 );
+
+$g_ac_flags = array(
+	'',
+	'Fixed'
+);
+
 
 function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
 {
@@ -260,6 +266,7 @@ function walk_route($route, $action)
 			'check-tasks-status',
 			'create-tasks-tmao',
 			'create-tasks-tmee',
+			'create-tasks-ac',
 			'create-tasks-laps',
 			'create-tasks-rename',
 			'create-tasks-sccm',
@@ -281,6 +288,9 @@ function walk_route($route, $action)
 		),
 		'create-tasks-tmee' => array(
 			'@create-tasks-tmee.php'
+		),
+		'create-tasks-ac' => array(
+			'@create-tasks-ac.php'
 		),
 		'create-tasks-rename' => array(
 			'@create-tasks-rename.php'
