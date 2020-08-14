@@ -5,7 +5,7 @@
 
 	echo "\ncreate-tasks-ac\n";
 
-	$limit = 10;
+	$limit = 50;
 
 	global $g_comp_flags;
 
@@ -100,6 +100,7 @@
 		WHERE
 			(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND (al.`flags` & 0x0002) = 0
+			AND c.`name` NOT REGEXP '".CDB_REGEXP_SHOPS."'
 		GROUP BY c.`id`
 		HAVING 
 			(BIT_OR(t.`flags`) & 0x0080) = 0
