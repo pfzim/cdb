@@ -27,7 +27,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0008 |                                           |
 | 0x0010 |                                           |
 | 0x0020 |                                           |
-| 0x0040 |                                           |
+| 0x0040 | Task Windows Updates not installed        |
 | 0x0080 | Application Control Task was created      |
 | 0x0100 | TMEE Task was created in HelpDesk         |
 | 0x0200 | TMAO Task was created in HelpDesk         |
@@ -75,6 +75,7 @@ Table `properties_*` column `oid`
 | 101    | CDB_PROP_USERACCOUNTCONTROL               | AD UserAccountControl                     |
 | 102    | CDB_PROP_OPERATINGSYSTEM                  | Operation System name                     |
 | 103    | CDB_PROP_OPERATINGSYSTEMVERSION           | Operation System version                  |
+| 104    | CDB_PROP_BASELINE_COMPLIANCE_HOTFIX       | SCCM Baseline HotFix Compliance Status    |
 |        |                                           |                                           |
 |        |                                           |                                           |
 

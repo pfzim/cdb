@@ -121,7 +121,7 @@ $g_tasks_flags = array(
 	'',
 	'',
 	'',
-	'',
+	'Несоответствие baseline установка обновлений',
 	'Блокировка ПО TMAC',
 	'Не установлен или не работает TMEE',
 	'Не установлен или не работает TMAO',
@@ -310,6 +310,9 @@ function walk_route($route, $action)
 		'create-tasks-os' => array(
 			'@create-tasks-os.php'
 		),
+		'create-tasks-wsus' => array(
+			'@create-tasks-wsus.php'
+		),
 		'create-tasks-itinvent' => array(
 			'@create-tasks-itinvent.php'
 		),
@@ -382,6 +385,9 @@ function walk_route($route, $action)
 		),
 		'computer' => array(
 			'@computer.php'
+		),
+		'mac' => array(
+			'@mac.php'
 		)
 	);
 
