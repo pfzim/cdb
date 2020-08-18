@@ -1,6 +1,11 @@
 <?php
 	// Report for opened HelpDesk tasks
 
+	/**
+		\file
+		\brief Формирование отчёта по открытым заявкми в системе HelpDesk.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nreport-tasks-status:\n";

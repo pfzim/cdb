@@ -6,6 +6,11 @@
 			+ Clear flag 0x0001 if computer account was enabled again
 	*/
 
+	/**
+		\file
+		\brief Синхронизация объектов Computer с Active Directory
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-ad-computers:\n";

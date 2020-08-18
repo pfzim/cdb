@@ -1,6 +1,11 @@
 <?php
 	// Report about 3PAR virtual volumes
 
+	/**
+		\file
+		\brief Отчёт по используемому месту дисками 3Par
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nreport-3par:\n";

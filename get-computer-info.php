@@ -1,5 +1,10 @@
 <?php
 	// Get computer info
+	/**
+		\file
+		\brief Информационная страница о объекте Computer.
+	*/
+
 
 	if(!defined('Z_PROTECTED')) exit;
 

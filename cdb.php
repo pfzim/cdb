@@ -17,6 +17,18 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/** 
+	\mainpage
+	Описание модулей в разделе Файлы
+*/
+
+/**
+	\file
+	\brief Главный модуль.
+	Здесь определены общие для всех модулей функции.
+	Отсюда запускаются все остальные модули.
+*/
+
 	if(!defined('ROOTDIR'))
 	{
 		define('ROOTDIR', dirname(__FILE__));
@@ -34,6 +46,12 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
+
+/**
+	Отправка почтового сообщения
+
+	@return true - if success
+*/
 
 function php_mailer($to, $subject, $html, $plain)
 {
@@ -79,6 +97,15 @@ function php_mailer($to, $subject, $html, $plain)
 	return $mail->send();
 }
 
+/**
+	Функция сравнения двух SQL дат
+
+	@param [in] $date1  Дата в формате 'YYYY-MM-DD HH:MM:SS'
+	@param [in] $date2  Дата в формате 'YYYY-MM-DD HH:MM:SS'
+	@retval 0 если даты равны
+	@retval -1 если дата $date1 меньше $date2
+	@retval 1 если дата $date1 больше $date2
+*/
 function sql_date_cmp($date1, $date2)
 {
 	$d1 = preg_split('/[-:\.T\s]/', $date1, 6);
@@ -102,6 +129,14 @@ function sql_date_cmp($date1, $date2)
 	return 0;	
 }
 
+/**
+	Функция возвращает текстовое представление статуса шифрования TMEE
+
+	@param [in] $code  Числовой код шифрования
+	@return Преобразованный в читаемый вид код шифрования
+	
+	\todo Переделать на массив
+*/
 function tmee_status($code)
 {
 	switch($code)
@@ -183,6 +218,15 @@ $g_ac_flags = array(
 );
 
 
+/**
+	Функция преобразует значения бит в человекочитабельный вид
+
+	@param [in] $flags  Числовое значение битовых флагов
+	@param [in] $texts  Массив с текстовым оаписание флагов
+	@param [in] $delimiter  Разделитель. По умолчанию равен ' '
+	@param [in] $notset  Текстовое значение для неустановленного бита. По умолчанию равен ''
+	@return Значения бит преобразованные в читабельный текст
+*/
 function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
 {
 	$result = '';
@@ -202,6 +246,11 @@ function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
 	return $result;
 }
 
+/**
+	Устаревшая функция заменена flags_to_string.
+	\sa flags_to_string()
+	\todo Заменить во всех модулях на flags_to_string()
+*/
 function tasks_flags_to_string($flags)  // replace with flags_to_string() later
 {
 	global $g_tasks_flags;
@@ -219,6 +268,11 @@ function tasks_flags_to_string($flags)  // replace with flags_to_string() later
 	return $result;
 }
 
+/**
+	Функция для выполнения маршрута (запуска модулей)
+	\param [in] $route Массив с описанием маршрутов
+	\param [in] $action Команда для выполнения
+*/
 function walk_route($route, $action)
 {
 	global $db;

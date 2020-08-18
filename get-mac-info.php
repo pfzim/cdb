@@ -1,6 +1,12 @@
 <?php
 	// Get MAC (IT Invent) info
 
+	/**
+		\file
+		\brief Информационная страница о MAC адресе.
+	*/
+
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	header("Content-Type: text/html; charset=utf-8");

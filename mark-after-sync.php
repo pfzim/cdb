@@ -1,5 +1,10 @@
 <?php
 	// Mark all items after sync as deleted
+	/**
+		\file
+		\brief Выявление удаленных объектов после полной синхорнизации.
+		Выполняется после полной синхорнизации (sync-all) для выявления удаленных объектов.
+	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 

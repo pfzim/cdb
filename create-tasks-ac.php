@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (TMAO AC)
 
+	/**
+		\file
+		\brief Создание заявок по выявленным блокировкам ПО
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-ac\n";

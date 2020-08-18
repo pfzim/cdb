@@ -1,6 +1,11 @@
 <?php
 	// Create report LAPS
 
+	/**
+		\file
+		\brief Отчёт по ПК с неработающим LAPS.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nreport-laps:\n";

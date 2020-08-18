@@ -1,5 +1,10 @@
 <?php
 	// Mark all items before sync
+	/**
+		\file
+		\brief Пометка объектов в БД перед синхронизацией.
+		Требуется для выявления удаленных объектов.
+	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 

@@ -1,6 +1,11 @@
 <?php
 	// Retrieve information from Active Directory
 
+	/**
+		\file
+		\brief Синхронизация объектов УЗ Пользователя с Active Directory
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-ad-persons:\n";

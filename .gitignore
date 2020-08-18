@@ -1,2 +1,4 @@
 inc.config.php
 scripts/inc.config.ps1
+docs/
+Doxyfile

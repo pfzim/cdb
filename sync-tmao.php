@@ -6,6 +6,12 @@
 	//   SCRIPT_PTN  = Smart scan pattern version
 	//   PTNFILE     = Conventional scan pattern version
 
+	/**
+		\file
+		\brief Синхронизация с БД TMAO.
+		Загрузка информации о версии антивирусных баз и выявленных блокировках ПО с помощью Application Control.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-tmao:\n";

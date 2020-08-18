@@ -23,6 +23,11 @@
 	SELECT * FROM c_computers WHERE name regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 */
 
+	/**
+		\file
+		\brief Формиррование отчёта по проблемам антивируса на серверах.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nreport-tmao-servers:\n";

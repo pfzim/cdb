@@ -1,5 +1,10 @@
 <?php
 	// Retrieve information from IT Invent database
+	/**
+		\file
+		\brief Синхронизация БД IT Invent.
+		Загрузка информации о MAC адресах и серийных номерах
+	*/
 
 	/*
 

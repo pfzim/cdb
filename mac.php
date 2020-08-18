@@ -1,5 +1,13 @@
 <?php
-	// Set MAC flags and other operaions
+	//Set MAC flags and other operaions
+	
+	/**
+		\file
+		\brief Управление объектом MAC адресами.
+		Модуль для манипуляции с MAC адресами:
+		- отключение/включение создания заявок
+		- удаление MAC адреса из БД
+	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 

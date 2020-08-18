@@ -1,6 +1,12 @@
 <?php
 	// Report for opened HelpDesk tasks IT Invent
 
+	/**
+		\file
+		\brief Формирование отчёта по открытым заявкам на добавление оборудования в IT Invent.
+	*/
+
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	global $g_mac_short_flags;
