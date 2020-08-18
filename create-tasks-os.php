@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (empty password allowed)
 
+	/**
+		\file
+		\brief Создание заявок по проблемам устаревшей ОС на ПК.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-os:\n";

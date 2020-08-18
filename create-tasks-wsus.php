@@ -1,5 +1,9 @@
 <?php
 	// Create new and close resolved tasks (updates have not been installed for too long)
+	/**
+		\file
+		\brief Создание нарядов на исправление несответствию базовому уровню установки обновлений на ПК.
+	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 

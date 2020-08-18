@@ -1,9 +1,11 @@
 # CDB is a database for collect information about different computers and devices
 
-Now it collect information about Trent Micro Apex One and Endpoint Encryption.
-It can create tasks in HelpDesk.
+CBD собирает информацию из различных источников о различных объектах (компьютеры, учётные записи,
+программное обеспечение и т.п.), сверяет собранные сведения на соответствие установленым требования
+и при выявления не соответствия создаёт заявки в системе HelpDesk для устаранения выявленных
+несоответствий.
 
-Available `flags` bit options for table `computers` (? and `persons`)
+Описание битовых флагов `flags` в таблице `computers` (? and `persons`)
 
 | Bits   | Description                               |
 |--------|-------------------------------------------|
@@ -17,7 +19,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0040 | Exist in TMEE                             |
 | 0x0080 | Exist in SCCM                             |
 
-`tasks` table `flags`
+Описание битовых флагов `flags` в таблице `tasks`
 
 | Bits   | Description                               |
 |--------|-------------------------------------------|
@@ -38,7 +40,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x4000 | OS Task was created in HelpDesk           |
 | 0x8000 | IT Invent Task was created in HelpDesk    |
 
-`ac_log` table `flags`
+Описание битовых флагов `flags` в таблице `ac_log`
 
 | Bits   | Description                               |
 |--------|-------------------------------------------|
@@ -47,7 +49,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0004 |                                           |
 | 0x0008 |                                           |
 
-`mac` table `flags`
+Описание битовых флагов `flags` в таблице `mac`
 
 | Bits   | Description                               |
 |--------|-------------------------------------------|
@@ -60,7 +62,7 @@ Available `flags` bit options for table `computers` (? and `persons`)
 | 0x0040 | Active in IT Invent                       |
 | 0x0080 | `mac` field is serial number              |
 
-Table `devices` column `type`
+Возможные значения колонки `type` в таблице `devices`
 
 | Value  | Description                               |
 |--------|-------------------------------------------|
@@ -69,7 +71,7 @@ Table `devices` column `type`
 | 3      | netdev                                    |
 
 
-Table `properties_*` column `oid`
+Возможные значения колонки `oid` в таблицах `properties_*`
 | Value  | PHP constant                              | Description                               |
 |--------|-------------------------------------------|-------------------------------------------|
 | 101    | CDB_PROP_USERACCOUNTCONTROL               | AD UserAccountControl                     |
@@ -79,13 +81,13 @@ Table `properties_*` column `oid`
 |        |                                           |                                           |
 |        |                                           |                                           |
 
-Table `tasks` and `properties_*` column `tid`
+Возможные значения колонки `tid` в таблицах `tasks` и `properties_*`
 | Value  | Description                               |
 |--------|-------------------------------------------|
-| 1      | Then `pid` from `computers` table         |
-| 2      | Then `pid` from `persons` table           |
-| 3      | Then `pid` from `mac` table               |
-| 4      | Then `pid` from `ac_log` table            |
+| 1      | When `pid` from `computers` table         |
+| 2      | When `pid` from `persons` table           |
+| 3      | When `pid` from `mac` table               |
+| 4      | When `pid` from `ac_log` table            |
 
 
 Change flag 0x40 to 0x0400:

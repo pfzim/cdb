@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (empty password allowed)
 
+	/**
+		\file
+		\brief Создание заявок по проблеме возможности установки пустого пароля на УЗ пользователя.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-epwd-persons:\n";

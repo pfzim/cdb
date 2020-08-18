@@ -1,6 +1,11 @@
 <?php
 	// Import MAC addresses
 
+	/**
+		\file
+		\brief API для загрузки MAC адресов с сетевых устройств.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	if(empty($_POST['netdev']))

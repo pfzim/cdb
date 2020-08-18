@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (RENAME)
 
+	/**
+		\file
+		\brief Создание заявок по проблемам неисправности агента LAPS на ПК.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-laps:\n";

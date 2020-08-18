@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (TMAO)
 
+	/**
+		\file
+		\brief Создание заявок по проблеме неисправности антивируса на ПК.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-tmao:\n";

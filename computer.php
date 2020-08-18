@@ -1,6 +1,13 @@
 <?php
 	// Set computer flags
 
+	/**
+		\file
+		\brief Управление объектом Computer.
+		Модуль для манипуляции с объектом Computer:
+		- Исключение из проверок
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	if(!empty($_GET['do']) && !empty($_GET['id']))

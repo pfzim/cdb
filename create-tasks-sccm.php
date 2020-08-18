@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (SCCM)
 
+	/**
+		\file
+		\brief Создание заявок по проблеме неисправности агента SCCM на ПК.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-sccm:\n";

@@ -1,6 +1,12 @@
 <?php
 	// Retrieve information from TMEE database
 
+	/**
+		\file
+		\brief Синхронизация БД TMEE.
+		Загрузка информации о статусе шифрования ноутбука
+	*/
+
 	/*
 		TMEE status:
 

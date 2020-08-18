@@ -1,6 +1,11 @@
 <?php
 	// Retrieve information from 3PAR virtual volumes
 
+	/**
+		\file
+		\brief Синхронизация информации из 3Par
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-3par:\n";

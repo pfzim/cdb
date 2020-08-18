@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (TMEE)
 
+	/**
+		\file
+		\brief Создание заявок на шифрование ноутбука (TMEE).
+	*/
+
 	/*
 		1. Сбор информации - закрытие заявок, если статус изменился на ОК
 		2. Создание заявок
@@ -20,6 +25,7 @@
 		    AND (`flags` & (0x0001 | 0x0100)) = 0
 		    AND (ee_encryptionstatus <> 2 OR ee_lastsync < DATE_SUB(NOW(), INTERVAL 2 WEEK));
 	*/
+
 
 	if(!defined('Z_PROTECTED')) exit;
 

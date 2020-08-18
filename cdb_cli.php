@@ -1,4 +1,12 @@
 <?php
+/**
+	\file
+	\brief Стартовый модуль для CLI версии.
+	Предназначен для запуска из cron.
+	
+	\todo Перенести функционал в cdb.php
+*/
+
 	if(!defined('ROOTDIR'))
 	{
 		define('ROOTDIR', dirname(__FILE__));

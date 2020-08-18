@@ -1,6 +1,11 @@
 <?php
 	// Report about Hyper-V Virtual Machines resource usage
 
+	/**
+		\file
+		\brief Отчёт по используемым ресурсам виртуальными машинами.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nreport-vm:\n";

@@ -1,5 +1,11 @@
 <?php
 	// Create report TMAO
+
+	/**
+		\file
+		\brief Отчёт по именам ПК не соответствующим установленному шаблону.
+	*/
+
 /*
 	SET @current_pattern = (SELECT MAX(ao_script_ptn) FROM c_computers) - 200;
 	SELECT @current_pattern;

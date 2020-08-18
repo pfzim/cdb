@@ -1,6 +1,11 @@
 <?php
 	// Checking HelpDesk tasks status for TMAO and TMEE
 
+	/**
+		\file
+		\brief Получение стауса открытых заявок из системы HelpDesk.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncheck-tasks-status:\n";

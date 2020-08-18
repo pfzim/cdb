@@ -1,6 +1,11 @@
 <?php
 	// Create new and close resolved tasks (RENAME)
 
+	/**
+		\file
+		\brief Создание заявок на переименование ПК.
+	*/
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-rename:\n";
