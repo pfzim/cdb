@@ -328,6 +328,7 @@ function walk_route($route, $action)
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
 			'create-tasks-os',
+			'create-tasks-wsus',
 			'report-tasks-status',
 			'report-tasks-itinvent',
 			'report-laps'

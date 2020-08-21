@@ -9,7 +9,13 @@
 	/**
 		\file
 		\brief Синхронизация с БД TMAO.
+		
 		Загрузка информации о версии антивирусных баз и выявленных блокировках ПО с помощью Application Control.
+		По выявленным блокировкам загружаются:
+			- путь к заблокированному файлу
+			- командная сторка последнено запуска
+			- хэш файла
+			- дата последней попытки запуска
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -120,6 +126,7 @@
 				[SLF_ClientHostName]
 				,MAX([SLF_LogGenLocalDatetime]) AS last_event
 				,[SLF_ApplicationPath]
+				,[SLF_ApplicationFileHash]
 				,[SLF_ApplicationProcessCommandline]
 			FROM
 				[iac].[DetectionLog]
@@ -128,6 +135,7 @@
 			GROUP BY
 				[SLF_ClientHostName]
 				,[SLF_ApplicationPath]
+				,[SLF_ApplicationFileHash]
 				,[SLF_ApplicationProcessCommandline]
 			ORDER BY
 				[SLF_ClientHostName]
@@ -143,7 +151,16 @@
 			//echo $row['COMP_NAME'].", ".$row['PTNUPDTIME'].", ".$row['SCRIPT_PTN'].", ".$row['AS_PSTIME']."\r\n";
 			if($client !== $row['SLF_ClientHostName'])
 			{
-				if($db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['SLF_ClientHostName'])))
+				if($db->select_ex($res, rpv("
+						SELECT
+							c.`id`
+						FROM @computers AS c
+						WHERE
+							c.`name` = !
+						LIMIT 1
+					",
+					$row['SLF_ClientHostName']
+				)))
 				{
 					$client = $row['SLF_ClientHostName'];
 					$client_id = $res[0][0];
@@ -155,20 +172,37 @@
 				}
 			}
 			
-			if(!$db->select_ex($res, rpv("SELECT al.`id`, al.`last` FROM @ac_log AS al WHERE al.`pid` = # AND al.`app_path` = ! LIMIT 1", $client_id, $row['SLF_ApplicationPath'])))
+			if(!$db->select_ex($res, rpv("
+					SELECT
+						al.`id`,
+						al.`last`
+					FROM @ac_log AS al
+					WHERE
+						al.`pid` = #
+						AND al.`app_path` = !
+						AND al.`hash` = !
+					LIMIT 1
+				",
+				$client_id,
+				$row['SLF_ApplicationPath'],
+				$row['SLF_ApplicationFileHash']
+			)))
 			{
 				if($db->put(rpv("
 						INSERT INTO @ac_log (
 							`pid`,
 							`last`,
 							`app_path`,
+							`hash`,
 							`cmdln`,
 							`flags`
 						)
-						VALUES (#, !, !, !, 0x0000)",
+						VALUES (#, !, !, !, !, 0x0000)
+					",
 					$client_id,
 					$row['last_event'],
 					$row['SLF_ApplicationPath'],
+					$row['SLF_ApplicationFileHash'],
 					$row['SLF_ApplicationProcessCommandline']
 				)))
 				{

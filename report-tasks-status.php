@@ -96,6 +96,9 @@ EOT;
 	$opened_name = 0;
 	$problems_osup = 0;
 	$opened_osup = 0;
+	$opened_wsus = 0;
+	$problems_wsus_tt = 0;
+	$problems_wsus = 0;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
@@ -126,7 +129,39 @@ EOT;
 				AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
 				AND c.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
 		) AS `p_os`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x4000)) = 0x4000) AS `o_os`
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_os`,
+		(
+			SELECT
+				COUNT(*)
+			FROM @properties_int AS os
+			LEFT JOIN @computers AS c
+				ON
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+				AND os.`pid` = c.`id`
+			WHERE
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND os.`value` <> 1
+		) AS `p_wsus`,
+		(
+			SELECT
+				COUNT(*)
+			FROM @properties_int AS os
+			LEFT JOIN @computers AS c
+				ON
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+				AND os.`pid` = c.`id`
+			WHERE
+				os.`tid` = 1
+				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND os.`value` <> 1
+				AND c.`name` REGEXP '".CDB_REGEXP_SHOPS."'
+		) AS `p_wsus_tt`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`
 	")))
 	{
 		$problems_tmao = $result[0]['p_tmao'];
@@ -142,6 +177,9 @@ EOT;
 		$opened_name = $result[0]['o_name'];
 		$problems_osup = $result[0]['p_os'];
 		$opened_osup = $result[0]['o_os'];
+		$opened_wsus = $result[0]['p_wsus'];
+		$problems_wsus_tt = $result[0]['p_wsus_tt'];
+		$problems_wsus = $result[0]['p_wsus'];
 	}
 
 	$html .= '<p>';
@@ -150,6 +188,7 @@ EOT;
 	$html .= 'LAPS открытых заявок: '.$opened_laps.', всего проблемных ПК : '.$problems_laps.'<br />';
 	$html .= 'SCCM открытых заявок: '.$opened_sccm.', всего проблемных ПК : '.$problems_sccm.'<br />';
 	$html .= 'NAME открытых заявок: '.$opened_name.', всего проблемных ПК : '.$problems_name.'<br />';
+	$html .= 'WSUS открытых заявок: '.$opened_wsus.', всего проблемных ПК : '.$problems_wsus.' (ТТ: '.$problems_wsus_tt.', Остальные: '.(intval($problems_wsus) - intval($problems_wsus_tt)).')<br />';
 	$html .= 'OS   открытых заявок: '.$opened_osup.', всего проблемных ПК : '.$problems_osup;
 	$html .= '</p>';
 
