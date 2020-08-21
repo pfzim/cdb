@@ -3,13 +3,17 @@
 	/**
 		\file
 		\brief Создание нарядов на исправление несответствию базовому уровню установки обновлений на ПК.
+		
+		Выполняется проверка информации загруженной из SCCM на соответствие базовому уровню установки обновлений.
+		Если ПК не соотвтетствует, выставляется заявка в HelpDesk на устаранение проблемы.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-wsus:\n";
 
-	$limit = 1;
+	$limit_gup = 1;
+	$limit_goo = 1;
 
 	global $g_comp_flags;
 
@@ -68,13 +72,35 @@
 
 	// Open new tasks
 
-	$i = 0;
+	$count_gup = 0;
+	$count_goo = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0040)) = 0x0040")))
+	if($db->select_ex($result, rpv("
+		SELECT COUNT(*)
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c ON c.id = t.pid
+		WHERE
+			t.`tid` = 1
+			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
+			AND c.`dn` LIKE '%".LDAP_OU_SHOPS."'
+	")))
 	{
-		$i = intval($result[0][0]);
+		$count_gup = intval($result[0][0]);
 	}
 	
+	if($db->select_ex($result, rpv("
+		SELECT COUNT(*)
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c ON c.id = t.pid
+		WHERE
+			t.`tid` = 1
+			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
+			AND c.`dn` NOT LIKE '%".LDAP_OU_SHOPS."'
+	")))
+	{
+		$count_goo = intval($result[0][0]);
+	}
+
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			m.`id`,
@@ -101,18 +127,33 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= $limit)
+			if(substr($row['dn'], -strlen(LDAP_OU_SHOPS)) === LDAP_OU_SHOPS)
 			{
-				echo 'Limit reached: '.$limit."\r\n";
-				break;
+				if($count_gup >= $limit_gup)
+				{
+					continue;
+				}
+
+				$count_gup++;
+				$to = 'gup';
 			}
-			
+			else
+			{
+				if($count_goo >= $limit_goo)
+				{
+					continue;
+				}
+
+				$count_goo++;
+				$to = 'goo';
+			}
+
 			$answer = @file_get_contents(
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=new'
-				.'&Type=test'
-				.'&To=byname'
+				.'&Type=update'
+				.'&To='.$to
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
 					'Необходимо устранить проблему установки обновлений ОС.'
@@ -136,4 +177,5 @@
 		}
 	}
 
-	echo 'Created: '.$i."\r\n";
+	echo 'Total opened GOO: '.$count_goo."\r\n";
+	echo 'Total opened GUP: '.$count_gup."\r\n";

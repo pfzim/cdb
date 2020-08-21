@@ -4,6 +4,10 @@
 	/**
 		\file
 		\brief Создание заявок по выявленным блокировкам ПО
+		
+		Анализируются загруженные данные из БД TMAO. Проблемы группируются по имени ПК и создаётся в HelpDesk заявка на устранение проблемы.
+		После закрытия наряда, проблема автоматически считается решенной.
+		При появлении в логах оналогичной записи с более свежей датой, наряд будет создан вновь.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -105,7 +109,7 @@
 		WHERE
 			(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND (al.`flags` & 0x0002) = 0
-			AND c.`name` NOT REGEXP '".CDB_REGEXP_SHOPS."'
+			AND c.`name` REGEXP '".CDB_REGEXP_OFFICES."'
 		GROUP BY c.`id`
 		HAVING 
 			(BIT_OR(t.`flags`) & 0x0080) = 0
@@ -126,6 +130,7 @@
 					al.`id`,
 					al.`app_path`,
 					al.`cmdln`,
+					al.`hash`,
 					al.`last`,
 					al.`flags`
 				FROM @ac_log AS al
@@ -140,7 +145,9 @@
 				{
 					$message .= 
 						"\n\nПуть к заблокированному файлу: ".$ac_row['app_path']
+						."\nHash: ".$ac_row['hash']
 						."\nПроцесс запускавший файл: ".$ac_row['cmdln']
+						."\nДата последнего запуска: ".$ac_row['last']
 					;
 				}
 
