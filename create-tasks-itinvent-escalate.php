@@ -1,20 +1,20 @@
 <?php
-	// Create new and close resolved tasks (IT Invent)
+	// Create new and close resolved tasks (IT Invent) tasks
 
 	/**
 		\file
-		\brief Создание заявок на занесение оборудования в IT Invent.
+		\brief Создание заявок на заявки в IT Invent.
 		
-		Критерии создания заявок при выполненни обоих условий:
-		  - Оборудование обнаружено активным в сети
-		  - Оборудование не занесено в ИТ Инвент, либо занесено, но числится не в работе
+		Рекурсия. Заявки которые открывались повторно 2 и более раз перевыствляются на РИТМ для проведения анализа.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\ncreate-tasks-itinvent:\n";
+	echo "\ncreate-tasks-itinvent-escalate:\n";
 
-	$limit = 300;
+	$limit = 1;
+
+	global $g_comp_flags;
 
 	// Close auto resolved tasks
 
@@ -26,7 +26,7 @@
 			ON m.`id` = t.`pid`
 		WHERE
 			t.`tid` = 3
-			AND (t.`flags` & (0x0001 | 0x8000)) = 0x8000        -- Task status is Opened
+			AND (t.`flags` & (0x0001 | 0x0020)) = 0x0020          -- Task status is Opened
 			AND (
 				m.`flags` & (0x0002 | 0x0004)                   -- Deleted, Manual hide
 				OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent
@@ -61,29 +61,15 @@
 
 	// Open new tasks
 
-/*
-			AND (
-				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
-				OR
-				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
-				OR
-				d.`name` LIKE 'RU-77-%'                                            -- Temporary filter by region 77
-				OR
-				d.`name` LIKE 'RU-13-%'                                            -- Temporary filter by region 13
-				OR
-				d.`name` LIKE 'RU-11-%'                                            -- Temporary filter by region 11
-			)
-*/
-
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x8000)) = 0x8000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0020)) = 0x0020")))
 	{
 		$i = intval($result[0][0]);
 	}
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT 
+		SELECT
 			m.`id`,
 			d.`name` AS `netdev`,
 			m.`name`,
@@ -91,19 +77,27 @@
 			m.`ip`,
 			m.`port`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
-			m.`flags`
-		FROM @mac AS m
-		LEFT JOIN @devices AS d
+			m.`flags`,
+			COUNT(*) AS `issues`
+		FROM c_mac AS m
+		LEFT JOIN c_devices AS d
 			ON d.`id` = m.`pid`
-		LEFT JOIN @tasks AS t
+		LEFT JOIN c_tasks AS t
 			ON
 				t.`tid` = 3
 				AND t.pid = m.id
-				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
+				AND (t.flags & (0x0001 | 0x0020)) = 0x0020
+		LEFT JOIN c_tasks AS t2
+			ON
+				t2.`tid` = 3
+				AND t2.pid = m.id
+				AND (t2.flags & 0x8000)
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent or not Active
+			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent
 		GROUP BY m.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
+		HAVING
+			(BIT_OR(t.`flags`) & 0x0020) = 0
+			AND `issues` > 1
 	")))
 	{
 		foreach($result as &$row)
@@ -125,19 +119,20 @@
 				'Source=cdb'
 				.'&Action=new'
 				.'&Type=itinvent'
-				.'&To=bynetdev'
+				.'&To=ritm'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
-					'Обнаружено сетевое устройство '.((intval($row['flags']) & 0x0080) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
+					'Необходимо проанализировать заявки по данному сетевому устройству. Принять меры: добавить в ИТ Инвент, удалить из базы Снежинки или добавить в исключение.'
 					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']
 					."\nПорт: ".$row['port']
 					."\nВремя регистрации: ".$row['regtime']
+					."\nКоличество повторных заявок: ".$row['issues']
 					."\n\nКод работ: IIV09"
-					."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
-					."\nВ решении укажите Инвентарный номер оборудования!"
+					."\n\nИстория выставленных нарядов: ".CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id']
+					."\n\nВ решении указать причину и принятые меры по недопущению открытия повторных заявок."
 				)
 			);
 
@@ -153,7 +148,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x8000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x0020, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

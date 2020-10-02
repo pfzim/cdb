@@ -4,6 +4,11 @@
 	/**
 		\file
 		\brief Получение стауса открытых заявок из системы HelpDesk.
+		
+		При закрытии заявок Application Contol делается пометка Problem fixed об исправлении у проблемных событий.
+		При закрытии заявок Vulnerability делается пометка Problem fixed об исправлении уязвимости у конкретного хоста.
+		При закрытии заявок Vulnerability (mass) делается пометка Problem fixed об исправлении уязвимости у всех хостов.
+		Пометки Problem fixed стираются при следующей синхронизации, если проблема обнаруживается вновь.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -91,6 +96,18 @@ function get_status_name($strings, $code)
 							if(intval($row['flags']) & 0x0080)
 							{
 								$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE (`flags` & 0x0002) = 0 AND `pid` = #", $row['pid']));
+							}
+
+							// Vulnerability mark as Solved
+							if(intval($row['flags']) & 0x010000)
+							{
+								$db->put(rpv("UPDATE @vuln_scan SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $row['pid']));
+							}
+
+							// Vulnerability (mass) mark all as Solved
+							if(intval($row['flags']) & 0x020000)
+							{
+								$db->put(rpv("UPDATE @vuln_scan SET `flags` = (`flags` | 0x0002) WHERE `plugin_id` = #", $row['pid']));
 							}
 							$i++;
 						}

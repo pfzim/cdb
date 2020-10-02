@@ -4,10 +4,13 @@
 	/**
 		\file
 		\brief Синхронизация с БД SCCM.
-		Загрузка данных о состоянии агента, информации по соответствию базовому уровню установки обновлений на ПК
+		
+		Загрузка данных о состоянии агента и информации по соответствию базовому уровню установки обновлений на ПК
 	*/
 
 	/*
+		Определение идентификатора SCCM_CI_ID
+		
 		SELECT
 			TOP 1000
 			v_ConfigurationItems.CI_ID,
@@ -19,6 +22,26 @@
 		WHERE
 			CIType_ID = 3
 			AND v_LocalizedCIProperties.DisplayName = 'CI - Check - PS - InstallHotFix'
+
+
+		Инвентаризация файлов
+
+		SELECT
+			m.ItemKey AS ResourceID
+			,m.Netbios_Name0 AS DeviceName
+			,sf.FileName
+			,fp.FilePath
+		FROM [dbo].[System_DISC] AS m
+		LEFT JOIN SoftwareInventory as si on si.ClientId = m.ItemKey
+		LEFT JOIN SoftwareFile as sf on sf.FileId = si.FileId
+		LEFT JOIN SoftwareFilePath as fp on si.FilePathId = fp.FilePathId
+		WHERE
+			ISNULL(m.Obsolete0, 0) <> 1
+			AND ISNULL(m.Decommissioned0, 0) <> 1
+			AND m.Client0 = 1
+			AND m.Netbios_Name0 = '0001-W0125'
+			AND sf.FileName LIKE '%.exe'
+		
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;

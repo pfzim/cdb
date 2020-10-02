@@ -33,6 +33,7 @@
 			}
 			else if($_GET['do'] === 'delete')
 			{
+				$db->put(rpv("DELETE FROM @tasks WHERE `pid` = # AND tid = 3", $result[0][0]));
 				if($db->put(rpv("DELETE FROM @mac WHERE `id` = # LIMIT 1", $result[0][0])))
 				{
 					echo 'OK';

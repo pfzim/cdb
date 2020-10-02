@@ -4,6 +4,15 @@
 	/**
 		\file
 		\brief API для загрузки MAC адресов с сетевых устройств.
+		
+		Входящие параметры:
+		- netdev - имя сетевого устройства передающего данные
+		- list   - список данных, описание колонок:
+		  - mac    - MAC адрес поделюченного оборуования
+		  - name   - имя устройства (hostname)
+		  - ip     - ip адрес
+		  - sw_id  - имя коммутатора
+		  - port   - порт коммутатора в который подключено устройство
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -30,7 +39,7 @@
 	$dev_id = 0;
 	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $net_dev)))
 	{
-		$dev_id = $result[0][0];
+		$dev_id = intval($result[0][0]);
 	}
 	else
 	{
@@ -52,6 +61,8 @@
 		
 		if(!empty($line))
 		{
+			// Парсим сторку
+			
 			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port
 			if(count($row) != 5)
 			{
@@ -63,6 +74,8 @@
 				$line = strtok("\n");
 				continue;
 			}
+			
+			// Определяем это серийный номер или MAC. Убираем лишние символы
 
 			$is_sn = false;
 			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
@@ -74,6 +87,8 @@
 				$is_sn = true;
 				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
 			}
+			
+			// Проверяем корректность данных
 
 			if(empty($mac) || (!$is_sn && strlen($mac) != 12))
 			{
@@ -85,7 +100,7 @@
 				$line = strtok("\n");
 				continue;
 			}
-
+			
 			if($row[3] === $net_dev)
 			{
 				$last_sw_id = $net_dev;
@@ -95,9 +110,20 @@
 			{
 				$pid = 0;
 				$last_sw_id = $row[3];
-				if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[3])))
+				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[3])))
 				{
-					$pid = $result[0][0];
+					$pid = intval($result[0][0]);
+					if(intval($result[0][1]) != $dev_id)    // && $pid != $dev_id  - лишнее, подразумевается в первом if
+					{
+						if($db->put(rpv("UPDATE @devices SET `pid` = # WHERE `id` = # LIMIT 1", $dev_id, $pid)))
+						{
+							error_log(date('c').'  Error: Update device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
+						}
+						else
+						{
+							error_log(date('c').'  Info: Updated device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
+						}
+					}
 				}
 				else
 				{
@@ -105,8 +131,14 @@
 					{
 						$pid = $db->last_id();
 					}
+					else
+					{
+						error_log(date('c').'  Error: Insert new device ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+					}
 				}
 			}
+			
+			// Исключения по MAC адресу
 			
 			$excluded = 0x0000;
 			
@@ -127,12 +159,31 @@
 					) || (
 						preg_match('/'.NETDEV_SHOPS_FA_REGEX.'/i', $last_sw_id)
 						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_FA_PORT.'#i', $row[4])
+					) || (
+						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
+						&& preg_match('/'.MAC_EXCLUDE_SHOPS_REGEX.'/i', $mac)
 					)
 				)
 			)
 			{
 				$excluded = 0x0002;
 				error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac.log');
+			}
+			
+			// Исключение по IP адресу
+
+			if(!empty($row[2]) && ($excluded & 0x0002) == 0)
+			{
+				$masks = explode(';', IP_MASK_EXCLUDE_LIST);
+				foreach($masks as &$mask)
+				{
+					if(cidr_match($row[2], $mask))
+					{
+						$excluded = 0x0002;
+						error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac.log');
+						break;
+					}
+				}
 			}
 
 			$row_id = 0;

@@ -83,24 +83,7 @@ EOT;
 
 	$table .= '</table>';
 
-	$problems_tmao = 0;
-	$problems_tmao_tt = 0;
-	$problems_tmee = 0;
-	$opened_tmao = 0;
-	$opened_tmee = 0;
-	$problems_laps = 0;
-	$opened_laps = 0;
-	$problems_sccm = 0;
-	$opened_sccm = 0;
-	$problems_name = 0;
-	$opened_name = 0;
-	$problems_osup = 0;
-	$opened_osup = 0;
-	$opened_wsus = 0;
-	$problems_wsus_tt = 0;
-	$problems_wsus = 0;
-
-	if($db->select_assoc_ex($result, rpv("
+	if(!$db->select_assoc_ex($result, rpv("
 		SELECT
 		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
 		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
@@ -161,36 +144,72 @@ EOT;
 				AND os.`value` <> 1
 				AND c.`name` REGEXP '".CDB_REGEXP_SHOPS."'
 		) AS `p_wsus_tt`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
+		(
+			SELECT COUNT(*)
+			FROM @persons AS p
+			LEFT JOIN @properties_int AS j_quota
+				ON j_quota.`tid` = 2
+				AND j_quota.`pid` = p.`id`
+				AND j_quota.`oid` = ".CDB_PROP_MAILBOX_QUOTA."
+			WHERE
+				(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND j_quota.`value` = 0
+		) AS `p_mbxq`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0040) AS `o_mbxq`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
+		(
+			SELECT COUNT(*)
+			FROM @mac AS m
+			LEFT JOIN @devices AS d
+				ON d.`id` = m.`pid` AND d.`type` = 3
+			LEFT JOIN @mac AS dm
+				ON
+					dm.`name` = d.`name`
+					AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
+			WHERE
+				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0070    -- Not deleted, not hidden, from netdev, exist in IT Invent, active in IT Invent
+				AND (
+					dm.`branch_no` IS NULL
+					OR dm.`loc_no` IS NULL
+					OR (
+						m.`branch_no` <> dm.`branch_no`
+						AND m.`loc_no` <> dm.`loc_no`
+					)
+				)
+		) AS `p_iimv`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
 	")))
 	{
-		$problems_tmao = $result[0]['p_tmao'];
-		$problems_tmao_tt = $result[0]['p_tmao_tt'];
-		$problems_tmee = $result[0]['p_tmee'];
-		$opened_tmao = $result[0]['o_tmao'];
-		$opened_tmee = $result[0]['o_tmee'];
-		$problems_laps = $result[0]['p_laps'];
-		$opened_laps = $result[0]['o_laps'];
-		$problems_sccm = $result[0]['p_sccm'];
-		$opened_sccm = $result[0]['o_sccm'];
-		$problems_name = $result[0]['p_name'];
-		$opened_name = $result[0]['o_name'];
-		$problems_osup = $result[0]['p_os'];
-		$opened_osup = $result[0]['o_os'];
-		$opened_wsus = $result[0]['p_wsus'];
-		$problems_wsus_tt = $result[0]['p_wsus_tt'];
-		$problems_wsus = $result[0]['p_wsus'];
+		// error
 	}
 
+	$html .= '<table>';
+	$html .= '<tr><th>Проблема</th><th>Проблемных ПК</th><th>Открыто заявок</th></tr>';
+	$html .= '<tr><td>Устаревшая БД антивируса</td><td>'.$result[0]['p_tmao'].' (ТТ: '.$result[0]['p_tmao_tt'].')</td><td>'.$result[0]['o_tmao'].'</td></tr>';
+	$html .= '<tr><td>Не зашифрован ноутбук</td><td>'.$result[0]['p_tmee'].'</td><td>'.$result[0]['o_tmee'].'</td></tr>';
+	$html .= '<tr><td>Не обновляется пароль LAPS</td><td>'.$result[0]['p_laps'].'</td><td>'.$result[0]['o_laps'].'</td></tr>';
+	$html .= '<tr><td>Агент SCCM не активен</td><td>'.$result[0]['p_sccm'].'</td><td>'.$result[0]['o_sccm'].'</td></tr>';
+	$html .= '<tr><td>Имя ПК не соответствует стандарту именования</td><td>'.$result[0]['p_name'].'</td><td>'.$result[0]['o_name'].'</td></tr>';
+	$html .= '<tr><td>Давно не устанавливались обновления</td><td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td><td>'.$result[0]['o_wsus'].'</td></tr>';
+	$html .= '<tr><td>Не установлена квота на ПЯ</td><td>'.$result[0]['p_mbxq'].'</td><td>'.$result[0]['o_mbxq'].'</td></tr>';
+	$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td></tr>';
+	$html .= '<tr><td>Устаревшая операционная система</td><td>'.$result[0]['p_os'].'</td><td>'.$result[0]['o_os'].'</td></tr>';
+	$html .= '</table>';
+
+/*
 	$html .= '<p>';
-	$html .= 'TMAO открытых заявок: '.$opened_tmao.', всего проблемных ПК : '.$problems_tmao.' (ТТ: '.$problems_tmao_tt.', Остальные: '.(intval($problems_tmao) - intval($problems_tmao_tt)).')<br />';
-	$html .= 'TMEE открытых заявок: '.$opened_tmee.', всего проблемных ПК : '.$problems_tmee.'<br />';
-	$html .= 'LAPS открытых заявок: '.$opened_laps.', всего проблемных ПК : '.$problems_laps.'<br />';
-	$html .= 'SCCM открытых заявок: '.$opened_sccm.', всего проблемных ПК : '.$problems_sccm.'<br />';
-	$html .= 'NAME открытых заявок: '.$opened_name.', всего проблемных ПК : '.$problems_name.'<br />';
-	$html .= 'WSUS открытых заявок: '.$opened_wsus.', всего проблемных ПК : '.$problems_wsus.' (ТТ: '.$problems_wsus_tt.', Остальные: '.(intval($problems_wsus) - intval($problems_wsus_tt)).')<br />';
-	$html .= 'OS   открытых заявок: '.$opened_osup.', всего проблемных ПК : '.$problems_osup;
+	$html .= 'TMAO открытых заявок: '.$result[0]['o_tmao'].', всего проблемных ПК : '.$result[0]['p_tmao'].' (ТТ: '.$result[0]['p_tmao_tt'].', Остальные: '.(intval($result[0]['p_tmao']) - intval($result[0]['p_tmao_tt'])).')<br />';
+	$html .= 'TMEE открытых заявок: '.$result[0]['o_tmee'].', всего проблемных ПК : '.$result[0]['p_tmee'].'<br />';
+	$html .= 'LAPS открытых заявок: '.$result[0]['o_laps'].', всего проблемных ПК : '.$result[0]['p_laps'].'<br />';
+	$html .= 'SCCM открытых заявок: '.$result[0]['o_sccm'].', всего проблемных ПК : '.$result[0]['p_sccm'].'<br />';
+	$html .= 'NAME открытых заявок: '.$result[0]['o_name'].', всего проблемных ПК : '.$result[0]['p_name'].'<br />';
+	$html .= 'WSUS открытых заявок: '.$result[0]['o_wsus'].', всего проблемных ПК : '.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].', Остальные: '.(intval($result[0]['p_wsus']) - intval($result[0]['p_wsus_tt'])).')<br />';
+	$html .= 'MBXQ открытых заявок: '.$result[0]['o_mbxq'].', всего проблемных ПЯ : '.$result[0]['p_mbxq'].'<br />';
+	$html .= 'IIMV открытых заявок: '.$result[0]['o_iimv'].', всего проблемных ПК : '.$result[0]['p_iimv'].'<br />';
+	$html .= 'OSUP открытых заявок: '.$result[0]['o_os'].', всего проблемных ПК : '.$result[0]['p_os'];
 	$html .= '</p>';
+*/
 
 	$html .= '<p>Обозначения: D - Отключен в AD, R - удалён, H - скрыт, T - временный флаг синхронизации, A - Active Directory, O - Apex One, E - Encryption Endpoint, C - Configuration Manager</p>';
 	$html .= $table;
