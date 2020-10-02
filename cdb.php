@@ -149,13 +149,33 @@ function tmee_status($code)
 	return 'Unknown';
 }
 
+/**
+ *  @brief Функция проыеряет соотствие IP адреса маске CIDR
+ *  
+ *  @param [in] $ip IP адрес
+ *  @param [in] $cidr Маска CIDR. Например: 10.12.54.0/24
+ *  @return True if equal
+ */
+ 
+function cidr_match($ip, $cidr)
+{
+    list($subnet, $mask) = explode('/', $cidr);
+
+    if((ip2long($ip) & ~((1 << (32 - intval($mask))) - 1)) == ip2long($subnet))
+    { 
+        return true;
+    }
+
+    return false;
+}
+
 $g_tasks_flags = array(
 	'Заявка закрыта',
 	'',
 	'',
-	'',
-	'',
-	'',
+	'Не установлена квота на ПЯ',
+	'Неправильное местоположение в IT Invent',
+	'Выяснить причиную повторения заявок IT Invent',
 	'Несоответствие baseline установка обновлений',
 	'Блокировка ПО TMAC',
 	'Не установлен или не работает TMEE',
@@ -165,7 +185,8 @@ $g_tasks_flags = array(
 	'Не установлен или не работает агент SCCM',
 	'Возможна установка пустого пароля',
 	'Устаревшая ОС',
-	'Отсутствует в IT Invent'
+	'Отсутствует в IT Invent',
+	'Обнаружена уязвимость'
 );
 
 $g_comp_flags = array(
@@ -312,6 +333,7 @@ function walk_route($route, $action)
 			'sync-tmee',
 			'sync-sccm',
 			'sync-itinvent',
+			//'sync-nessus',
 			'mark-after-sync'
 		),
 		'cron-daily' => array(
@@ -327,6 +349,8 @@ function walk_route($route, $action)
 			'create-tasks-epwd',
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
+			'create-tasks-itinvent-move',
+			//'create-tasks-itinvent-escalate',
 			'create-tasks-os',
 			'create-tasks-wsus',
 			'report-tasks-status',
@@ -368,8 +392,20 @@ function walk_route($route, $action)
 		'create-tasks-wsus' => array(
 			'@create-tasks-wsus.php'
 		),
+		'create-tasks-mbx-unlim' => array(
+			'@create-tasks-mbx-unlim.php'
+		),
 		'create-tasks-itinvent' => array(
 			'@create-tasks-itinvent.php'
+		),
+		'create-tasks-itinvent-escalate' => array(
+			'@create-tasks-itinvent-escalate.php'
+		),
+		'create-tasks-itinvent-move' => array(
+			'@create-tasks-itinvent-move.php'
+		),
+		'create-tasks-vuln' => array(
+			'@create-tasks-vuln.php'
 		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
@@ -428,6 +464,9 @@ function walk_route($route, $action)
 		),
 		'sync-itinvent' => array(
 			'@sync-itinvent.php'
+		),
+		'sync-nessus' => array(
+			'@sync-nessus.php'
 		),
 		'get-computer-info' => array(
 			'@get-computer-info.php'

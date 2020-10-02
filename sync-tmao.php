@@ -148,6 +148,11 @@
 
 		while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
 		{
+			if(preg_match('/'.TMAC_EXCLUDE_REGEX.'/i', $row['SLF_ApplicationPath']) === 0)
+			{
+				continue;
+			}
+			
 			//echo $row['COMP_NAME'].", ".$row['PTNUPDTIME'].", ".$row['SCRIPT_PTN'].", ".$row['AS_PSTIME']."\r\n";
 			if($client !== $row['SLF_ClientHostName'])
 			{

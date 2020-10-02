@@ -5,7 +5,7 @@
 		\brief Создание нарядов на исправление несответствию базовому уровню установки обновлений на ПК.
 		
 		Выполняется проверка информации загруженной из SCCM на соответствие базовому уровню установки обновлений.
-		Если ПК не соотвтетствует, выставляется заявка в HelpDesk на устаранение проблемы.
+		Если ПК не соответствует базовому уровню, выставляется заявка в HelpDesk на устаранение проблемы.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -13,7 +13,7 @@
 	echo "\ncreate-tasks-wsus:\n";
 
 	$limit_gup = 1;
-	$limit_goo = 1;
+	$limit_goo = 10;
 
 	global $g_comp_flags;
 
@@ -102,28 +102,42 @@
 	}
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT
-			m.`id`,
-			m.`name`,
-			m.`dn`,
-			m.`flags`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS t
-			ON
-			t.`tid` = 1
-			AND t.`pid` = m.`id`
-			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
-		LEFT JOIN @properties_int AS j_up
-			ON j_up.`tid` = 1
-			AND j_up.`pid` = m.`id`
-			AND j_up.`oid` = #
-		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND j_up.`value` <> 1
-			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
-		GROUP BY m.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x0040) = 0
-	", CDB_PROP_BASELINE_COMPLIANCE_HOTFIX)))
+			SELECT
+				c.`id`,
+				c.`name`,
+				c.`dn`,
+				c.`flags`,
+				j_os.`value` AS `os`,
+				j_ver.`value` AS `ver`
+			FROM @computers AS c
+			LEFT JOIN @tasks AS t
+				ON
+				t.`tid` = 1
+				AND t.`pid` = c.`id`
+				AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
+			LEFT JOIN @properties_int AS j_up
+				ON j_up.`tid` = 1
+				AND j_up.`pid` = c.`id`
+				AND j_up.`oid` = #
+			LEFT JOIN @properties_str AS j_os
+				ON j_os.`tid` = 1
+				AND j_os.`pid` = c.`id`
+				AND j_os.`oid` = #
+			LEFT JOIN @properties_str AS j_ver
+				ON j_ver.`tid` = 1
+				AND j_ver.`pid` = c.`id`
+				AND j_ver.`oid` = #
+			WHERE
+				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND j_up.`value` <> 1
+				AND c.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
+			GROUP BY c.`id`
+			HAVING (BIT_OR(t.`flags`) & 0x0040) = 0
+		",
+		CDB_PROP_BASELINE_COMPLIANCE_HOTFIX,
+		CDB_PROP_OPERATINGSYSTEM,
+		CDB_PROP_OPERATINGSYSTEMVERSION
+	)))
 	{
 		foreach($result as &$row)
 		{
@@ -158,6 +172,7 @@
 				.'&Message='.urlencode(
 					'Необходимо устранить проблему установки обновлений ОС.'
 					."\nПК: ".$row['name']
+					."\nОперационная система: ".$row['os'].' ('.$row['ver'].')'
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
 					."\nКод работ: USYS\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция-Устранение-ошибок-установки-обновлений.ashx'
 				)
