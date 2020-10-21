@@ -81,7 +81,7 @@
 		LEFT JOIN @tasks AS t
 			ON
 			t.`tid` = 5
-			AND t.`pid` = v.`id`
+			AND t.`pid` = s.`id`
 			AND (t.`flags` & (0x0001 | 0x010000)) = 0x010000
 		LEFT JOIN @vulnerabilities AS v
 			ON v.`plugin_id` = s.`plugin_id`
@@ -89,7 +89,7 @@
 			ON d.`id` = s.`pid`
 		WHERE
 			(d.`flags` & 0x0004) = 0
-			AND (s.`flags` 0x0002) = 0
+			AND (s.`flags` & 0x0002) = 0
 			AND v.`severity` >= 4
 		GROUP BY s.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x010000) = 0
