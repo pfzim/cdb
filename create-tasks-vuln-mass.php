@@ -23,7 +23,7 @@
 			v.`plugin_name`
 		FROM @tasks AS t
 		LEFT JOIN @vulnerabilities AS v
-			ON v.`id` = t.`pid`
+			ON v.`plugin_id` = t.`pid`
 		WHERE
 			t.`tid` = 6
 			AND (t.`flags` & (0x0001 | 0x020000)) = 0x020000
@@ -115,7 +115,7 @@
 					'Обнаружена массовая уязвимость требующая устранения.'
 					."\nУязвимость: ".$row['plugin_name']
 					."\nУровень опасности: ".$row['severity']
-					."\nКоличество уязвимых устройств: ".$row['cnt']
+					."\nКоличество уязвимых устройств: ".$row['v_count']
 				)
 			);
 			if($answer !== FALSE)
@@ -124,7 +124,7 @@
 				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
 					//echo $answer."\r\n";
-					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
+					echo $row['plugin_name'].' '.$xml->extAlert->query['number']."\r\n";
 					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (6, #, 0x020000, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}

@@ -107,8 +107,7 @@ CBD собирает информацию из различных источни
 | 102    | CDB_PROP_OPERATINGSYSTEM                  | Operation System name                     |
 | 103    | CDB_PROP_OPERATINGSYSTEMVERSION           | Operation System version                  |
 | 104    | CDB_PROP_BASELINE_COMPLIANCE_HOTFIX       | SCCM Baseline HotFix Compliance Status    |
-| 105    |                                           | Mailbox quota (Unlimited = 0)             |
-|        |                                           |                                           |
+| 105    | CDB_PROP_MAILBOX_QUOTA                    | Mailbox quota (Unlimited = 0)             |
 
 Возможные значения колонки `tid` в таблицах `tasks` и `properties_*`
 | Value  | Description                               |

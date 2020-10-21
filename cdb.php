@@ -333,7 +333,7 @@ function walk_route($route, $action)
 			'sync-tmee',
 			'sync-sccm',
 			'sync-itinvent',
-			//'sync-nessus',
+			'sync-nessus',
 			'mark-after-sync'
 		),
 		'cron-daily' => array(
@@ -350,12 +350,14 @@ function walk_route($route, $action)
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
 			'create-tasks-itinvent-move',
-			//'create-tasks-itinvent-escalate',
+			'create-tasks-itinvent-escalate',
 			'create-tasks-os',
 			'create-tasks-wsus',
 			'report-tasks-status',
 			'report-tasks-itinvent',
-			'report-laps'
+			'report-laps',
+			'report-vuln-top-servers',
+			'report-vuln-top'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
@@ -407,6 +409,9 @@ function walk_route($route, $action)
 		'create-tasks-vuln' => array(
 			'@create-tasks-vuln.php'
 		),
+		'create-tasks-vuln-mass' => array(
+			'@create-tasks-vuln-mass.php'
+		),
 		'check-tasks-status' => array(
 			'@check-tasks-status.php'
 		),
@@ -436,6 +441,12 @@ function walk_route($route, $action)
 		),
 		'report-tasks-itinvent' => array(
 			'@report-tasks-itinvent.php'
+		),
+		'report-vuln-top' => array(
+			'@report-vuln-top.php'
+		),
+		'report-vuln-top-servers' => array(
+			'@report-vuln-top-servers.php'
 		),
 		'report-vm' => array(
 			'@report-vm.php'

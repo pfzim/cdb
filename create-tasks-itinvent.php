@@ -14,7 +14,7 @@
 
 	echo "\ncreate-tasks-itinvent:\n";
 
-	$limit = 300;
+	$limit = 500;
 
 	// Close auto resolved tasks
 

@@ -53,7 +53,7 @@
 						
 						foreach($scans['hosts'] as &$host)
 						{
-							echo '  '.$host['host_id'].': '.$host['hostname']."\r\n";
+							//echo '  '.$host['host_id'].': '.$host['hostname']."\r\n";
 
 							$row_id = 0;
 							if($db->select_ex($res, rpv("SELECT d.`id` FROM @devices AS d WHERE d.type = 4 AND d.`name` = ! LIMIT 1", $host['hostname'])))
@@ -86,7 +86,7 @@
 									{
 										if(intval($vuln['severity']) > 0)
 										{
-											echo '    '.$vuln['severity_index'].' '.$vuln['severity'].' '.' '.$vuln['plugin_id'].' '.$vuln['plugin_name']."\r\n"; flush();
+											//echo '    '.$vuln['severity_index'].' '.$vuln['severity'].' '.' '.$vuln['plugin_id'].' '.$vuln['plugin_name']."\r\n"; flush();
 
 											if(!$db->select_ex($res, rpv("SELECT v.`plugin_id` FROM @vulnerabilities AS v WHERE v.`plugin_id` = # LIMIT 1", $vuln['plugin_id'])))
 											{
@@ -123,12 +123,13 @@
 											if(!$db->select_ex($res, rpv("SELECT s.`id`, s.`scan_date` FROM @vuln_scans AS s WHERE s.`pid` = # AND s.`plugin_id` = # LIMIT 1", $row_id, $vuln['plugin_id'])))
 											{
 												$db->put(rpv("
-														INSERT INTO @vuln_scans (`pid`, `plugin_id`, `scan_date`, `flags`)
-														VALUES (#, #, !, #)
+														INSERT INTO @vuln_scans (`pid`, `plugin_id`, `scan_date`, `folder_id`, `flags`)
+														VALUES (#, #, !, #, #)
 													",
 													$row_id,
 													$vuln['plugin_id'],
 													$scan_date,
+													$scan['folder_id'],
 													0x0000
 												));
 											}
@@ -141,12 +142,14 @@
 																@vuln_scans
 															SET
 																`scan_date` = !,
+																`folder_id` = #,
 																`flags` = #
 															WHERE
 																`id` = #
 															LIMIT 1
 														",
 														$scan_date,
+														$scan['folder_id'],
 														0x0000,  // reset Fixed flag
 														$res[0][0]
 													));
