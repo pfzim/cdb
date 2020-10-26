@@ -3,7 +3,7 @@
 
 	/**
 		\file
-		\brief Синхронизация с БД SCCM.
+		\brief Синхронизация с БД SCCM (состояние агента, baseline обновления).
 		
 		Загрузка данных о состоянии агента и информации по соответствию базовому уровню установки обновлений на ПК
 	*/
@@ -22,27 +22,7 @@
 		WHERE
 			CIType_ID = 3
 			AND v_LocalizedCIProperties.DisplayName = 'CI - Check - PS - InstallHotFix'
-
-
-		Инвентаризация файлов
-
-		SELECT
-			m.ItemKey AS ResourceID
-			,m.Netbios_Name0 AS DeviceName
-			,sf.FileName
-			,fp.FilePath
-			,si.ModifiedDate
-		FROM [dbo].[System_DISC] AS m
-		LEFT JOIN SoftwareInventory as si on si.ClientId = m.ItemKey
-		LEFT JOIN SoftwareFile as sf on sf.FileId = si.FileId
-		LEFT JOIN SoftwareFilePath as fp on si.FilePathId = fp.FilePathId
-		WHERE
-			ISNULL(m.Obsolete0, 0) <> 1
-			AND ISNULL(m.Decommissioned0, 0) <> 1
-			AND m.Client0 = 1
-			AND m.Netbios_Name0 = '0001-W0125'
-			AND sf.FileName LIKE '%.exe'
-		
+	
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -199,100 +179,4 @@
 
 	sqlsrv_free_stmt($result);
 	
-	// Load files inventory data
-	
-	$result = sqlsrv_query($conn, "
-		SELECT
-			m.ItemKey AS ResourceID
-			,m.Netbios_Name0 AS DeviceName
-			,sf.FileName
-			,fp.FilePath
-			,si.ModifiedDate
-		FROM [dbo].[System_DISC] AS m
-		LEFT JOIN SoftwareInventory as si on si.ClientId = m.ItemKey
-		LEFT JOIN SoftwareFile as sf on sf.FileId = si.FileId
-		LEFT JOIN SoftwareFilePath as fp on si.FilePathId = fp.FilePathId
-		WHERE
-			ISNULL(m.Obsolete0, 0) <> 1
-			AND ISNULL(m.Decommissioned0, 0) <> 1
-			AND m.Client0 = 1
-			AND m.Netbios_Name0 = '7701-W0034'
-			AND sf.FileName LIKE '%.exe'
-	");
-
-	$i = 0;
-	$last_resource_id = 0;
-	$last_file_name = NULL;
-	$last_path = NULL;
-	$device_id = 0;
-	$file_id = 0;
-	
-	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
-	{
-		//echo $row['DeviceName'].", ".$row['LastSync'].", ".$row['EncryptionStatus']."\r\n";
-
-		if(intval($row['ResourceID']) != $last_resource_id)
-		{
-			$device_id = 0;
-			$last_resource_id = 0;
-
-			if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['DeviceName'])))
-			{
-				if($db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, 0x0080)",
-					$row['DeviceName']
-				)))
-				{
-					$device_id = $db->last_id();
-					$last_resource_id = intval($row['ResourceID']);
-				}
-			}
-			else
-			{
-				$device_id = $res[0][0];
-				$last_resource_id = intval($row['ResourceID']);
-			}
-		}
-
-		if(($row['FileName'] !== $last_file_name) || ($row['FilePath'] !== $last_path))
-		{
-			$file_id = 0;
-			$last_file_name = NULL;
-			$last_path = NULL;
-
-			if(!$db->select_ex($res, rpv("SELECT f.`id` FROM @files AS f WHERE f.`filename` = ! AND f.`path` = ! LIMIT 1", $row['FileName'], $row['FilePath'])))
-			{
-				if($db->put(rpv(
-					"INSERT INTO @files (`filename`, `path`, `flags`) VALUES (!, !, 0x0000)",
-					$row['FileName'],
-					$row['FilePath']
-				)))
-				{
-					$file_id = $db->last_id();
-					$last_file_name = $row['FileName'];
-					$last_path = $row['FilePath'];
-				}
-			}
-			else
-			{
-				$file_id = $res[0][0];
-				$last_file_name = $row['FileName'];
-				$last_path = $row['FilePath'];
-			}
-		}
-
-		if($device_id && $file_id)
-		{
-			$db->put(rpv("INSERT INTO @files_inventory (`pid`, `fid`, `scan_date`, `flags`) VALUES (#, #, {s3}, 0x0000) ON DUPLICATE KEY UPDATE `scan_date` = {s3}",
-				$device_id,
-				$file_id,
-				$row['ModifiedDate']
-			));
-		}
-		$i++;
-	}
-
-	echo 'Count: '.$i."\r\n";
-
-	sqlsrv_free_stmt($result);
-
 	sqlsrv_close($conn);

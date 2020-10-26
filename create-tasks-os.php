@@ -77,29 +77,32 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT
-			m.`id`,
-			m.`name`,
-			m.`dn`,
-			m.`flags`,
-			j_os.`value` AS `os`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS t
-			ON
-			t.`tid` = 1
-			AND t.`pid` = m.`id`
-			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
-		LEFT JOIN @properties_str AS j_os
-			ON j_os.`tid` = 1
-			AND j_os.`pid` = m.`id`
-			AND j_os.`oid` = #
-		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
-			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
-		GROUP BY m.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x4000) = 0
-	", CDB_PROP_OPERATINGSYSTEM)))
+			SELECT
+				m.`id`,
+				m.`name`,
+				m.`dn`,
+				m.`flags`,
+				j_os.`value` AS `os`
+			FROM @computers AS m
+			LEFT JOIN @tasks AS t
+				ON
+				t.`tid` = 1
+				AND t.`pid` = m.`id`
+				AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
+			LEFT JOIN @properties_str AS j_os
+				ON j_os.`tid` = 1
+				AND j_os.`pid` = m.`id`
+				AND j_os.`oid` = #
+			WHERE
+				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+				AND m.`name` NOT REGEXP {s1}
+			GROUP BY m.`id`
+			HAVING (BIT_OR(t.`flags`) & 0x4000) = 0
+		",
+		CDB_PROP_OPERATINGSYSTEM,
+		CDB_REGEXP_SERVERS
+	)))
 	{
 		foreach($result as &$row)
 		{

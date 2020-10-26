@@ -64,14 +64,16 @@ EOT;
 	$opened = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & 0x0001) = 0 AND (j1.`flags` & 0x0400)
-		WHERE
-			(m.`flags` & (0x0002 | 0x0004)) = 0
-			AND m.`name` NOT REGEXP '".CDB_REGEXP_VALID_NAMES."'
-		ORDER BY m.`name`
-	")))
+			SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
+			FROM @computers AS m
+			LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & 0x0001) = 0 AND (j1.`flags` & 0x0400)
+			WHERE
+				(m.`flags` & (0x0002 | 0x0004)) = 0
+				AND m.`name` NOT REGEXP {s0}
+			ORDER BY m.`name`
+		",
+		CDB_REGEXP_VALID_NAMES
+	)))
 	{
 		foreach($result as &$row)
 		{

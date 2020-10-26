@@ -80,20 +80,22 @@
 	$i = 0;
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0100 | 0x0004 | 0x0002)) = 0 AND (`ee_encryptionstatus` <> 2 OR `ee_lastsync` < DATE_SUB(NOW(), INTERVAL 2 WEEK))")))
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`ee_encryptionstatus`, m.`flags`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1
-			ON
-				j1.`tid` = 1
-				AND j1.pid = m.id
-				AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
-		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`ee_encryptionstatus` <> 2
-			AND m.`name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+'
-		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & 0x0100) = 0
-	")))
+			SELECT m.`id`, m.`name`, m.`dn`, m.`ee_encryptionstatus`, m.`flags`
+			FROM @computers AS m
+			LEFT JOIN @tasks AS j1
+				ON
+					j1.`tid` = 1
+					AND j1.pid = m.id
+					AND (j1.flags & (0x0001 | 0x0100)) = 0x0100
+			WHERE
+				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND m.`ee_encryptionstatus` <> 2
+				AND m.`name` regexp {s0}
+			GROUP BY m.`id`
+			HAVING (BIT_OR(j1.`flags`) & 0x0100) = 0
+		",
+		CDB_REGEXP_NOTEBOOK_NAME
+	)))
 	{
 		foreach($result as &$row)
 		{

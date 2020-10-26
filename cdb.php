@@ -243,7 +243,7 @@ $g_ac_flags = array(
 	Функция преобразует значения бит в человекочитабельный вид
 
 	@param [in] $flags  Числовое значение битовых флагов
-	@param [in] $texts  Массив с текстовым оаписание флагов
+	@param [in] $texts  Массив с текстовым описанием флагов
 	@param [in] $delimiter  Разделитель. По умолчанию равен ' '
 	@param [in] $notset  Текстовое значение для неустановленного бита. По умолчанию равен ''
 	@return Значения бит преобразованные в читабельный текст
@@ -351,6 +351,8 @@ function walk_route($route, $action)
 			'create-tasks-itinvent',
 			'create-tasks-itinvent-move',
 			'create-tasks-itinvent-escalate',
+			//'create-tasks-vuln',
+			'create-tasks-vuln-mass',
 			'create-tasks-os',
 			'create-tasks-wsus',
 			'report-tasks-status',
@@ -361,6 +363,7 @@ function walk_route($route, $action)
 		),
 		'cron-weekly' => array(
 			'sync-3par',
+			'sync-sccm-files',
 			'report-3par',
 			'report-vm'
 		),
@@ -472,6 +475,9 @@ function walk_route($route, $action)
 		),
 		'sync-sccm' => array(
 			'@sync-sccm.php'
+		),
+		'sync-sccm-files' => array(
+			'@sync-sccm-files.php'
 		),
 		'sync-itinvent' => array(
 			'@sync-itinvent.php'

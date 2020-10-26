@@ -104,6 +104,7 @@
 			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent or not Active
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
+		ORDER BY RAND()
 	")))
 	{
 		foreach($result as &$row)
