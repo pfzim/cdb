@@ -3,7 +3,9 @@
 
 	/**
 		\file
-		\brief Создание заявок на устранение обнаруженных уязвимостей.
+		\brief Создание заявок на устранение обнаруженных уязвимостей (не массовых < 100 ПК).
+		Автоматическое закрытие срабатывает, если проблема помечена исправленой, устройство скрыли из проверок (Manual hide),
+		или уязвимость скрыли из проверок (Manual hide).
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -22,14 +24,20 @@
 			t.`opernum`,
 			d.`name`
 		FROM @tasks AS t
-		LEFT JOIN @vuln_scans AS s
-			ON s.`id` = t.`pid`
+		LEFT JOIN @vuln_scans AS vs
+			ON vs.`id` = t.`pid`
+		LEFT JOIN @vulnerabilities AS v
+			ON v.`plugin_id` = vs.`plugin_id`
 		LEFT JOIN @devices AS d
-			ON d.`id` = s.`pid`
+			ON d.`id` = vs.`pid`
 		WHERE
 			t.`tid` = 5
 			AND (t.`flags` & (0x0001 | 0x010000)) = 0x010000
-			AND d.`flags` & 0x0004
+			AND (
+				d.`flags` & 0x0004                              -- Manual hide
+				OR vs.`flags` & 0x0002                          -- Marked as Fixed
+				OR v.`flags` & 0x0004                           -- Manual hide
+			)
 	")))
 	{
 		foreach($result as &$row)
@@ -75,23 +83,25 @@
 			d.`name`,
 			v.`plugin_name`,
 			v.`severity`,
-			s.`scan_date`,
+			vs.`scan_date`,
 			d.`flags`
-		FROM @vuln_scans AS s
+		FROM @vuln_scans AS vs
 		LEFT JOIN @tasks AS t
 			ON
 			t.`tid` = 5
-			AND t.`pid` = s.`id`
+			AND t.`pid` = vs.`id`
 			AND (t.`flags` & (0x0001 | 0x010000)) = 0x010000
 		LEFT JOIN @vulnerabilities AS v
-			ON v.`plugin_id` = s.`plugin_id`
+			ON v.`plugin_id` = vs.`plugin_id`
 		LEFT JOIN @devices AS d
-			ON d.`id` = s.`pid`
+			ON d.`id` = vs.`pid`
 		WHERE
-			(d.`flags` & 0x0004) = 0
-			AND (s.`flags` & 0x0002) = 0
-			AND v.`severity` >= 4
-		GROUP BY s.`id`
+			(d.`flags` & 0x0004) = 0                                                                           -- Device not excluded (Manual hide)
+			AND (vs.`flags` & 0x0002) = 0                                                                      -- Not marked as Fixed
+			AND v.`severity` >= 3                                                                              -- Severity >= 3
+			AND (v.`flags` & 0x0004) = 0                                                                       -- Vulnerability not excluded (Manual hide)
+			AND (SELECT COUNT(*) FROM @vuln_scans AS ivs WHERE ivs.`plugin_id` = vs.`plugin_id`) < 100         -- Not mass vulnerability (affected < 100)
+		GROUP BY vs.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x010000) = 0
 	")))
 	{
@@ -108,11 +118,11 @@
 				.'?Source=cdb'
 				.'&Action=new'
 				.'&Type=vuln'
-				.'&To=sas'
+				.'&To=byname'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Обнаружена уязвимость требующая устранения.'
-					."\nПК: ".$row['name']
+					'Nessus: Обнаружена уязвимость требующая устранения.'
+					."\n\nПК: ".$row['name']
 					."\nУязвимость: ".$row['plugin_name']
 					."\nУровень опасности: ".$row['severity']
 					."\nДата обнаружения: ".$row['scan_date']

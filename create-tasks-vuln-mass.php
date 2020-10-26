@@ -3,7 +3,8 @@
 
 	/**
 		\file
-		\brief Создание заявок на устранение обнаруженных уязвимостей (массовые проблемы).
+		\brief Создание заявок на устранение обнаруженных уязвимостей (массовые проблемы >= 100 ПК).
+		Автоматическое закрытие при ручной установке отметки Manual hide (Скрыть из проверок)
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -27,7 +28,7 @@
 		WHERE
 			t.`tid` = 6
 			AND (t.`flags` & (0x0001 | 0x020000)) = 0x020000
-			AND v.`flags` & 0x0004
+			AND v.`flags` & 0x0004                              -- Manual hide
 	")))
 	{
 		foreach($result as &$row)
@@ -73,24 +74,24 @@
 			v.`plugin_name`,
 			v.`severity`,
 			v.`flags`,
-			COUNT(s.`id`) AS v_count
+			COUNT(vs.`id`) AS v_count
 		FROM @vulnerabilities AS v
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = 6
 				AND t.`pid` = v.`plugin_id`
 				AND (t.`flags` & (0x0001 | 0x020000)) = 0x020000
-		LEFT JOIN @vuln_scans AS s
+		LEFT JOIN @vuln_scans AS vs
 			ON
-				s.`plugin_id` = v.`plugin_id`
-				AND (s.`flags` & 0x0002) = 0x0000
+				vs.`plugin_id` = v.`plugin_id`
+				AND (vs.`flags` & 0x0002) = 0x0000                         -- Not fixed
 		WHERE
-			(v.`flags` & 0x0004) = 0
-			AND v.`severity` >= 4
+			(v.`flags` & 0x0004) = 0                                       -- Not excluded (Manual hide)
+			AND v.`severity` >= 3                                          -- Severity >= 3
 		GROUP BY v.`plugin_id`		
 		HAVING
-			(BIT_OR(t.`flags`) & 0x020000) = 0
-			AND v_count > 100
+			(BIT_OR(t.`flags`) & 0x020000) = 0                             -- Not yet task created
+			AND v_count >= 100                                             -- Affected devices >= 100
 		ORDER BY
 			severity DESC,
 			v_count DESC
@@ -112,8 +113,8 @@
 				.'&To=sas'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Обнаружена массовая уязвимость требующая устранения.'
-					."\nУязвимость: ".$row['plugin_name']
+					'Nessus: Обнаружена массовая уязвимость требующая устранения.'
+					."\n\nУязвимость: ".$row['plugin_name']
 					."\nУровень опасности: ".$row['severity']
 					."\nКоличество уязвимых устройств: ".$row['v_count']
 				)

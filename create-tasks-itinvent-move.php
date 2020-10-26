@@ -21,14 +21,28 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`
+		SELECT t.`id`, t.`operid`, t.`opernum`, m.`inv_no`
 		FROM @tasks AS t
 		LEFT JOIN @mac AS m
 			ON m.`id` = t.`pid`
+		LEFT JOIN @devices AS d
+			ON d.`id` = m.`pid` AND d.`type` = 3
+		LEFT JOIN @mac AS dm
+			ON
+				dm.`name` = d.`name`
+				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
 		WHERE
 			t.`tid` = 3
 			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010        -- Task status is Opened
-			AND m.`flags` & (0x0002 | 0x0004)                   -- Deleted OR Manual hide
+			AND (
+				m.`flags` & (0x0002 | 0x0004)                   -- Deleted OR Manual hide
+				OR (
+					dm.`branch_no` IS NOT NULL
+					AND dm.`loc_no` IS NOT NULL
+					AND m.`branch_no` = dm.`branch_no`
+					AND m.`loc_no` = dm.`loc_no`
+				)
+			)
 	")))
 	{
 		foreach($result as &$row)

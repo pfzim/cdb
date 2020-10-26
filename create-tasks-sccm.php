@@ -63,20 +63,22 @@
 	}
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`sccm_lastsync`, m.`flags`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1
-			ON
-				j1.`tid` = 1
-				AND j1.pid = m.id
-				AND (j1.flags & (0x0001 | 0x1000)) = 0x1000
-		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
-			AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
-		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & 0x1000) = 0
-	")))
+			SELECT m.`id`, m.`name`, m.`dn`, m.`sccm_lastsync`, m.`flags`
+			FROM @computers AS m
+			LEFT JOIN @tasks AS j1
+				ON
+					j1.`tid` = 1
+					AND j1.pid = m.id
+					AND (j1.flags & (0x0001 | 0x1000)) = 0x1000
+			WHERE
+				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
+				AND m.`name` NOT REGEXP {s0}
+			GROUP BY m.`id`
+			HAVING (BIT_OR(j1.`flags`) & 0x1000) = 0
+		",
+		CDB_REGEXP_SERVERS
+	)))
 	{
 		foreach($result as &$row)
 		{

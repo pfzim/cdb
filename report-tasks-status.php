@@ -84,102 +84,107 @@ EOT;
 	$table .= '</table>';
 
 	if(!$db->select_assoc_ex($result, rpv("
-		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP '".CDB_REGEXP_SERVERS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP '".CDB_REGEXP_SHOPS."' AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
-		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
-		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)) AS `p_laps`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
-		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."') AS `p_sccm`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
-		(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`name` NOT REGEXP '".CDB_REGEXP_VALID_NAMES."') AS `p_name`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`,
-		(
 			SELECT
-				COUNT(*)
-			FROM @properties_str AS os
-			LEFT JOIN @computers AS c
-				ON
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
-				AND os.`pid` = c.`id`
-			WHERE
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
-				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
-				AND c.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
-		) AS `p_os`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_os`,
-		(
-			SELECT
-				COUNT(*)
-			FROM @properties_int AS os
-			LEFT JOIN @computers AS c
-				ON
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-				AND os.`pid` = c.`id`
-			WHERE
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND os.`value` <> 1
-		) AS `p_wsus`,
-		(
-			SELECT
-				COUNT(*)
-			FROM @properties_int AS os
-			LEFT JOIN @computers AS c
-				ON
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-				AND os.`pid` = c.`id`
-			WHERE
-				os.`tid` = 1
-				AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-				AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND os.`value` <> 1
-				AND c.`name` REGEXP '".CDB_REGEXP_SHOPS."'
-		) AS `p_wsus_tt`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
-		(
-			SELECT COUNT(*)
-			FROM @persons AS p
-			LEFT JOIN @properties_int AS j_quota
-				ON j_quota.`tid` = 2
-				AND j_quota.`pid` = p.`id`
-				AND j_quota.`oid` = ".CDB_PROP_MAILBOX_QUOTA."
-			WHERE
-				(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND j_quota.`value` = 0
-		) AS `p_mbxq`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0040) AS `o_mbxq`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
-		(
-			SELECT COUNT(*)
-			FROM @mac AS m
-			LEFT JOIN @devices AS d
-				ON d.`id` = m.`pid` AND d.`type` = 3
-			LEFT JOIN @mac AS dm
-				ON
-					dm.`name` = d.`name`
-					AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
-			WHERE
-				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0070    -- Not deleted, not hidden, from netdev, exist in IT Invent, active in IT Invent
-				AND (
-					dm.`branch_no` IS NULL
-					OR dm.`loc_no` IS NULL
-					OR (
-						m.`branch_no` <> dm.`branch_no`
-						AND m.`loc_no` <> dm.`loc_no`
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
+			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)) AS `p_laps`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`name` NOT REGEXP {s2}) AS `p_name`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`,
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_str AS os
+				LEFT JOIN @computers AS c
+					ON
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
+					AND os.`pid` = c.`id`
+				WHERE
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
+					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+					AND c.`name` NOT REGEXP {s0}
+			) AS `p_os`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_os`,
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS os
+				LEFT JOIN @computers AS c
+					ON
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+					AND os.`pid` = c.`id`
+				WHERE
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND os.`value` <> 1
+			) AS `p_wsus`,
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS os
+				LEFT JOIN @computers AS c
+					ON
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+					AND os.`pid` = c.`id`
+				WHERE
+					os.`tid` = 1
+					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
+					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND os.`value` <> 1
+					AND c.`name` REGEXP {s1}
+			) AS `p_wsus_tt`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
+			(
+				SELECT COUNT(*)
+				FROM @persons AS p
+				LEFT JOIN @properties_int AS j_quota
+					ON j_quota.`tid` = 2
+					AND j_quota.`pid` = p.`id`
+					AND j_quota.`oid` = ".CDB_PROP_MAILBOX_QUOTA."
+				WHERE
+					(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND j_quota.`value` = 0
+			) AS `p_mbxq`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0040) AS `o_mbxq`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
+			(
+				SELECT COUNT(*)
+				FROM @mac AS m
+				LEFT JOIN @devices AS d
+					ON d.`id` = m.`pid` AND d.`type` = 3
+				LEFT JOIN @mac AS dm
+					ON
+						dm.`name` = d.`name`
+						AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
+				WHERE
+					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0070    -- Not deleted, not hidden, from netdev, exist in IT Invent, active in IT Invent
+					AND (
+						dm.`branch_no` IS NULL
+						OR dm.`loc_no` IS NULL
+						OR (
+							m.`branch_no` <> dm.`branch_no`
+							AND m.`loc_no` <> dm.`loc_no`
+						)
 					)
-				)
-		) AS `p_iimv`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
-	")))
+			) AS `p_iimv`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
+		",
+		CDB_REGEXP_SERVERS,
+		CDB_REGEXP_SHOPS,
+		CDB_REGEXP_VALID_NAMES,
+		CDB_REGEXP_NOTEBOOK_NAME
+	)))
 	{
 		// error
 	}

@@ -94,28 +94,30 @@
 	")))
 */
 	if($db->select_assoc_ex($result, rpv("
-		SELECT
-			c.`id`,
-			c.`name`,
-			-- c.`dn`,
-			c.`flags`
-		FROM @computers AS c
-		LEFT JOIN @tasks AS t ON
-			t.`tid` = 1
-			AND t.`pid` = c.`id`
-			AND (t.`flags` & (0x0001 | 0x0080)) = 0x0080
-		LEFT JOIN @ac_log AS al ON
-			al.`pid` = c.`id`
-		WHERE
-			(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND (al.`flags` & 0x0002) = 0
-			AND c.`name` REGEXP '".CDB_REGEXP_OFFICES."'
-		GROUP BY c.`id`
-		HAVING 
-			(BIT_OR(t.`flags`) & 0x0080) = 0
-			-- AND (BIT_AND(al.`flags`) & 0x0002) = 0
-			AND COUNT(al.`id`) > 0
-	")))
+			SELECT
+				c.`id`,
+				c.`name`,
+				-- c.`dn`,
+				c.`flags`
+			FROM @computers AS c
+			LEFT JOIN @tasks AS t ON
+				t.`tid` = 1
+				AND t.`pid` = c.`id`
+				AND (t.`flags` & (0x0001 | 0x0080)) = 0x0080
+			LEFT JOIN @ac_log AS al ON
+				al.`pid` = c.`id`
+			WHERE
+				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND (al.`flags` & 0x0002) = 0
+				AND c.`name` REGEXP {s0}
+			GROUP BY c.`id`
+			HAVING 
+				(BIT_OR(t.`flags`) & 0x0080) = 0
+				-- AND (BIT_AND(al.`flags`) & 0x0002) = 0
+				AND COUNT(al.`id`) > 0
+		",
+		CDB_REGEXP_OFFICES
+	)))
 	{
 		foreach($result as &$row)
 		{

@@ -28,6 +28,8 @@ Write-Host -ForegroundColor Green ('Connecting to {0}...' -f $g_config.vmm_serve
 Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authentication Negotiate -ArgumentList @($g_config) -ScriptBlock {
 	param($g_config)
 
+	$ErrorActionPreference = 'Stop'
+
 	function ExecuteNonQueryFailover($Query)
 	{
 		$retry = 5
@@ -66,12 +68,21 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 	Get-Mailbox -ResultSize Unlimited | %{
 		try
 		{
+			$id = $null
 			$mbx_s = Get-MailboxStatistics -Identity $_.DistinguishedName
 			$query.CommandText = 'SELECT `id` FROM c_persons WHERE `login` = ''{0}'' LIMIT 1' -f $_.SamAccountName
 			$result = $query.ExecuteReader()
-			$result.Read() | Out-Null
-			$id = [int] $result.GetString(0)
-			$result.Close() | Out-Null
+			try
+			{
+				$result.Read() | Out-Null
+				$id = [int] $result.GetString(0)
+				$result.Close() | Out-Null
+			}
+			catch
+			{
+				$result.Close() | Out-Null
+				Write-Host -ForegroundColor Red ('ERROR: {0}' -f $_.Exception.Message)
+			}
 			
 			if($id)
 			{

@@ -130,13 +130,14 @@
 			WHERE
 				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 				AND j_up.`value` <> 1
-				AND c.`name` NOT REGEXP '".CDB_REGEXP_SERVERS."'
+				AND c.`name` NOT REGEXP {s3}
 			GROUP BY c.`id`
 			HAVING (BIT_OR(t.`flags`) & 0x0040) = 0
 		",
 		CDB_PROP_BASELINE_COMPLIANCE_HOTFIX,
 		CDB_PROP_OPERATINGSYSTEM,
-		CDB_PROP_OPERATINGSYSTEMVERSION
+		CDB_PROP_OPERATINGSYSTEMVERSION,
+		CDB_REGEXP_SERVERS
 	)))
 	{
 		foreach($result as &$row)

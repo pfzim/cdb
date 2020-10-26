@@ -60,20 +60,22 @@ EOT;
 	$i = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT
-			`id`,
-			`name`,
-			`ao_script_ptn`,
-			DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
-			DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan`
-		FROM
-			@computers
-		WHERE
-			(`flags` & (0x0002 | 0x0004)) = 0
-			AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG."
-			AND `name` REGEXP '".CDB_REGEXP_SERVERS."'
-		ORDER BY `name`
-	")))
+			SELECT
+				`id`,
+				`name`,
+				`ao_script_ptn`,
+				DATE_FORMAT(`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+				DATE_FORMAT(`ao_as_pstime`, '%d.%m.%Y %H:%i:%s') AS `last_scan`
+			FROM
+				@computers
+			WHERE
+				(`flags` & (0x0002 | 0x0004)) = 0
+				AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG."
+				AND `name` REGEXP {s0}
+			ORDER BY `name`
+		",
+		CDB_REGEXP_SERVERS
+	)))
 	{
 		foreach($result as &$row)
 		{

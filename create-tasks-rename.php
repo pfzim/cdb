@@ -66,19 +66,21 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1
-			ON
-				j1.`tid` = 1
-				AND j1.pid = m.id
-				AND (j1.flags & (0x0001 | 0x0400)) = 0x0400
-		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`name` NOT REGEXP '".CDB_REGEXP_VALID_NAMES."'
-		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & 0x0400) = 0
-	")))
+			SELECT m.`id`, m.`name`, m.`dn`, m.`flags`
+			FROM @computers AS m
+			LEFT JOIN @tasks AS j1
+				ON
+					j1.`tid` = 1
+					AND j1.pid = m.id
+					AND (j1.flags & (0x0001 | 0x0400)) = 0x0400
+			WHERE
+				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND m.`name` NOT REGEXP {s0}
+			GROUP BY m.`id`
+			HAVING (BIT_OR(j1.`flags`) & 0x0400) = 0
+		",
+		CDB_REGEXP_VALID_NAMES
+	)))
 	{
 		foreach($result as &$row)
 		{
