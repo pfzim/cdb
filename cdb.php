@@ -308,7 +308,15 @@ function walk_route($route, $action)
 	{
 		if($operation[0] == '@')
 		{
-			include(ROOTDIR.DIRECTORY_SEPARATOR.substr($operation, 1));
+			$module_name = ROOTDIR.DIRECTORY_SEPARATOR.substr($operation, 1);
+			if(file_exists($module_name))
+			{
+				include($module_name);
+			}
+			else
+			{
+				echo 'ERROR: '.$module_name.' - file not found!';
+			}
 		}
 		else
 		{
@@ -320,7 +328,12 @@ function walk_route($route, $action)
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
 
 	$action = '';
-	if(isset($_GET['action']))
+
+	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
+	{
+		$action = $argv[1];
+	}
+	elseif(isset($_GET['action']))
 	{
 		$action = $_GET['action'];
 	}
@@ -351,7 +364,7 @@ function walk_route($route, $action)
 			'create-tasks-itinvent',
 			'create-tasks-itinvent-move',
 			'create-tasks-itinvent-escalate',
-			//'create-tasks-vuln',
+			'create-tasks-vuln',
 			'create-tasks-vuln-mass',
 			'create-tasks-os',
 			'create-tasks-wsus',

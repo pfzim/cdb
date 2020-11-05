@@ -26,7 +26,16 @@
 			  ,[TAB_NO]
 			  ,[SQL_QUERY]
 			  ,[USE_ON_TABLE]
-		  FROM [ITINVENT].[dbo].[FIELDS]
+		FROM [ITINVENT].[dbo].[FIELDS]
+
+		List all statuses:
+		
+		SELECT
+			[STATUS_NO]
+			,[DESCR]
+			,[ADDINFO]
+			,[IMAGE_DATA]
+		FROM [ITINVENT].[dbo].[STATUS]
   
   */
 	

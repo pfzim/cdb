@@ -143,14 +143,13 @@
 															SET
 																`scan_date` = !,
 																`folder_id` = #,
-																`flags` = #
+																`flags` = (`flags` & ~0x0002)     -- reset Fixed flag
 															WHERE
 																`id` = #
 															LIMIT 1
 														",
 														$scan_date,
 														$scan['folder_id'],
-														0x0000,  // reset Fixed flag
 														$res[0][0]
 													));
 												}

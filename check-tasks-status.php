@@ -101,13 +101,13 @@ function get_status_name($strings, $code)
 							// Vulnerability mark as Solved
 							if(intval($row['flags']) & 0x010000)
 							{
-								$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $row['pid']));
+								$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | 0x0002), `scan_date` = NOW() WHERE `id` = # LIMIT 1", $row['pid']));
 							}
 
 							// Vulnerability (mass) mark all as Solved
 							if(intval($row['flags']) & 0x020000)
 							{
-								$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | 0x0002) WHERE `plugin_id` = #", $row['pid']));
+								$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | 0x0002), `scan_date` = NOW() WHERE `plugin_id` = #", $row['pid']));
 							}
 							$i++;
 						}

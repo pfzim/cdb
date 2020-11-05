@@ -146,7 +146,7 @@
 				!$is_sn
 				&& (
 					(
-						(preg_match('/'.MAC_EXCLUDE_REGEX.'/i', $mac) === 0)
+						(preg_match('/'.MAC_NOT_EXCLUDE_REGEX.'/i', $mac) === 0)
 						&& (
 							(
 								preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
