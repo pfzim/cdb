@@ -141,8 +141,8 @@
 				.'&To=byname'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Выявлена проблема с TMAO'
-					."\nПК: ".$row['name']
+					'Выявлена проблема с антивирусом Trend Micro Apex One.'
+					."\n\nПК: ".$row['name']
 					."\nВерсия антивирусной базы: "
 					.$row['ao_script_ptn']
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')

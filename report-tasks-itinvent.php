@@ -35,7 +35,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
+	$table .= '<tr><th>netdev</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>HD Date</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -48,6 +48,7 @@ EOT;
 			m.`mac`,
 			t.`opernum`,
 			t.`operid`,
+			DATE_FORMAT(t.`date`, '%d.%m.%Y') AS `t_date`,
 			t.`flags` AS `t_flags`,
 			m.`flags` AS `m_flags`,
 			(
@@ -77,6 +78,7 @@ EOT;
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['last_seen'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
+			$table .= '<td>'.$row['t_date'].'</td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['t_flags'])).'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['m_flags']) & 0x00F0, $g_mac_short_flags, '', '-').'</td>';
 			$table .= '<td'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';

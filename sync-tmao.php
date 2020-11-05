@@ -121,6 +121,10 @@
 
 		// Load Application Control logs
 
+		// Mark very old events as fixed
+		
+		$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE ((`flags` & 0x0002) = 0) AND `last` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+
 		$result = sqlsrv_query($conn, "
 			SELECT
 				[SLF_ClientHostName]

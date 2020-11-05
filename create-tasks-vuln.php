@@ -79,12 +79,12 @@
 	
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			d.`id`,
+			vs.`id`,
 			d.`name`,
 			v.`plugin_name`,
 			v.`severity`,
 			vs.`scan_date`,
-			d.`flags`
+			d.`flags`			
 		FROM @vuln_scans AS vs
 		LEFT JOIN @tasks AS t
 			ON
@@ -97,7 +97,7 @@
 			ON d.`id` = vs.`pid`
 		WHERE
 			(d.`flags` & 0x0004) = 0                                                                           -- Device not excluded (Manual hide)
-			AND (vs.`flags` & 0x0002) = 0                                                                      -- Not marked as Fixed
+			AND (vs.`flags` & (0x0002 | 0x0004)) = 0                                                           -- Not marked as Fixed OR Manual hide
 			AND v.`severity` >= 3                                                                              -- Severity >= 3
 			AND (v.`flags` & 0x0004) = 0                                                                       -- Vulnerability not excluded (Manual hide)
 			AND (SELECT COUNT(*) FROM @vuln_scans AS ivs WHERE ivs.`plugin_id` = vs.`plugin_id`) < 100         -- Not mass vulnerability (affected < 100)
@@ -121,7 +121,7 @@
 				.'&To=byname'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Nessus: Обнаружена уязвимость требующая устранения.'
+					'Nessus: Обнаружена уязвимость требующая устранения. #'.$row['id']
 					."\n\nПК: ".$row['name']
 					."\nУязвимость: ".$row['plugin_name']
 					."\nУровень опасности: ".$row['severity']
