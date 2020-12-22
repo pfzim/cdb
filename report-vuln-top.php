@@ -40,6 +40,8 @@ EOT;
 	$table = '<table>';
 	$table .= '<tr><th>Vulnerability</th><th>Severity</th><th>Detections</th></tr>';
 
+	$severities = array();
+
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
@@ -49,19 +51,30 @@ EOT;
 		FROM @vulnerabilities AS v
 		LEFT JOIN @vuln_scans AS vs ON vs.`plugin_id` = v.`plugin_id`
 		WHERE vs.`folder_id` <> #
+		AND v.`severity` > 2
 		GROUP BY v.`plugin_id`
-		ORDER BY cnt DESC
-		LIMIT 100
+		ORDER BY cnt DESC, v.`severity` DESC
+		-- LIMIT 100
 	", NESSUS_SERVERS_FOLDER_ID)))
 	{
 
 		foreach($result as &$row)
 		{
-			$table .= '<tr>';
-			$table .= '<td>'.$row['plugin_name'].'</td>';
-			$table .= '<td class="severity'.$row['severity'].'">'.$row['severity'].'</td>';
-			$table .= '<td>'.$row['cnt'].'</td>';
-			$table .= '</tr>';
+			if($i < 100)
+			{
+				$table .= '<tr>';
+				$table .= '<td>'.$row['plugin_name'].'</td>';
+				$table .= '<td class="severity'.$row['severity'].'">'.$row['severity'].'</td>';
+				$table .= '<td>'.$row['cnt'].'</td>';
+				$table .= '</tr>';
+			}
+
+			if(!isset($severities[intval($row['severity'])]))
+			{
+				$severities[intval($row['severity'])] = 0;
+			}
+
+			$severities[intval($row['severity'])] += (intval($row['severity']) * intval($row['cnt']));
 
 			$i++;
 		}
@@ -69,6 +82,17 @@ EOT;
 
 	$table .= '</table>';
 
+	$html .= '<table>';
+	$html .= '<tr><th>Severity</th><th>Общий балл</th></tr>';
+
+	krsort($severities);
+
+	foreach($severities as $key => $value)
+	{
+		$html .= '<tr><td class="severity'.$key.'">'.$key.'</td><td>'.$value.'</td></tr>';
+	}
+	$html .= '</table><br />';
+	
 	$html .= $table;
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-vuln-top">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';

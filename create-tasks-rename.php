@@ -10,7 +10,7 @@
 
 	echo "\ncreate-tasks-rename:\n";
 
-	$limit = 10;
+	$limit = 20;
 
 	global $g_comp_flags;
 
@@ -18,15 +18,20 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
-		FROM @tasks AS t
-		LEFT JOIN @computers AS c
-			ON c.`id` = t.`pid`
-		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0400 | 0x0001)) = 0x0400
-			AND c.`flags` & (0x0001 | 0x0002 | 0x0004)
-	")))
+			SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
+			FROM @tasks AS t
+			LEFT JOIN @computers AS c
+				ON c.`id` = t.`pid`
+			WHERE
+				t.`tid` = 1
+				AND (t.`flags` & (0x0400 | 0x0001)) = 0x0400
+				AND (
+					c.`flags` & (0x0001 | 0x0002 | 0x0004)
+					OR c.`name` REGEXP !
+				)
+		",
+		CDB_REGEXP_VALID_NAMES
+	)))
 	{
 		foreach($result as &$row)
 		{
@@ -66,18 +71,18 @@
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-			SELECT m.`id`, m.`name`, m.`dn`, m.`flags`
-			FROM @computers AS m
-			LEFT JOIN @tasks AS j1
+			SELECT c.`id`, c.`name`, c.`dn`, c.`flags`
+			FROM @computers AS c
+			LEFT JOIN @tasks AS t
 				ON
-					j1.`tid` = 1
-					AND j1.pid = m.id
-					AND (j1.flags & (0x0001 | 0x0400)) = 0x0400
+					t.`tid` = 1
+					AND t.pid = c.id
+					AND (t.flags & (0x0001 | 0x0400)) = 0x0400
 			WHERE
-				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND m.`name` NOT REGEXP {s0}
-			GROUP BY m.`id`
-			HAVING (BIT_OR(j1.`flags`) & 0x0400) = 0
+				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				AND c.`name` NOT REGEXP {s0}
+			GROUP BY c.`id`
+			HAVING (BIT_OR(t.`flags`) & 0x0400) = 0
 		",
 		CDB_REGEXP_VALID_NAMES
 	)))

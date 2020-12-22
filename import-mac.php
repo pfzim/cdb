@@ -13,6 +13,9 @@
 		  - ip     - ip адрес
 		  - sw_id  - имя коммутатора
 		  - port   - порт коммутатора в который подключено устройство
+		  
+		\todo Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг.
+		Флаг обнулять при обновлении записи.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -189,7 +192,7 @@
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
-				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), #)",
+				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), NOW(), #)",
 					$pid,
 					$row[1],  // name
 					$mac,
@@ -204,7 +207,7 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip

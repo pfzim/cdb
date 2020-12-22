@@ -150,7 +150,7 @@ function tmee_status($code)
 }
 
 /**
- *  @brief Функция проыеряет соотствие IP адреса маске CIDR
+ *  @brief Функция проверяет соотствие IP адреса маске CIDR
  *  
  *  @param [in] $ip IP адрес
  *  @param [in] $cidr Маска CIDR. Например: 10.12.54.0/24
@@ -358,7 +358,7 @@ function walk_route($route, $action)
 			'create-tasks-ac',
 			'create-tasks-laps',
 			'create-tasks-rename',
-			'create-tasks-sccm',
+//			'create-tasks-sccm',
 			'create-tasks-epwd',
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
@@ -366,7 +366,8 @@ function walk_route($route, $action)
 			'create-tasks-itinvent-escalate',
 			'create-tasks-vuln',
 			'create-tasks-vuln-mass',
-			'create-tasks-os',
+//			'create-tasks-os',
+			//'create-tasks-net-errors',
 			'create-tasks-wsus',
 			'report-tasks-status',
 			'report-tasks-itinvent',
@@ -422,6 +423,9 @@ function walk_route($route, $action)
 		'create-tasks-itinvent-move' => array(
 			'@create-tasks-itinvent-move.php'
 		),
+		'create-tasks-net-errors' => array(
+			'@create-tasks-net-errors.php'
+		),
 		'create-tasks-vuln' => array(
 			'@create-tasks-vuln.php'
 		),
@@ -457,6 +461,9 @@ function walk_route($route, $action)
 		),
 		'report-tasks-itinvent' => array(
 			'@report-tasks-itinvent.php'
+		),
+		'report-itinvent-files-top' => array(
+			'@report-itinvent-files-top.php'
 		),
 		'report-vuln-top' => array(
 			'@report-vuln-top.php'
@@ -495,6 +502,9 @@ function walk_route($route, $action)
 		'sync-itinvent' => array(
 			'@sync-itinvent.php'
 		),
+		'sync-itinvent-sw' => array(
+			'@sync-itinvent-sw.php'
+		),
 		'sync-nessus' => array(
 			'@sync-nessus.php'
 		),
@@ -506,6 +516,9 @@ function walk_route($route, $action)
 		),
 		'import-mac' => array(
 			'@import-mac.php'
+		),
+		'import-errors' => array(
+			'@import-errors.php'
 		),
 		'computer' => array(
 			'@computer.php'

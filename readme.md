@@ -41,6 +41,8 @@ CBD собирает информацию из различных источни
 | 0x008000 | IT Invent Task was created in HelpDesk    |
 | 0x010000 | Vulnerabilities                           |
 | 0x020000 | Vulnerabilities (mass problem)            |
+| 0x040000 | Net errors                                |
+| 0x080000 | IT Invent software                        |
 
 Описание битовых флагов `flags` в таблице `ac_log`
 
@@ -53,16 +55,17 @@ CBD собирает информацию из различных источни
 
 Описание битовых флагов `flags` в таблице `mac`
 
-| Bits   | Description                               |
-|--------|-------------------------------------------|
-| 0x0001 |                                           |
-| 0x0002 | Deleted (excluded)                        |
-| 0x0004 |                                           |
-| 0x0008 |                                           |
-| 0x0010 | Exist in IT Invent                        |
-| 0x0020 | Imported from netdev                      |
-| 0x0040 | Active in IT Invent                       |
-| 0x0080 | `mac` field is serial number              |
+| Bits   | Description                                    |
+|--------|------------------------------------------------|
+| 0x0001 |                                                |
+| 0x0002 | Deleted (excluded)                             |
+| 0x0004 | Manual hide?                                   |
+| 0x0008 |                                                |
+| 0x0010 | Exist in IT Invent                             |
+| 0x0020 | Imported from netdev                           |
+| 0x0040 | Active in IT Invent                            |
+| 0x0080 | `mac` field is serial number                   |
+| 0x0100 | This is mobile device (do not check location)  |
 
 Возможные значения колонки `type` в таблице `devices`
 
@@ -100,6 +103,16 @@ CBD собирает информацию из различных источни
 | 0x0004 | Manual hide                               |
 | 0x0008 |                                           |
 
+Описание битовых флагов `flags` в таблице `files`
+
+| Bits   | Description                               |
+|--------|-------------------------------------------|
+| 0x0001 |                                           |
+| 0x0002 |                                           |
+| 0x0004 |                                           |
+| 0x0008 |                                           |
+| 0x0010 | Allowed (Exist in IT Invent)              |
+
 Возможные значения колонки `oid` в таблицах `properties_*`
 | Value  | PHP constant                              | Description                               |
 |--------|-------------------------------------------|-------------------------------------------|
@@ -118,6 +131,8 @@ CBD собирает информацию из различных источни
 | 4      | When `pid` from `ac_log` table            |
 | 5      | When `pid` from `vuln_scans` table        |
 | 6      | When `pid` from `vulnerabilities` table   |
+| 7      | When `pid` from `devices` table           |
+| 8      | When `pid` from `files` table             |
 
 
 Change flag 0x40 to 0x0400:
