@@ -112,7 +112,7 @@ EOT;
 					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
 					AND c.`name` NOT REGEXP {s0}
 			) AS `p_os`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_os`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x4000)) = 0x4000) AS `o_os`,
 			(
 				SELECT
 					COUNT(*)
@@ -156,29 +156,7 @@ EOT;
 					(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 					AND j_quota.`value` = 0
 			) AS `p_mbxq`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0040) AS `o_mbxq`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
-			(
-				SELECT COUNT(*)
-				FROM @mac AS m
-				LEFT JOIN @devices AS d
-					ON d.`id` = m.`pid` AND d.`type` = 3
-				LEFT JOIN @mac AS dm
-					ON
-						dm.`name` = d.`name`
-						AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
-				WHERE
-					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0070    -- Not deleted, not hidden, from netdev, exist in IT Invent, active in IT Invent
-					AND (
-						dm.`branch_no` IS NULL
-						OR dm.`loc_no` IS NULL
-						OR (
-							m.`branch_no` <> dm.`branch_no`
-							AND m.`loc_no` <> dm.`loc_no`
-						)
-					)
-			) AS `p_iimv`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0008) AS `o_mbxq`
 		",
 		CDB_REGEXP_SERVERS,
 		CDB_REGEXP_SHOPS,
@@ -198,7 +176,6 @@ EOT;
 	$html .= '<tr><td>Имя ПК не соответствует стандарту именования</td><td>'.$result[0]['p_name'].'</td><td>'.$result[0]['o_name'].'</td></tr>';
 	$html .= '<tr><td>Давно не устанавливались обновления</td><td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td><td>'.$result[0]['o_wsus'].'</td></tr>';
 	$html .= '<tr><td>Не установлена квота на ПЯ</td><td>'.$result[0]['p_mbxq'].'</td><td>'.$result[0]['o_mbxq'].'</td></tr>';
-	$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td></tr>';
 	$html .= '<tr><td>Устаревшая операционная система</td><td>'.$result[0]['p_os'].'</td><td>'.$result[0]['o_os'].'</td></tr>';
 	$html .= '</table>';
 

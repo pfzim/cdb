@@ -7,6 +7,7 @@
 		
 		Локация оборудования (branch_no и loc_no) должна совпадать с локацией коммутатора, в который оно подключено.
 		Коммутатор выбирается из таблицы по имени и здесь может быть небольшая проблема, т.к. имя устройства не является уникальным.
+		Оборудование имеющее флаг Mobile (Ноутбуки) не проверяется на корректность местоположения.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -30,12 +31,12 @@
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
+				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                         -- Only exist and active in IT Invent
 		WHERE
 			t.`tid` = 3
-			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010        -- Task status is Opened
+			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010                                         -- Task status is Opened
 			AND (
-				m.`flags` & (0x0002 | 0x0004)                   -- Deleted OR Manual hide
+				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) <> 0x0070    -- Deleted OR Manual hide, Not Exist OR Inactive in IT Invent, Not Mobile device
 				OR (
 					dm.`branch_no` IS NOT NULL
 					AND dm.`loc_no` IS NOT NULL
@@ -85,8 +86,10 @@
 			m.id
 			,m.`inv_no` AS m_inv_no
 			,m.`name` AS m_name
-			-- ,m.`mac`
-			-- ,m.`date`
+			,m.`mac`
+			,DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`
+			,m.`port`
+			,m.`flags`
 			-- ,m.`branch_no`
 			-- ,m.`loc_no`
 			-- ,hex(m.`flags`)
@@ -104,14 +107,14 @@
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
+				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                    -- Only exist and active in IT Invent
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = 3
 				AND t.pid = m.id
 				AND (t.flags & (0x0001 | 0x0010)) = 0x0010
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0070    -- Not deleted, not hidden, from netdev, exist in IT Invent, active in IT Invent
+			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not deleted, Not hidden, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
 			AND (
 				dm.`branch_no` IS NULL
 				OR dm.`loc_no` IS NULL
@@ -146,10 +149,13 @@
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
-					'Обнаружено расхождение в IT Invent: местоположение оборудования отличается от местоположения коммутатора, в который оно подключено.'
+					'Обнаружено расхождение в IT Invent: местоположение оборудования отличается от местоположения коммутатора/маршрутизатора, в который оно подключено.'
 					."\n\nИнвентарный номер оборудования: ".$row['m_inv_no']
 					."\nDNS имя: ".$row['m_name']
-					."\nИнвентарный номер коммутатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора' : $row['d_inv_no'])
+					."\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+					."\nПорт: ".$row['port']
+					."\nВремя регистрации: ".$row['regtime']
+					."\n\nИнвентарный номер коммутатора/маршрутизатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no'])
 					."\nDNS имя: ".$row['netdev']
 					."\nСерийный номер: ".$row['d_mac']
 					."\n\nКод работ: IIV09"

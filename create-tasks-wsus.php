@@ -12,8 +12,8 @@
 
 	echo "\ncreate-tasks-wsus:\n";
 
-	$limit_gup = 1;
-	$limit_goo = 10;
+	$limit_gup = 0; // 1
+	$limit_goo = 20;
 
 	global $g_comp_flags;
 
@@ -175,7 +175,7 @@
 					."\nПК: ".$row['name']
 					."\nОперационная система: ".$row['os'].' ('.$row['ver'].')'
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
-					."\nКод работ: USYS\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция-Устранение-ошибок-установки-обновлений.ashx'
+					."\nКод работ: OSUP\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция-Устранение-ошибок-установки-обновлений.ashx'
 				)
 			);
 

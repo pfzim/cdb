@@ -8,6 +8,7 @@
 		При закрытии заявок Application Contol делается пометка Problem fixed об исправлении у проблемных событий.
 		При закрытии заявок Vulnerability делается пометка Problem fixed об исправлении уязвимости у конкретного хоста.
 		При закрытии заявок Vulnerability (mass) делается пометка Problem fixed об исправлении уязвимости у всех хостов.
+		При закрытии заявок Net Errors делается пометка Problem fixed об исправлении у всех портов устройства.
 		Пометки Problem fixed стираются при следующей синхронизации, если проблема обнаруживается вновь.
 	*/
 
@@ -108,6 +109,12 @@ function get_status_name($strings, $code)
 							if(intval($row['flags']) & 0x020000)
 							{
 								$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | 0x0002), `scan_date` = NOW() WHERE `plugin_id` = #", $row['pid']));
+							}
+
+							// Net errors mark all as Solved
+							if(intval($row['flags']) & 0x040000)
+							{
+								$db->put(rpv("UPDATE @net_errors SET `flags` = (`flags` | 0x0002) WHERE `pid` = #", $row['pid']));
 							}
 							$i++;
 						}

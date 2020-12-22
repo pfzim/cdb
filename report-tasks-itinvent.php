@@ -93,13 +93,36 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & (0x0002 | 0x0010 | 0x0020)) = 0x0020) AS `inv_problems`,
-		(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x8000)) = 0x8000) AS `inv_opened`
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & (0x0002 | 0x0010 | 0x0020)) = 0x0020) AS `inv_problems`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x8000)) = 0x8000) AS `inv_opened`,
+			(
+				SELECT COUNT(*)
+				FROM @mac AS m
+				LEFT JOIN @devices AS d
+					ON d.`id` = m.`pid` AND d.`type` = 3
+				LEFT JOIN @mac AS dm
+					ON
+						dm.`name` = d.`name`
+						AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                    -- Only exist and active in IT Invent
+				WHERE
+					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not deleted, not hidden, exist in IT Invent, active in IT Invent, not Mobile device
+					AND (
+						dm.`branch_no` IS NULL
+						OR dm.`loc_no` IS NULL
+						OR (
+							m.`branch_no` <> dm.`branch_no`
+							AND m.`loc_no` <> dm.`loc_no`
+						)
+					)
+			) AS `p_iimv`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
 	")))
 	{
-		$html .= '<p>';
-		$html .= 'Открытых заявок: '.$result[0]['inv_opened'].', MAC адресов не добавленных в IT Invent: '.$result[0]['inv_problems'];
-		$html .= '</p>';
+		$html .= '<table>';
+		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th></tr>';
+		$html .= '<tr><td>Обрудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td></tr>';
+		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td></tr>';
+		$html .= '</table>';
 	}
 	
 	$html .= '<p>Обозначения: R - удалён, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер</p>';

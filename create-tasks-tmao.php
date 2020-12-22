@@ -4,13 +4,16 @@
 	/**
 		\file
 		\brief Создание заявок по проблеме неисправности антивируса на ПК.
+		
+		Проверка происходит по версии антивирусной базы. Версия базы не должна отставать
+		от самой свежей на количество хранимое в параметре TMAO_PATTERN_VERSION_LAG.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-tmao:\n";
 
-	$limit_gup = 15;
+	$limit_gup = 0; // 15
 	$limit_goo = 100;
 
 	global $g_comp_flags;

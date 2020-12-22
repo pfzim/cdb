@@ -3,12 +3,20 @@
 	/**
 		\file
 		\brief Синхронизация БД IT Invent.
+		
 		Загрузка информации о MAC адресах и серийных номера.
+		
 		Добавлена загрузка информации о местоположении оборудования.
 		Местоположение состоит из двух значенией: Филиал и Местоположение.
 		Местоположение может содержать как номер кабинете или этажа, так и
 		адреса магазинов. Если поле LOC_NO_BUH равно NULL, то Местоположение
 		не загружается.
+		
+		Активным считается оборудование имеющее статус Работает или
+		Выдан пользователю для удаленной работы.
+
+		Оборудование помечается Мобильным если имеет тип Ноутбук. Такое
+		оборудование исключается из проверок на местоположение.
 	*/
 
 	/*
@@ -62,13 +70,15 @@
 		exit;
 	}
 
-	// before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040)) WHERE `flags` & (0x0010 | 0x0040)"));
+	// before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100)) WHERE `flags` & (0x0010 | 0x0040 | 0x0100)"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
 			[ID]
 			,[INV_NO]
+			,[TYPE_NO]
+			,[CI_TYPE]
 			,item.[BRANCH_NO]
 			,[LOC_NO] = 
 				CASE
@@ -121,6 +131,9 @@
 		$i = 0;
 		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
+			$active = ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000);
+			$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);
+
 			// Load SN
 			$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
 			if(!empty($mac))
@@ -133,7 +146,7 @@
 						$row['INV_NO'],
 						$row['BRANCH_NO'],
 						$row['LOC_NO'],
-						0x0010 | 0x0080 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000)
+						0x0010 | 0x0080 | $active | $mobile
 					)))
 					{
 						$row_id = $db->last_id();
@@ -145,14 +158,14 @@
 
 					if(intval($result[0][2]) & 0x0010 && $mac !== 'N/A' && $mac !== 'N\A' && $mac !== 'NA')    // Exist in IT Invent?
 					{
-						echo 'Possible duplicate: '.$row_id.' INV_ON: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+						echo 'Possible duplicate: ID: '.$row_id.' INV_ON: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 					}
 
 					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 						$row['INV_NO'],
 						$row['BRANCH_NO'],
 						$row['LOC_NO'],
-						0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000),
+						0x0010 | $active | $mobile,
 						$row_id
 					));
 				}
@@ -173,7 +186,7 @@
 							$row['INV_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000)
+							0x0010 | $active | $mobile
 						)))
 						{
 							$row_id = $db->last_id();
@@ -185,14 +198,14 @@
 
 						if(intval($result[0][2]) & 0x0010)    // Exist in IT Invent?
 						{
-							echo 'Possible duplicate: '.$row_id.' INV_ON: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+							echo 'Possible duplicate: ID: '.$row_id.' INV_ON: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
 						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 							$row['INV_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | ((in_array(intval($row['STATUS_NO']), $active_statuses)) ? 0x0040 : 0x0000),
+							0x0010 | $active | $mobile,
 							$row_id
 						));
 					}

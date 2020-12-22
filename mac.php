@@ -7,13 +7,24 @@
 		Модуль для манипуляции с MAC адресами:
 		- отключение/включение создания заявок
 		- удаление MAC адреса из БД
+		
+		GET method parameters:
+		  do - reset, exclude, delete
+		  mac - MAC address or SN
+		  type - 1 - mac is MAC address, 2 - mac is SN
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 
 	if(!empty($_GET['do']) && !empty($_GET['mac']))
 	{
-		if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = 0x0000) LIMIT 1", $_GET['mac'])))
+		$type = 0x0000;
+		if(!empty($_GET['type']) && intval($_GET['type']) == 2)
+		{
+			$type = 0x0080;
+		}
+		
+		if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $_GET['mac'], $type)))
 		{
 			if($_GET['do'] === 'reset')
 			{
@@ -43,4 +54,4 @@
 		}
 	}
 
-	echo 'ERROR: MAC address not found!';
+	echo 'ERROR: MAC address or SN not found!';
