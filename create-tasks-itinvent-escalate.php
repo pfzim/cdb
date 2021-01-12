@@ -28,7 +28,7 @@
 			t.`tid` = 3
 			AND (t.`flags` & (0x0001 | 0x0020)) = 0x0020          -- Task status is Opened
 			AND (
-				m.`flags` & (0x0002 | 0x0004)                   -- Deleted, Manual hide
+				m.`flags` & (0x0002 | 0x0004)                   -- Temprary excluded or Premanently excluded
 				OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent
 			)
 	")))
@@ -93,7 +93,7 @@
 				AND t2.pid = m.id
 				AND (t2.flags & 0x8000)
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not deleted, not hide, imported from netdev, not exist in IT Invent
+			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, Imported from netdev, Not exist in IT Invent
 		GROUP BY m.`id`
 		HAVING
 			(BIT_OR(t.`flags`) & 0x0020) = 0

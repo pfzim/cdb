@@ -213,8 +213,8 @@ $g_comp_short_flags = array(
 
 $g_mac_flags = array(
 	'',
-	'Deleted',
-	'',
+	'Permanently excluded',
+	'Temporary excluded',
 	'',
 	'IT Invent',
 	'netdev',
@@ -225,7 +225,7 @@ $g_mac_flags = array(
 $g_mac_short_flags = array(
 	'',
 	'R',
-	'',
+	'T',
 	'',
 	'I',
 	'N',

@@ -93,7 +93,7 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & (0x0002 | 0x0010 | 0x0020)) = 0x0020) AS `inv_problems`,
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020)) = 0x0020) AS `inv_problems`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x8000)) = 0x8000) AS `inv_opened`,
 			(
 				SELECT COUNT(*)
@@ -105,7 +105,7 @@ EOT;
 						dm.`name` = d.`name`
 						AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                    -- Only exist and active in IT Invent
 				WHERE
-					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not deleted, not hidden, exist in IT Invent, active in IT Invent, not Mobile device
+					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
 					AND (
 						dm.`branch_no` IS NULL
 						OR dm.`loc_no` IS NULL
