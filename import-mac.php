@@ -8,14 +8,17 @@
 		Входящие параметры:
 		- netdev - имя сетевого устройства передающего данные
 		- list   - список данных, описание колонок:
-		  - mac    - MAC адрес поделюченного оборуования
-		  - name   - имя устройства (hostname)
-		  - ip     - ip адрес
+		  - mac    - MAC адрес подключенного оборудования
+		  - name   - имя подключенного оборудования (hostname)
+		  - ip     - ip адрес подключенного оборудования
 		  - sw_id  - имя коммутатора
-		  - port   - порт коммутатора в который подключено устройство
+		  - port   - порт коммутатора в который подключено оборудование
 		  
 		\todo Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг.
 		Флаг обнулять при обновлении записи.
+		\todo Ручное исключение из проверок навсегда производить через флаг 0x0002.
+		Временное исключение до первого обнаружения и исключения по фильтрам производить через флаг 0x0004.
+		Флаг 0x0004 обнулять при импорте.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -36,7 +39,7 @@
 	$error_msg = '';
 
 	$pid = 0;
-	$last_sw_id = '';
+	$last_sw_name = '';
 	
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
@@ -106,13 +109,13 @@
 			
 			if($row[3] === $net_dev)
 			{
-				$last_sw_id = $net_dev;
+				$last_sw_name = $net_dev;
 				$pid = $dev_id;
 			}
-			else if($last_sw_id !== $row[3])
+			else if($last_sw_name !== $row[3])
 			{
 				$pid = 0;
-				$last_sw_id = $row[3];
+				$last_sw_name = $row[3];
 				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[3])))
 				{
 					$pid = intval($result[0][0]);
@@ -152,19 +155,22 @@
 						(preg_match('/'.MAC_NOT_EXCLUDE_REGEX.'/i', $mac) === 0)
 						&& (
 							(
-								preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
+								preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_name)
 								&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_PORT.'#i', $row[4])
 							) || (
-								preg_match('/'.NETDEV_TOF_REGEX.'/i', $last_sw_id)
+								preg_match('/'.NETDEV_TOF_REGEX.'/i', $last_sw_name)
 								&& preg_match('#'.NETDEV_EXCLUDE_TOF_PORT.'#i', $row[4])
 							)
 						)
 					) || (
-						preg_match('/'.NETDEV_SHOPS_FA_REGEX.'/i', $last_sw_id)
+						preg_match('/'.NETDEV_SHOPS_FA_REGEX.'/i', $last_sw_name)
 						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_FA_PORT.'#i', $row[4])
 					) || (
-						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_id)
+						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_name)
 						&& preg_match('/'.MAC_EXCLUDE_SHOPS_REGEX.'/i', $mac)
+					) || (
+						preg_match('/'.NETDEV_WIFI_REGEX.'/i', $last_sw_name)
+						&& preg_match('#'.NETDEV_EXCLUDE_WIFI_PORT.'#i', $row[4])
 					)
 				)
 			)

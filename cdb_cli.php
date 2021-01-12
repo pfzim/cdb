@@ -4,7 +4,7 @@
 	\brief Стартовый модуль для CLI версии.
 	Предназначен для запуска из cron.
 	
-	\todo Перенести функционал в cdb.php
+	\todo Перенести функционал в cdb.php. Done!
 */
 
 	if(!defined('ROOTDIR'))

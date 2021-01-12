@@ -58,8 +58,8 @@ CBD собирает информацию из различных источни
 | Bits   | Description                                    |
 |--------|------------------------------------------------|
 | 0x0001 |                                                |
-| 0x0002 | Deleted (excluded)                             |
-| 0x0004 | Manual hide?                                   |
+| 0x0002 | Temporary excluded (Deleted)                   |
+| 0x0004 | Permanently excluded (Manual)                  |
 | 0x0008 |                                                |
 | 0x0010 | Exist in IT Invent                             |
 | 0x0020 | Imported from netdev                           |

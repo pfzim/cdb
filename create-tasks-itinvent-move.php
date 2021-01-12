@@ -5,9 +5,15 @@
 		\file
 		\brief Создание заявок на корректировку местоположения оборудования в IT Invent.
 		
-		Локация оборудования (branch_no и loc_no) должна совпадать с локацией коммутатора, в который оно подключено.
-		Коммутатор выбирается из таблицы по имени и здесь может быть небольшая проблема, т.к. имя устройства не является уникальным.
-		Оборудование имеющее флаг Mobile (Ноутбуки) не проверяется на корректность местоположения.
+		Локация оборудования (значения branch_no и loc_no) должна совпадать с локацией
+		коммутатора, в который оно подключено.
+		
+		Коммутатор выбирается из таблицы по имени и здесь может быть небольшая проблема,
+		т.к. имя устройства не является уникальным значением в БД. Если появится устройство
+		с аналогичным именем, то возникнет путаница.
+		
+		Оборудование имеющее флаг Mobile (Ноутбуки) не проверяется на корректность
+		местоположения.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -36,7 +42,7 @@
 			t.`tid` = 3
 			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010                                         -- Task status is Opened
 			AND (
-				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) <> 0x0070    -- Deleted OR Manual hide, Not Exist OR Inactive in IT Invent, Not Mobile device
+				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) <> 0x0070    -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
 				OR (
 					dm.`branch_no` IS NOT NULL
 					AND dm.`loc_no` IS NOT NULL
@@ -114,7 +120,7 @@
 				AND t.pid = m.id
 				AND (t.flags & (0x0001 | 0x0010)) = 0x0010
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not deleted, Not hidden, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
+			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
 			AND (
 				dm.`branch_no` IS NULL
 				OR dm.`loc_no` IS NULL

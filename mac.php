@@ -9,9 +9,14 @@
 		- удаление MAC адреса из БД
 		
 		GET method parameters:
-		  do - reset, exclude, delete
-		  mac - MAC address or SN
-		  type - 1 - mac is MAC address, 2 - mac is SN
+		  - do - Операция:
+		    - reset    - Сбрасывает флаги 0x0002 и 0x0004,
+		    - exclude  - Исключение из проверок на постоянной основе. Устанавливает флаг 0x0004,
+			- delete   - Исключение из проверок временное. Устанавливает флаг 0x0002.
+		  - mac   - MAC address or SN.
+		  - type  - Тип адреса:
+		    - 1 - mac is MAC address,
+		    - 2 - mac is SN.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -28,7 +33,7 @@
 		{
 			if($_GET['do'] === 'reset')
 			{
-				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~0x0002) WHERE `id` = # LIMIT 1", $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0002 | 0x0004)) WHERE `id` = # LIMIT 1", $result[0][0])))
 				{
 					echo 'OK';
 					return;
@@ -36,7 +41,7 @@
 			}
 			else if($_GET['do'] === 'exclude')
 			{
-				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002), comment = ! WHERE `id` = # LIMIT 1", @$_GET['comment'], $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0004), comment = ! WHERE `id` = # LIMIT 1", @$_GET['comment'], $result[0][0])))
 				{
 					echo 'OK';
 					return;
@@ -44,8 +49,7 @@
 			}
 			else if($_GET['do'] === 'delete')
 			{
-				$db->put(rpv("DELETE FROM @tasks WHERE `pid` = # AND tid = 3", $result[0][0]));
-				if($db->put(rpv("DELETE FROM @mac WHERE `id` = # LIMIT 1", $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $result[0][0])))
 				{
 					echo 'OK';
 					return;
