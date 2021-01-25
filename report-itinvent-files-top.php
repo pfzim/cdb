@@ -50,7 +50,7 @@ EOT;
 				ON f.`id` = fi.`fid`
 				-- AND (fi.`flags` & 0x0010) = 0
 			WHERE (f.`flags` & 0x0010) = 0
-			GROUP BY fi.`fid`, f.`path`
+			GROUP BY f.`path`
 			ORDER BY `cnt` DESC
 			LIMIT 100
 		",

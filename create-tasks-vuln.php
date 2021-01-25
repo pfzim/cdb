@@ -12,7 +12,7 @@
 
 	echo "\ncreate-tasks-vuln:\n";
 
-	$limit = 1;
+	$limit = TASKS_LIMIT_VULN;
 
 	// Close auto resolved tasks
 

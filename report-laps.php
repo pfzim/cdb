@@ -44,10 +44,10 @@ EOT;
 		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0800)) = 0x0800
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
+			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
 		GROUP BY m.`id`
 		ORDER BY m.`name`
-	")))
+	", LAPS_EXPIRE_DAYS)))
 	{
 		foreach($result as &$row)
 		{

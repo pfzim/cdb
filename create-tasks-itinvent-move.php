@@ -20,7 +20,7 @@
 
 	echo "\ncreate-tasks-itinvent-move:\n";
 
-	$limit = 300;
+	$limit = TASKS_LIMIT_ITINVENT_MOVE;
 
 	global $g_comp_flags;
 

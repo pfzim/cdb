@@ -80,7 +80,7 @@ EOT;
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.$row['t_date'].'</td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['t_flags'])).'</td>';
-			$table .= '<td>'.flags_to_string(intval($row['m_flags']) & 0x00F0, $g_mac_short_flags, '', '-').'</td>';
+			$table .= '<td>'.flags_to_string(intval($row['m_flags']), $g_mac_short_flags, '', '-').'</td>';
 			$table .= '<td'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
 
@@ -125,7 +125,7 @@ EOT;
 		$html .= '</table>';
 	}
 	
-	$html .= '<p>Обозначения: R - удалён, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер</p>';
+	$html .= '<p>Обозначения: R - исключен из проверок навсегда, T - временно исключен, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-itinvent">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';

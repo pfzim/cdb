@@ -43,6 +43,46 @@ CBD собирает информацию из различных источни
 | 0x020000 | Vulnerabilities (mass problem)            |
 | 0x040000 | Net errors                                |
 | 0x080000 | IT Invent software                        |
+| Переделать на:                                       |
+| 0x00FF00 | Mask tasks codes                          |
+| 0x000100 | Mbox unlim Task was created in HelpDesk   |
+| 0x000200 | IT Invent Move was created in HelpDesk    |
+| 0x000300 | IT Invent TaskFix was created in HelpDesk |
+| 0x000400 | Task Windows Updates not installed        |
+| 0x000500 | Application Control Task was created      |
+| 0x000600 | TMEE Task was created in HelpDesk         |
+| 0x000700 | TMAO Task was created in HelpDesk         |
+| 0x000800 | Rename Task was created in HelpDesk       |
+| 0x000900 | LAPS Task was created in HelpDesk         |
+| 0x000A00 | SCCM Task was created in HelpDesk         |
+| 0x000B00 | PASSWD Task was created in HelpDesk       |
+| 0x000C00 | OS Task was created in HelpDesk           |
+| 0x000D00 | IT Invent Task was created in HelpDesk    |
+| 0x000E00 | Vulnerabilities                           |
+| 0x000F00 | Vulnerabilities (mass problem)            |
+| 0x001000 | Net errors                                |
+| 0x001100 | IT Invent software                        |
+
+
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000008) | 0x01000000) WHERE `flags` & 0x000008;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000010) | 0x02000000) WHERE `flags` & 0x000010;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000020) | 0x03000000) WHERE `flags` & 0x000020;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000040) | 0x04000000) WHERE `flags` & 0x000040;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000080) | 0x05000000) WHERE `flags` & 0x000080;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000100) | 0x06000000) WHERE `flags` & 0x000100;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000200) | 0x07000000) WHERE `flags` & 0x000200;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000400) | 0x08000000) WHERE `flags` & 0x000400;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x000800) | 0x09000000) WHERE `flags` & 0x000800;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x001000) | 0x0A000000) WHERE `flags` & 0x001000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x002000) | 0x0B000000) WHERE `flags` & 0x002000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x004000) | 0x0C000000) WHERE `flags` & 0x004000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x008000) | 0x0D000000) WHERE `flags` & 0x008000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x010000) | 0x0E000000) WHERE `flags` & 0x010000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x020000) | 0x0F000000) WHERE `flags` & 0x020000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x040000) | 0x10000000) WHERE `flags` & 0x040000;
+UPDATE c_tasks SET `flags` = ((`flags` & ~0x080000) | 0x11000000) WHERE `flags` & 0x080000;
+
+UPDATE c_tasks SET `flags` = ((`flags` & ~0xFF000000) | ((`flags` & 0xFF000000) >> 16 )) WHERE `flags` & 0xFF000000;
 
 Описание битовых флагов `flags` в таблице `ac_log`
 
@@ -58,14 +98,30 @@ CBD собирает информацию из различных источни
 | Bits   | Description                                    |
 |--------|------------------------------------------------|
 | 0x0001 |                                                |
-| 0x0002 | Temporary excluded (Deleted)                   |
-| 0x0004 | Permanently excluded (Manual)                  |
+| 0x0002 | Temporary excluded                             |
+| 0x0004 | Permanently excluded (Manual exclude)          |
 | 0x0008 |                                                |
 | 0x0010 | Exist in IT Invent                             |
 | 0x0020 | Imported from netdev                           |
 | 0x0040 | Active in IT Invent                            |
 | 0x0080 | `mac` field is serial number                   |
 | 0x0100 | This is mobile device (do not check location)  |
+
+SQL example:
+```
+SELECT m.`id`, m.`mac`, m.`ip`, m.`name`, m.`inv_no`, d.`name` AS `netdev`, m.`port`, m.`first`, m.`date`,
+	CONCAT(
+		IF(m.`flags` & 0x0002, 'Temp excl;', ''),
+		IF(m.`flags` & 0x0004, 'Perm excl;', ''),
+		IF(m.`flags` & 0x0010, 'ITInv;', ''),
+		IF(m.`flags` & 0x0020, 'FromNet;', ''),
+		IF(m.`flags` & 0x0040, 'ActiveInv;', ''),
+		IF(m.`flags` & 0x0080, 'SN;', ''),
+		IF(m.`flags` & 0x0100, 'Mobile;', '')
+	) AS `flags_to_string`
+FROM c_mac AS m
+LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3
+```
 
 Возможные значения колонки `type` в таблице `devices`
 

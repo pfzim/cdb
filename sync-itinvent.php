@@ -19,6 +19,8 @@
 
 		Оборудование помечается Мобильным если имеет тип Ноутбук. В последующем
 		такое оборудование исключается из проверок на местоположение.
+		
+		Добавлено "удаление" устройств, которые не появлялись в сети более 30 дней
 	*/
 
 	/*
@@ -72,8 +74,11 @@
 		exit;
 	}
 
-	// before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile
+	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100)) WHERE `flags` & (0x0010 | 0x0040 | 0x0100)"));
+
+	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `flags` & 0x0020 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT

@@ -11,6 +11,8 @@
 	echo "\ncreate-tasks-passwd:\n";
 
 	global $g_comp_flags;
+	
+	$limit = TASKS_LIMIT_EPWD;
 
 	// Close auto resolved tasks
 
@@ -88,9 +90,9 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 10)
+			if($i >= $limit)
 			{
-				echo "Limit reached: 1\r\n";
+				echo 'Limit reached: '.$limit."\r\n";
 				break;
 			}
 			

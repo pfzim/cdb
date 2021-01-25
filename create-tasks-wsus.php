@@ -12,8 +12,8 @@
 
 	echo "\ncreate-tasks-wsus:\n";
 
-	$limit_gup = 0; // 1
-	$limit_goo = 20;
+	$limit_gup = TASKS_LIMIT_WSUS_GUP;
+	$limit_goo = TASKS_LIMIT_WSUS_GOO;
 
 	global $g_comp_flags;
 

@@ -13,8 +13,8 @@
 
 	echo "\ncreate-tasks-tmao:\n";
 
-	$limit_gup = 0; // 15
-	$limit_goo = 100;
+	$limit_gup = TASKS_LIMIT_TMAO_GUP;
+	$limit_goo = TASKS_LIMIT_TMAO_GOO;
 
 	global $g_comp_flags;
 

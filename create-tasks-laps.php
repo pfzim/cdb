@@ -10,6 +10,8 @@
 
 	echo "\ncreate-tasks-laps:\n";
 
+	$limit = TASKS_LIMIT_LAPS;
+	
 	global $g_comp_flags;
 
 	// Close auto resolved tasks
@@ -23,8 +25,8 @@
 		WHERE
 			m.`tid` = 1
 			AND (m.`flags` & (0x0001 | 0x0800)) = 0x0800
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`laps_exp` >= DATE_SUB(NOW(), INTERVAL 1 MONTH))
-	")))
+			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR j1.`laps_exp` >= DATE_SUB(NOW(), INTERVAL # DAY))
+	", LAPS_EXPIRE_DAYS)))
 	{
 		foreach($result as &$row)
 		{
@@ -74,16 +76,16 @@
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			AND m.`dn` LIKE '%".LDAP_OU_COMPANY."'
-			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
+			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x0800) = 0
-	")))
+	", LAPS_EXPIRE_DAYS)))
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 10)
+			if($i >= $limit)
 			{
-				echo "Limit reached: 1\r\n";
+				echo 'Limit reached: '.$limit."\r\n";
 				break;
 			}
 			

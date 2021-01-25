@@ -10,7 +10,7 @@
 
 	echo "\ncreate-tasks-os:\n";
 
-	$limit = 28;
+	$limit = TASKS_LIMIT_OS;
 
 	global $g_comp_flags;
 

@@ -15,7 +15,7 @@
 
 	echo "\ncreate-tasks-ac\n";
 
-	$limit = 50;
+	$limit = TASKS_LIMIT_AC;
 
 	global $g_comp_flags;
 

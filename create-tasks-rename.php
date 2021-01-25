@@ -10,7 +10,7 @@
 
 	echo "\ncreate-tasks-rename:\n";
 
-	$limit = 20;
+	$limit = TASKS_LIMIT_RENAME;
 
 	global $g_comp_flags;
 

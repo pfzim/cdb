@@ -10,7 +10,7 @@
 
 	echo "\ncreate-tasks-mbx-unlim:\n";
 
-	$limit = 1;
+	$limit = TASKS_LIMIT_MBX;
 
 	// Close auto resolved tasks
 

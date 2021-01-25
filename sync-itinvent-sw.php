@@ -112,7 +112,7 @@
 		$i = 0;
 		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
-			echo 'NAME: '.$row['sw_name'].' VERSION: '.$row['sw_ver']."\r\n";
+			//echo 'NAME: '.$row['sw_name'].' VERSION: '.$row['sw_ver']."\r\n";
 
 			$files = array();
 			if(!empty($row['exe1'])) $files = array_merge($files, explode("\r\n", $row['exe1']));
@@ -146,7 +146,7 @@
 								$i++;
 								if(fnmatch($file, $row['filename'], FNM_NOESCAPE | FNM_CASEFOLD))
 								{
-									echo 'Pattern  : '.$path."\n".'Match    : '.$row['path']."\n".'  Pattern: '.$file."\n".'  Match  : '.$row['filename']."\n";
+									//echo 'Pattern  : '.$path."\n".'Match    : '.$row['path']."\n".'  Pattern: '.$file."\n".'  Match  : '.$row['filename']."\n";
 										
 									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | 0x0010) WHERE `id` = # LIMIT 1", $row['id']));
 									
