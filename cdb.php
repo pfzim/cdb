@@ -55,7 +55,9 @@
 
 function php_mailer($to, $subject, $html, $plain)
 {
-	require_once 'libs/PHPMailer/PHPMailerAutoload.php';
+	//require_once 'libs/PHPMailer/PHPMailerAutoload.php';
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'libs/PHPMailer/class.phpmailer.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'libs/PHPMailer/class.smtp.php');
 
 	$mail = new PHPMailer;
 
@@ -108,8 +110,8 @@ function php_mailer($to, $subject, $html, $plain)
 */
 function sql_date_cmp($date1, $date2)
 {
-	$d1 = preg_split('/[-:\.T\s]/', $date1, 6);
-	$d2 = preg_split('/[-:\.T\s]/', $date2, 6);
+	$d1 = preg_split('/[-:\\.T\\s]/', $date1, 6);
+	$d2 = preg_split('/[-:\\.T\\s]/', $date2, 6);
 	
 	for($i = 0; $i < 6; $i++)
 	{
@@ -213,8 +215,8 @@ $g_comp_short_flags = array(
 
 $g_mac_flags = array(
 	'',
-	'Permanently excluded',
 	'Temporary excluded',
+	'Permanently excluded',
 	'',
 	'IT Invent',
 	'netdev',
@@ -224,8 +226,8 @@ $g_mac_flags = array(
 
 $g_mac_short_flags = array(
 	'',
-	'R',
 	'T',
+	'R',
 	'',
 	'I',
 	'N',
@@ -265,6 +267,22 @@ function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
 		}
 	}
 	return $result;
+}
+
+/**
+	Функция возвращает текстовое представление кода
+
+	@param [in] $code  Числовой код
+	@return Преобразованный в читаемый вид код
+*/
+function code_to_string($codes, $code)
+{
+	if(isset($codes[$code]))
+	{
+		return $codes[$code];
+	}
+
+	return 'Unknown';
 }
 
 /**
@@ -346,6 +364,7 @@ function walk_route($route, $action)
 			'sync-tmee',
 			'sync-sccm',
 			'sync-itinvent',
+			'sync-itinvent-sw',
 			'sync-nessus',
 			'mark-after-sync'
 		),
@@ -366,14 +385,16 @@ function walk_route($route, $action)
 			'create-tasks-itinvent-escalate',
 			'create-tasks-vuln',
 			'create-tasks-vuln-mass',
-//			'create-tasks-os',
+			'create-tasks-os',
 			//'create-tasks-net-errors',
 			'create-tasks-wsus',
 			'report-tasks-status',
 			'report-tasks-itinvent',
+			'report-new-mac',
 			'report-laps',
 			'report-vuln-top-servers',
-			'report-vuln-top'
+			'report-vuln-top',
+			'report-itinvent-files-top'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
@@ -464,6 +485,9 @@ function walk_route($route, $action)
 		),
 		'report-itinvent-files-top' => array(
 			'@report-itinvent-files-top.php'
+		),
+		'report-new-mac' => array(
+			'@report-new-mac.php'
 		),
 		'report-vuln-top' => array(
 			'@report-vuln-top.php'

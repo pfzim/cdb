@@ -85,12 +85,12 @@ EOT;
 
 	if(!$db->select_assoc_ex($result, rpv("
 			SELECT
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
 			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL 1 MONTH)) AS `p_laps`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {d4} DAY)) AS `p_laps`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
 			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
@@ -161,7 +161,8 @@ EOT;
 		CDB_REGEXP_SERVERS,
 		CDB_REGEXP_SHOPS,
 		CDB_REGEXP_VALID_NAMES,
-		CDB_REGEXP_NOTEBOOK_NAME
+		CDB_REGEXP_NOTEBOOK_NAME,
+		LAPS_EXPIRE_DAYS
 	)))
 	{
 		// error

@@ -11,7 +11,7 @@
 
 	echo "\ncreate-tasks-vuln-mass:\n";
 
-	$limit = 1;
+	$limit = TASKS_LIMIT_VULN_MASS;
 
 	// Close auto resolved tasks
 

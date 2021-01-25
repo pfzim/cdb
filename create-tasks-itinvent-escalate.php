@@ -12,7 +12,7 @@
 
 	echo "\ncreate-tasks-itinvent-escalate:\n";
 
-	$limit = 1;
+	$limit = TASKS_LIMIT_ITINVENT_ESCALATE;
 
 	global $g_comp_flags;
 

@@ -9,6 +9,8 @@
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\ncreate-tasks-epwd-persons:\n";
+	
+	$limit = TASKS_LIMIT_EPWD_PERSON;
 
 	global $g_comp_flags;
 
@@ -87,9 +89,9 @@
 	{
 		foreach($result as &$row)
 		{
-			if($i >= 10)
+			if($i >= $limit)
 			{
-				echo "Limit reached: 1\r\n";
+				echo 'Limit reached: '.$limit."\r\n";
 				break;
 			}
 			

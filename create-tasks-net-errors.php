@@ -12,7 +12,7 @@
 
 	echo "\ncreate-tasks-net-errors:\n";
 
-	$limit = 1;
+	$limit = TASKS_LIMIT_NET_ERRORS;
 
 	// Close auto resolved tasks
 

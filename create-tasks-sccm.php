@@ -10,6 +10,8 @@
 
 	echo "\ncreate-tasks-sccm:\n";
 
+	$limit = TASKS_LIMIT_SCCM;
+
 	global $g_comp_flags;
 
 	// Close auto resolved tasks
@@ -55,7 +57,6 @@
 	// Open new tasks
 
 	$i = 0;
-	$limit = 20;
 
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x1000)) = 0x1000")))
 	{
