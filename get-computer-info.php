@@ -2,7 +2,7 @@
 	// Get computer info
 	/**
 		\file
-		\brief Информационная страница о объекте Computer.
+		\brief Информационная страница об объекте Computer.
 	*/
 
 
@@ -50,8 +50,6 @@ EOT;
 		}
 	}
 
-	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));
-	$db->select_assoc_ex($ac_log, rpv("SELECT m.`id`, m.`app_path`, m.`cmdln`, m.`last`, m.`flags` FROM @ac_log AS m WHERE m.`pid` = # ORDER BY m.`last` DESC", $computer[0]['id']));
 	
 	$html .= '<p>Name: '.$computer[0]['name'].'</p>';
 	$html .= '<p>DN: '.$computer[0]['dn'].'</p>';
@@ -63,6 +61,8 @@ EOT;
 	$html .= '<p>LAPS expire time: '.$computer[0]['laps_exp'].'</p>';
 	$html .= '<p>Flags: '.flags_to_string(intval($computer[0]['flags']), $g_comp_flags, ', ').'</p>';
 	$html .= '<p>Action: '.((intval($computer[0]['flags']) & 0x0004) ? '<a href="'.CDB_URL.'/cdb.php?action=computer&do=show&id='.$computer[0]['id'].'">Show</a>':'<a href="'.CDB_URL.'/cdb.php?action=computer&do=hide&id='.$computer[0]['id'].'">Hide</a>').'</p>';
+
+	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));
 
 	$html .= '<h1>История заявок</h1>';
 	
@@ -79,8 +79,13 @@ EOT;
 	}
 
 	$table .= '</table>';
+
+	unset($tasks);
+
 	$html .= $table;
 
+	$db->select_assoc_ex($ac_log, rpv("SELECT m.`id`, m.`app_path`, m.`cmdln`, m.`last`, m.`flags` FROM @ac_log AS m WHERE m.`pid` = # ORDER BY m.`last` DESC", $computer[0]['id']));
+	
 	$html .= '<h1>Срабатываения блокировки ПО Application Control</h1>';
 
 	$table = '<table>';
@@ -97,8 +102,43 @@ EOT;
 	}
 
 	$table .= '</table>';
+	
+	unset($ac_log);
+	
 	$html .= $table;
 
+	$db->select_assoc_ex($files, rpv("
+		SELECT
+			f.`path`,
+			f.`filename`
+		FROM @files_inventory AS fi
+		LEFT JOIN @files AS f
+			ON fi.`fid` = f.`id`
+		WHERE
+			(fi.`flags` & 0x0020) = 0                         -- File not Deleted
+			AND (f.`flags` & 0x0010) = 0                      -- Not exist in IT Invent
+			AND fi.`pid` = #
+		ORDER
+			BY f.`path`, f.`filename`
+	", $computer[0]['id']));
+	
+	$html .= '<h1>Обнаруженное незарегистрированное ПО</h1>';
+
+	$html .= '<table>';
+	$html .= '<tr><th>Path</th><th>File name</th></tr>';
+
+	foreach($files as &$row)
+	{
+		$html .= '<tr>';
+		$html .= '<td>'.$row['path'].'</td>';
+		$html .= '<td>'.$row['filename'].'</td>';
+		$html .= '</tr>';
+	}
+
+	$html .= '</table>';
+	
+	unset($files);
+	
 	$html .= '</body>';
 
 	echo $html;

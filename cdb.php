@@ -438,6 +438,9 @@ function walk_route($route, $action)
 		'create-tasks-itinvent' => array(
 			'@create-tasks-itinvent.php'
 		),
+		'create-tasks-itinvent-sw' => array(
+			'@create-tasks-itinvent-sw.php'
+		),
 		'create-tasks-itinvent-escalate' => array(
 			'@create-tasks-itinvent-escalate.php'
 		),

@@ -19,6 +19,22 @@ CBD собирает информацию из различных источни
 | 0x0040 | Exist in TMEE                             |
 | 0x0080 | Exist in SCCM                             |
 
+SQL example:
+```
+SELECT c.`id`, c.`name`,
+	CONCAT(
+		IF(c.`flags` & 0x0001, 'Disabled in AD;', ''),
+		IF(c.`flags` & 0x0002, 'Deleted;', ''),
+		IF(c.`flags` & 0x0004, 'Manual hide;', ''),
+		IF(c.`flags` & 0x0008, 'Temporary flag;', ''),
+		IF(c.`flags` & 0x0010, 'AD;', ''),
+		IF(c.`flags` & 0x0020, 'TMAO;', ''),
+		IF(c.`flags` & 0x0040, 'TMEE;', ''),
+		IF(c.`flags` & 0x0080, 'SCCM;', '')
+	) AS `flags_to_string`
+FROM c_computers AS c
+```
+
 Описание битовых флагов `flags` в таблице `tasks`
 
 | Bits     | Description                               |
@@ -168,6 +184,15 @@ LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3
 | 0x0004 |                                           |
 | 0x0008 |                                           |
 | 0x0010 | Allowed (Exist in IT Invent)              |
+
+Описание битовых флагов `flags` в таблице `files_inventory`
+
+| Bits   | Description                               |
+|--------|-------------------------------------------|
+| 0x0001 |                                           |
+| 0x0002 | Deleted                                   |
+| 0x0004 |                                           |
+| 0x0008 |                                           |
 
 Возможные значения колонки `oid` в таблицах `properties_*`
 | Value  | PHP constant                              | Description                               |

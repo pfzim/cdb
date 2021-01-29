@@ -4,6 +4,9 @@
 	/**
 		\file
 		\brief Создание заявок по проблемам неисправности агента LAPS на ПК.
+		
+		Заявки выставляются если от даты хранящейся в атрибуте ms-mcs-admpwdexpirationtime прошло
+		более LAPS_EXPIRE_DAYS дней
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -75,7 +78,7 @@
 				AND (j1.flags & (0x0001 | 0x0800)) = 0x0800
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-			AND m.`dn` LIKE '%".LDAP_OU_COMPANY."'
+			-- AND m.`dn` LIKE '%".LDAP_OU_COMPANY."'
 			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x0800) = 0
@@ -89,6 +92,7 @@
 				break;
 			}
 			
+			/*
 			if(preg_match('/'.LDAP_OU_SHOPS.'$/i', $row['dn']))
 			{
 				$direction = 'gup';
@@ -97,13 +101,14 @@
 			{
 				$direction = 'goo';
 			}
+			*/
 
 			$answer = @file_get_contents(
 				HELPDESK_URL.'/ExtAlert.aspx/'
 				.'?Source=cdb'
 				.'&Action=new'
 				.'&Type=laps'
-				.'&To='.$direction
+				.'&To=byname'
 				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
 					'Не установлен либо не работает LAPS.'

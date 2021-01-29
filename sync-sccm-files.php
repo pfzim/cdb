@@ -5,7 +5,11 @@
 		\file
 		\brief Синхронизация с БД SCCM (файлы).
 		
-		Загрузка данных о присутсутвующих на ПК .exe файлах
+		Загрузка данных из БД SCCM о присутсутвующих на ПК .exe файлах
+		
+		Флаг Deleted сбрасывается, если дата сканирования новее присутствующей в БД.
+		
+		Флаг Deleted устанавливается у всех файлов просканированных более 30 дней назад.
 	*/
 
 	/*
@@ -135,7 +139,15 @@
 
 		if($device_id && $file_id)
 		{
-			$db->put(rpv("INSERT INTO @files_inventory (`pid`, `fid`, `scan_date`, `flags`) VALUES (#, #, {s2}, 0x0000) ON DUPLICATE KEY UPDATE `scan_date` = {s2}",
+			$db->put(rpv("
+					INSERT
+						INTO @files_inventory (`pid`, `fid`, `scan_date`, `flags`)
+						VALUES (#, #, {s2}, 0x0000)
+					ON DUPLICATE KEY
+						UPDATE
+							`scan_date` = IF(`scan_date` < {s2}, {s2}, `scan_date`),          -- Update `scan_date` if newer
+							`flags` = IF(`scan_date` < {s2}, (`flags` & ~0x0002), `flags`)    -- Remove flag Deleted if `scan_date` newer
+				",
 				$device_id,
 				$file_id,
 				$row['ModifiedDate']
@@ -144,6 +156,9 @@
 		$i++;
 	}
 
+	// Mark as Deleted all files scanned more 30 days ago
+	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE `scan_date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+	
 	echo 'Count: '.$i."\r\n";
 
 	sqlsrv_free_stmt($result);

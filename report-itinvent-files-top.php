@@ -40,8 +40,6 @@ EOT;
 	$table = '<table>';
 	$table .= '<tr><th>Путь</th><th>Количество</th></tr>';
 
-	$severities = array();
-
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 			SELECT f.`path`, COUNT(*) AS cnt
@@ -49,12 +47,44 @@ EOT;
 			LEFT JOIN @files AS f
 				ON f.`id` = fi.`fid`
 				-- AND (fi.`flags` & 0x0010) = 0
-			WHERE (f.`flags` & 0x0010) = 0
+			WHERE
+				(f.`flags` & 0x0010) = 0
+				AND (fi.`flags` & 0x0020) = 0
 			GROUP BY f.`path`
 			ORDER BY `cnt` DESC
 			LIMIT 100
-		",
-		NESSUS_SERVERS_FOLDER_ID
+		"
+	)))
+	{
+		foreach($result as &$row)
+		{
+			$table .= '<tr>';
+			$table .= '<td>'.$row['path'].'</td>';
+			$table .= '<td>'.$row['cnt'].'</td>';
+			$table .= '</tr>';
+
+			$i++;
+		}
+	}
+
+	if($db->select_assoc_ex($result, rpv("
+			SELECT x.`path`, x.`cnt`
+			FROM (
+				SELECT f.`path`, COUNT(*) AS cnt
+				FROM @files_inventory AS fi
+				LEFT JOIN @files AS f
+					ON f.`id` = fi.`fid`
+					-- AND (fi.`flags` & 0x0010) = 0
+				WHERE
+					(f.`flags` & 0x0010) = 0
+					AND (fi.`flags` & 0x0020) = 0
+				GROUP BY f.`path`
+				HAVING `cnt` > 0
+				ORDER BY `cnt`, f.`path`
+				LIMIT 100
+			) AS x
+			ORDER BY x.`cnt` DESC, x.`path`
+		"
 	)))
 	{
 		foreach($result as &$row)
