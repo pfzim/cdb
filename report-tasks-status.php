@@ -3,7 +3,7 @@
 
 	/**
 		\file
-		\brief Формирование отчёта по открытым заявкми в системе HelpDesk.
+		\brief Формирование отчёта по открытым заявкам в системе HelpDesk.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -90,7 +90,7 @@ EOT;
 			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`dn` LIKE '%".LDAP_OU_COMPANY."' AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {d4} DAY)) AS `p_laps`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {d4} DAY)) AS `p_laps`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
 			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,

@@ -5,8 +5,10 @@
 		\file
 		\brief Создание заявок на инвентиризацию ПО в IT Invent или удаление с ПК пользователя (Код INV06).
 		
-		Из БД выбираются файлы, у которые во время синхронизации данных из ИТ Инвент и SCCM выявлено
-		их отстутствие в ИТ Инвент.
+		Из БД выбираются компьютеры, на которых присутствуют файлы обнаруженные SCCM и отсутствующие в ИТ Инвент.
+		
+		После закрытия наряда у файлов автоматические устанавливается флаг "Удален". При повтороном обнаружени
+		файла во время следующего сканирования флаг снимается.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -15,20 +17,33 @@
 
 	$limit = TASKS_LIMIT_ITINVENT_SW;
 
+	global $g_comp_flags;
+
 	// Close auto resolved tasks
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`
-		FROM @tasks AS t
-		LEFT JOIN @files AS f
-			ON f.`id` = t.`pid`
+		SELECT
+			t.`id`,
+			t.`operid`,
+			t.`opernum`,
+			COUNT(fi.`fid`) AS files_count,
+			c.`flags`
+		FROM c_tasks AS t
+		LEFT JOIN c_computers AS c
+			ON t.`pid` = c.`id`
+		LEFT JOIN c_files_inventory AS fi
+			ON fi.`pid` = c.`id` AND fi.`flags` & 0x0020 = 0
+		LEFT JOIN c_files AS f
+			ON fi.`fid` = f.`id`
 		WHERE
-			t.`tid` = 8
-			AND (t.`flags` & (0x0001 | 0x0080000)) = 0x8000        -- Task status is Opened
-			AND (
-				f.`flags` & 0x0010                                 -- Exist in IT Invent
-			)
+			t.`tid` = 1
+			AND (t.`flags` & (0x0001 | 0x0080000)) = 0x0080000     -- Task status is Opened
+			AND (f.`flags` & 0x0010) = 0                           -- Not exist in IT Invent
+		GROUP BY t.`id`
+		HAVING
+			`files_count` = 0
+			OR c.`flags` & (0x0001 | 0x0002 | 0x0004)
 	")))
 	{
 		foreach($result as &$row)
@@ -59,20 +74,6 @@
 
 	// Open new tasks
 
-/*
-			AND (
-				d.`name` LIKE 'RU-44-%'                                            -- Temporary filter by region 44
-				OR
-				d.`name` LIKE 'RU-33-%'                                            -- Temporary filter by region 33
-				OR
-				d.`name` LIKE 'RU-77-%'                                            -- Temporary filter by region 77
-				OR
-				d.`name` LIKE 'RU-13-%'                                            -- Temporary filter by region 13
-				OR
-				d.`name` LIKE 'RU-11-%'                                            -- Temporary filter by region 11
-			)
-*/
-
 	$i = 0;
 
 	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x080000)) = 0x080000")))
@@ -82,21 +83,30 @@
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			f.`id`,
-			f.`path`,
-			f.`filename`,
-			f.`flags`
-		FROM @files AS f
+			c.`id`,
+			c.`name`,
+			c.`flags`,
+			COUNT(fi.`fid`) AS files_count
+		FROM @computers AS c
+		LEFT JOIN @files_inventory AS fi
+			ON
+				fi.`pid` = c.`id`
+				AND (fi.`flags` & 0x0020) = 0                     -- File not Deleted
+		LEFT JOIN @files AS f
+			ON fi.`fid` = f.`id`
 		WHERE
-			(f.`flags` & 0x0010) = 0                              -- Not exist in IT Invent or not Active
-			AND f.`id` NOT IN (
+			(f.`flags` & 0x0010) = 0                              -- Not exist in IT Invent
+			AND c.`flags` & (0x0001 | 0x0002 | 0x0004) = 0        -- Not Disabled, Not Deleted, Not Hide
+			AND c.`id` NOT IN (
 				SELECT
 					DISTINCT t.`id`
 				FROM @tasks AS t
 				WHERE
-					t.`tid` = 8
+					t.`tid` = 1
 					AND (t.flags & (0x0001 | 0x080000)) = 0x080000
 			)
+		GROUP BY c.`id`
+		ORDER BY files_count
 		LIMIT 100
 	")))
 	{
@@ -118,15 +128,16 @@
 			curl_setopt($ch, CURLOPT_POSTFIELDS,
 				'Source=cdb'
 				.'&Action=new'
-				.'&Type=itinvent'
-				.'&To=bynetdev'
-				.'&Host='.urlencode($row['netdev'])
+				.'&Type=test'
+				.'&To=byname'
+				.'&Host='.urlencode($row['name'])
 				.'&Message='.urlencode(
-					'Обнаружено ПО не зарегистрированное в IT Invent'
-					."\nPath: ".$row['path']
-					."\nFile: ".$row['name']
+					'На компьютере обнаружено ПО не зарегистрированное в IT Invent'
+					."\n\nИмя ПК: ".$row['name']
+					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+					."\nСписок обнаруженного ПО доступен по ссылке: ".CDB_URL.'/cdb.php?action=get-computer-info&id='.$row['id']
 					."\n\nКод работ: INV06"
-					."\n\nСледует зарагистрировать ПО в ИТ Инвент или удалить с ПК пользователей. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
+					."\n\nСледует зарегистрировать ПО в ИТ Инвент или удалить с ПК пользователя. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
 				)
 			);
 
@@ -142,7 +153,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (8, #, 0x080000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x080000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

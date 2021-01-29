@@ -25,6 +25,14 @@
 
 	/*
 
+		FIELD_NO	ITEM_NO		FIELD_NAME
+		94			1			Усилитель 3G: mac-адрес
+		106			1			MAC Адрес 1
+		107			1			MAC Адрес 2
+		133			1			MAC Адрес ТСД
+		149			1			MAC Адрес 3
+		163			1			Усилитель 3G: mac-адрес 2
+
 		List all fields:
 
 		SELECT [FIELD_NO]

@@ -180,6 +180,9 @@
 						preg_match('/'.NETDEV_DEB2_REGEX.'/i', $last_sw_name)
 						&& preg_match('#'.NETDEV_EXCLUDE_DEB2_PORT.'#i', $row[4])
 					) || (
+						preg_match('/'.NETDEV_DEB3_REGEX.'/i', $last_sw_name)
+						&& preg_match('#'.NETDEV_EXCLUDE_DEB3_PORT.'#i', $row[4])
+					) || (
 						preg_match('/'.NETDEV_EXCLUDE_REGEX.'/i', $last_sw_name)
 					)
 				)
