@@ -79,6 +79,7 @@
 		WHERE
 			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 			-- AND m.`dn` LIKE '%".LDAP_OU_COMPANY."'
+			-- AND m.`dn` NOT LIKE '%".LDAP_OU_EXCLUDE."'
 			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
 		GROUP BY m.`id`
 		HAVING (BIT_OR(j1.`flags`) & 0x0800) = 0

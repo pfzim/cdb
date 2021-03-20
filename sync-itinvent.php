@@ -146,7 +146,7 @@
 		$i = 0;
 		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
-			if(in_array(intval($row['STATUS_NO']), $active_statuses))
+			//if(in_array(intval($row['STATUS_NO']), $active_statuses)) // Временно отключил проверку статусов
 			{
 				$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);

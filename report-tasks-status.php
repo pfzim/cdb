@@ -28,8 +28,10 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт по ранее выставленным не закрытым заявкам в HelpDesk</h1>
 EOT;
+
+	$html .= '<small>Версия: '.CDB_VERSION.'</small>';
+	$html .= '<h1>Отчёт по ранее выставленным не закрытым заявкам в HelpDesk</h1>';
 
 	$table = '<table>';
 	$table .= '<tr><th>Name</th><th>AV Pattern version</th><th>Last update</th><th>TMEE Status</th><th>TMEE Last sync</th><th>HD Task</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
@@ -109,7 +111,7 @@ EOT;
 					os.`tid` = 1
 					AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
 					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 					AND c.`name` NOT REGEXP {s0}
 			) AS `p_os`,
 			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x4000)) = 0x4000) AS `o_os`,
@@ -201,7 +203,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_GUP, MAIL_TO_GOO), CDB_TITLE.': Opened tasks', $html, 'You client does not support HTML'))
+	if(php_mailer(MAIL_TO_TASKS_STATUS, CDB_TITLE.': Opened tasks', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

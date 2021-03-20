@@ -15,12 +15,14 @@
 		  - port   - порт коммутатора в который подключено оборудование
 		  
 		\todo Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг.
-		Флаг обнулять при обновлении записи. Done!
+		Флаг обнулять при обновлении записи. Выполнено!
 		\todo Ручное исключение из проверок навсегда производить через флаг 0x0004.
 		Временное исключение до первого обнаружения и исключения по фильтрам производить через флаг 0x0002.
-		Флаг 0x0002 обнулять при импорте. Done!
+		Флаг 0x0002 обнулять при импорте. Выполнено!
 		
-		\todo Переделать механизм обработки исключений MAC адресов из проверок.
+		\todo Переделать механизм обработки исключений MAC адресов из проверок. Выполнено!
+		Настройки исключений полностью перенесены в конфигурационный файл в параметры MAC_EXCLUDE_ARRAY
+		и IP_MASK_EXCLUDE_LIST.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -146,50 +148,24 @@
 				}
 			}
 			
-			// Исключения по MAC адресу
+			// Исключение по MAC адресу, имени коммутатора, порту
 			
 			$excluded = 0x0000;
 			
-			if(
-				!$is_sn
-				&& (
-					(
-						(preg_match('/'.MAC_NOT_EXCLUDE_REGEX.'/i', $mac) === 0)
-						&& (
-							(
-								preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_name)
-								&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_PORT.'#i', $row[4])
-							) || (
-								preg_match('/'.NETDEV_TOF_REGEX.'/i', $last_sw_name)
-								&& preg_match('#'.NETDEV_EXCLUDE_TOF_PORT.'#i', $row[4])
-							)
-						)
-					) || (
-						preg_match('/'.NETDEV_SHOPS_FA_REGEX.'/i', $last_sw_name)
-						&& preg_match('#'.NETDEV_EXCLUDE_SHOPS_FA_PORT.'#i', $row[4])
-					) || (
-						preg_match('/'.NETDEV_SHOPS_REGEX.'/i', $last_sw_name)
-						&& preg_match('/'.MAC_EXCLUDE_SHOPS_REGEX.'/i', $mac)
-					) || (
-						preg_match('/'.NETDEV_WIFI_REGEX.'/i', $last_sw_name)
-						&& preg_match('#'.NETDEV_EXCLUDE_WIFI_PORT.'#i', $row[4])
-					) || (
-						preg_match('/'.NETDEV_DEB1_REGEX.'/i', $last_sw_name)
-						&& preg_match('#'.NETDEV_EXCLUDE_DEB1_PORT.'#i', $row[4])
-					) || (
-						preg_match('/'.NETDEV_DEB2_REGEX.'/i', $last_sw_name)
-						&& preg_match('#'.NETDEV_EXCLUDE_DEB2_PORT.'#i', $row[4])
-					) || (
-						preg_match('/'.NETDEV_DEB3_REGEX.'/i', $last_sw_name)
-						&& preg_match('#'.NETDEV_EXCLUDE_DEB3_PORT.'#i', $row[4])
-					) || (
-						preg_match('/'.NETDEV_EXCLUDE_REGEX.'/i', $last_sw_name)
-					)
-				)
-			)
+			if(!$is_sn)
 			{
-				$excluded = 0x0002;
-				error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac.log');
+				foreach(MAC_EXCLUDE_ARRAY as &$excl)
+				{
+					if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
+					   && (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
+					   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
+					)
+					{
+						$excluded = 0x0002;
+						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac.log');
+						break;
+					}
+				}
 			}
 			
 			// Исключение по IP адресу

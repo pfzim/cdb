@@ -17,6 +17,7 @@
 		  - type  - Тип адреса:
 		    - 1 - mac is MAC address,
 		    - 2 - mac is SN.
+		  - comment - Комментарий
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;

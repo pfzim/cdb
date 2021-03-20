@@ -34,6 +34,8 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
+	define('CDB_VERSION', 2);
+
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
 		header('Location: install.php');
