@@ -113,7 +113,7 @@
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                    -- Only exist and active in IT Invent
+				AND (dm.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = 3

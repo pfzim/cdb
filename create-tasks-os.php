@@ -4,6 +4,8 @@
 	/**
 		\file
 		\brief Создание заявок по проблемам устаревшей ОС на ПК.
+		
+		Проверятеся атрибут Операционная система у объекта компьютер в AD
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -35,7 +37,7 @@
 			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
 			AND (
 				c.`flags` & (0x0001 | 0x0002 | 0x0004)
-				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 			)
 	", CDB_PROP_OPERATINGSYSTEM)))
 	{
@@ -95,7 +97,7 @@
 				AND j_os.`oid` = #
 			WHERE
 				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная')
+				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 				AND m.`name` NOT REGEXP {s1}
 			GROUP BY m.`id`
 			HAVING (BIT_OR(t.`flags`) & 0x4000) = 0

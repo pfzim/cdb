@@ -58,10 +58,38 @@ EOT;
 	{
 		foreach($result as &$row)
 		{
+			echo $row['path']."\n";
+
 			$table .= '<tr>';
 			$table .= '<td>'.$row['path'].'</td>';
 			$table .= '<td>'.$row['cnt'].'</td>';
 			$table .= '</tr>';
+			
+			if($db->select_assoc_ex($comps, rpv("
+				SELECT DISTINCT c.`name`
+				FROM c_files AS f
+				LEFT JOIN c_files_inventory AS fi
+					ON fi.`fid` = f.`id`
+				LEFT JOIN c_computers AS c
+					ON c.`id` = fi.`pid`
+				WHERE f.`path` = !
+				LIMIT 10
+				",
+				$row['path']
+			)))
+			{
+				$delimeter = '';
+				$comps_list = '';
+				foreach($comps as &$comp)
+				{
+					$comps_list .= $delimeter.$comp['name'];
+					$delimeter = ', ';
+				}
+				
+				$table .= '<tr>';
+				$table .= '<td colspan="2">&nbsp;-&nbsp;'.$comps_list.'</td>';
+				$table .= '</tr>';
+			}
 
 			$i++;
 		}
@@ -89,10 +117,38 @@ EOT;
 	{
 		foreach($result as &$row)
 		{
+			echo $row['path']."\n";
+
 			$table .= '<tr>';
 			$table .= '<td>'.$row['path'].'</td>';
 			$table .= '<td>'.$row['cnt'].'</td>';
 			$table .= '</tr>';
+
+			if($db->select_assoc_ex($comps, rpv("
+				SELECT DISTINCT c.`name`
+				FROM c_files AS f
+				LEFT JOIN c_files_inventory AS fi
+					ON fi.`fid` = f.`id`
+				LEFT JOIN c_computers AS c
+					ON c.`id` = fi.`pid`
+				WHERE f.`path` = !
+				LIMIT 10
+				",
+				$row['path']
+			)))
+			{
+				$delimeter = '';
+				$comps_list = '';
+				foreach($comps as &$comp)
+				{
+					$comps_list .= $delimeter.$comp['name'];
+					$delimeter = ', ';
+				}
+				
+				$table .= '<tr>';
+				$table .= '<td colspan="2">&nbsp;-&nbsp;'.$comps_list.'</td>';
+				$table .= '</tr>';
+			}
 
 			$i++;
 		}
@@ -106,7 +162,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_INVENT), CDB_TITLE.': IT Invent - Unregistered software', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_ITINVENT_FILES_TOP_MAIL_TO, CDB_TITLE.': IT Invent - Unregistered software', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}
