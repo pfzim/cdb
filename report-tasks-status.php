@@ -158,7 +158,12 @@ EOT;
 					(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
 					AND j_quota.`value` = 0
 			) AS `p_mbxq`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0008) AS `o_mbxq`
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0008) AS `o_mbxq`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0010)) = 0x0010) AS `objects_from_ad`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0020)) = 0x0020) AS `objects_from_tmao`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0040)) = 0x0040) AS `objects_from_tmee`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0080)) = 0x0080) AS `objects_from_sccm`,
+			(SELECT COUNT(*) FROM @persons WHERE (`flags` & (0x0010)) = 0x0010) AS `users_from_ad`
 		",
 		CDB_REGEXP_SERVERS,
 		CDB_REGEXP_SHOPS,
@@ -180,6 +185,15 @@ EOT;
 	$html .= '<tr><td>Давно не устанавливались обновления</td><td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td><td>'.$result[0]['o_wsus'].'</td></tr>';
 	$html .= '<tr><td>Не установлена квота на ПЯ</td><td>'.$result[0]['p_mbxq'].'</td><td>'.$result[0]['o_mbxq'].'</td></tr>';
 	$html .= '<tr><td>Устаревшая операционная система</td><td>'.$result[0]['p_os'].'</td><td>'.$result[0]['o_os'].'</td></tr>';
+	$html .= '</table>';
+
+	$html .= '<br /><table>';
+	$html .= '<tr><th>Объект</th><th>Количество</th></tr>';
+	$html .= '<tr><td>Компьютеров в AD</td><td>'.$result[0]['objects_from_ad'].'</td></tr>';
+	$html .= '<tr><td>Компьютеров в TMAO</td><td>'.$result[0]['objects_from_tmao'].'</td></tr>';
+	$html .= '<tr><td>Компьютеров в TMEE</td><td>'.$result[0]['objects_from_tmee'].'</td></tr>';
+	$html .= '<tr><td>Компьютеров в SCCM</td><td>'.$result[0]['objects_from_sccm'].'</td></tr>';
+	$html .= '<tr><td>Пользователей в AD</td><td>'.$result[0]['users_from_ad'].'</td></tr>';
 	$html .= '</table>';
 
 /*

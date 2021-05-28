@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 2);
+	define('CDB_VERSION', 4);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
@@ -223,7 +223,9 @@ $g_mac_flags = array(
 	'IT Invent',
 	'netdev',
 	'Active',
-	'Serial number'
+	'Serial number',
+	'Mobile device',
+	'Duplicate detected'
 );
 
 $g_mac_short_flags = array(
@@ -234,7 +236,9 @@ $g_mac_short_flags = array(
 	'I',
 	'N',
 	'A',
-	'S'
+	'S',
+	'M',
+	'D'
 );
 
 $g_ac_flags = array(
@@ -396,6 +400,7 @@ function walk_route($route, $action)
 			'report-laps',
 			'report-vuln-top-servers',
 			'report-vuln-top',
+			'report-vuln-top-netdev',
 			'report-itinvent-files-top'
 		),
 		'cron-weekly' => array(
@@ -491,6 +496,9 @@ function walk_route($route, $action)
 		'report-itinvent-files-top' => array(
 			'@report-itinvent-files-top.php'
 		),
+		'report-itinvent-files-top-1' => array(
+			'@report-itinvent-files-top-1.php'
+		),
 		'report-new-mac' => array(
 			'@report-new-mac.php'
 		),
@@ -499,6 +507,9 @@ function walk_route($route, $action)
 		),
 		'report-vuln-top-servers' => array(
 			'@report-vuln-top-servers.php'
+		),
+		'report-vuln-top-netdev' => array(
+			'@report-vuln-top-netdev.php'
 		),
 		'report-vm' => array(
 			'@report-vm.php'
@@ -546,6 +557,9 @@ function walk_route($route, $action)
 		'import-mac' => array(
 			'@import-mac.php'
 		),
+		'import-sn' => array(
+			'@import-sn.php'
+		),
 		'import-errors' => array(
 			'@import-errors.php'
 		),
@@ -554,6 +568,9 @@ function walk_route($route, $action)
 		),
 		'mac' => array(
 			'@mac.php'
+		),
+		'test' => array(
+			'@test.php'
 		)
 	);
 

@@ -21,7 +21,7 @@ CBD собирает информацию из различных источни
 
 SQL example:
 ```
-SELECT c.`id`, c.`name`,
+SELECT c.`id`, c.`name`, HEX(c.`flags`),
 	CONCAT(
 		IF(c.`flags` & 0x0001, 'Disabled in AD;', ''),
 		IF(c.`flags` & 0x0002, 'Deleted;', ''),
@@ -122,6 +122,7 @@ UPDATE c_tasks SET `flags` = ((`flags` & ~0xFF000000) | ((`flags` & 0xFF000000) 
 | 0x0040 | Active in IT Invent                            |
 | 0x0080 | `mac` field is serial number                   |
 | 0x0100 | This is mobile device (do not check location)  |
+| 0x0200 | Duplicate detected                             |
 
 SQL example:
 ```
@@ -133,7 +134,8 @@ SELECT m.`id`, m.`mac`, m.`ip`, m.`name`, m.`inv_no`, d.`name` AS `netdev`, m.`p
 		IF(m.`flags` & 0x0020, 'FromNet;', ''),
 		IF(m.`flags` & 0x0040, 'ActiveInv;', ''),
 		IF(m.`flags` & 0x0080, 'SN;', ''),
-		IF(m.`flags` & 0x0100, 'Mobile;', '')
+		IF(m.`flags` & 0x0100, 'Mobile;', ''),
+		IF(m.`flags` & 0x0200, 'Duplicate detected;', '')
 	) AS `flags_to_string`
 FROM c_mac AS m
 LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3

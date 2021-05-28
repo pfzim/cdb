@@ -10,6 +10,8 @@
 		Флаг Deleted сбрасывается, если дата сканирования новее присутствующей в БД.
 		
 		Флаг Deleted устанавливается у всех файлов просканированных более 30 дней назад.
+
+		Флаг Deleted устанавливается у всех файлов перед началом загрузки жанных из SCCM.
 	*/
 
 	/*
@@ -51,6 +53,9 @@
 		print_r(sqlsrv_errors());
 		exit;
 	}
+
+	// Mark as Deleted all files before load
+	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE (`flags` & 0x0002 = 0)"));
 
 	// Load files inventory data
 	

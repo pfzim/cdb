@@ -1,11 +1,11 @@
 <?php
-	// Report detected vulnerabilities (Workstations)
+	// Report detected vulnerabilities (Network devices)
 
 	/**
 		\file
-		\brief Формирование отчёта по обнаруженным уязвимостям (рабочие станции) TOP 100.
+		\brief Формирование отчёта по обнаруженным уязвимостям (Сетевые устройства) TOP 100.
 		
-		Отчёт формируется по уязвимостям загруженным из папки Nessus с идентификатором равным NESSUS_WORKSTATIONS_FOLDER_ID
+		Отчёт формируется по уязвимостям загруженным из папки Nessus с идентификатором равным NESSUS_NETDEV_FOLDER_ID
 	*/
 
 
@@ -36,7 +36,7 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт по обнаруженным уязвимостям (рабочие станции)</h1>
+	<h1>Отчёт по обнаруженным уязвимостям (сетевые устройства)</h1>
 EOT;
 
 	$table = '<table>';
@@ -57,7 +57,7 @@ EOT;
 		GROUP BY v.`plugin_id`
 		ORDER BY cnt DESC, v.`severity` DESC
 		-- LIMIT 100
-	", NESSUS_WORKSTATIONS_FOLDER_ID)))
+	", NESSUS_NETDEV_FOLDER_ID)))
 	{
 
 		foreach($result as &$row)
@@ -96,12 +96,12 @@ EOT;
 	$html .= '</table><br />';
 	
 	$html .= $table;
-	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-vuln-top">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-vuln-top-netdev">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Detected vulnerabilities - Workstations', $html, 'You client does not support HTML'))
+	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Detected vulnerabilities - Network devices', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

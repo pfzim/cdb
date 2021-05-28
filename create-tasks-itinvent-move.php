@@ -37,7 +37,7 @@
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                         -- Only exist and active in IT Invent
+				AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)       -- Valid devices is only that exist and active in IT Invent and have SN
 		WHERE
 			t.`tid` = 3
 			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010                                         -- Task status is Opened
@@ -113,7 +113,7 @@
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0040)) = (0x0010 | 0x0040)  -- Only exist and active in IT Invent
+				AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)  -- Valid devices is only that exist and active in IT Invent and have SN
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = 3
@@ -166,6 +166,7 @@
 					."\nСерийный номер: ".$row['d_mac']
 					."\n\nКод работ: IIV09"
 					."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Местоположение-оборудования-отличается-от-местоположения-коммутатора-в-которыи-оно-подключено.ashx'
+					."\n".$row['id']
 				)
 			);
 
