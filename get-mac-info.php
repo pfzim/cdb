@@ -62,7 +62,7 @@ EOT;
 			exit;
 		}
 	}
-	else
+	else if(!empty($_GET['name']))
 	{
 		if(!$db->select_assoc_ex($mac, rpv("
 			SELECT
@@ -88,6 +88,68 @@ EOT;
 		{
 			exit;
 		}
+	}
+	else if(!empty($_GET['mac']))
+	{
+		if(!$db->select_assoc_ex($mac, rpv("
+			SELECT
+				m.`id`,
+				m.`mac`,
+				m.`inv_no`,
+				m.`ip`,
+				m.`name`,
+				d.`name` AS netdev,
+				m.`port`,
+				m.`flags`
+			FROM
+				@mac AS m
+			LEFT JOIN
+				@devices AS d
+				ON
+					d.`id` = m.`pid`
+			WHERE
+				m.`mac` = !
+			ORDER BY (m.`flags` & 0x0080) = 0x0080
+			LIMIT 1
+			",
+			strtolower(preg_replace('/[^0-9a-f]/i', '', $_GET['mac']))))
+		)
+		{
+			exit;
+		}
+	}
+	else if(!empty($_GET['sn']))
+	{
+		if(!$db->select_assoc_ex($mac, rpv("
+			SELECT
+				m.`id`,
+				m.`mac`,
+				m.`inv_no`,
+				m.`ip`,
+				m.`name`,
+				d.`name` AS netdev,
+				m.`port`,
+				m.`flags`
+			FROM
+				@mac AS m
+			LEFT JOIN
+				@devices AS d
+				ON
+					d.`id` = m.`pid`
+			WHERE
+				m.`mac` = !
+				AND (m.`flags` & 0x0080)
+			LIMIT 1
+			",
+			$_GET['sn']))
+		)
+		{
+			exit;
+		}
+	}
+	else
+	{
+		exit;
 	}
 
 	$db->select_assoc_ex($tasks, rpv("

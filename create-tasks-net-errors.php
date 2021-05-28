@@ -18,7 +18,7 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`
+		SELECT t.`id`, t.`operid`, t.`opernum`, d.`name`
 		FROM @tasks AS t
 		LEFT JOIN @devices AS d
 			ON d.`id` = t.`pid` AND t.`tid` = 7 AND d.`type` = 3
@@ -80,10 +80,12 @@
 			d.`type` = 3
 			AND (d.`flags` & (0x0002 | 0x0004)) = 0    -- Not deleted, not hide
 			AND (e.`flags` & 0x0002) = 0
+			AND e.`port` <> 'FastEthernet4'
 			AND (
-			  e.`scf` > 10
-			  OR e.`cse` > 10
-			  OR e.`ine` > 10
+			  -- e.`scf` > 10
+			  -- OR 
+			  e.`cse` > 10
+			  -- OR e.`ine` > 10
 			)
 		GROUP BY d.`id`
 		HAVING
@@ -120,7 +122,7 @@
 				{
 					$message .= 
 						"\n\nПорт: ".$ne_row['port']
-						."\nВремя регистрации: ".$ne_row['date']
+						."\nВремя регистрации ошибок: ".$ne_row['date']
 						."\nSingleCollisionFrames: ".$ne_row['scf']
 						.", CarrierSenseErrors: ".$ne_row['cse']
 						.", InErrors: ".$ne_row['ine']
@@ -140,11 +142,11 @@
 					.'&To=bynetdev'
 					.'&Host='.urlencode($row['name'])
 					.'&Message='.urlencode(
-						'Обнаружены ошибки в работе сетевого устройства'
-						."\n\nDNS имя: ".$row['name']
+						'Необходимо заменить кабель в ТТ на заводской патч-корд 5м'
+						."\n\nDNS имя маршрутизатора: ".$row['name']
 						."\n\n".$message
 						."\n\nКод работ: NET01"
-						."\n\nСледует . Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.ashx'
+						//."\n\nСледует . Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.ashx'
 					)
 				);
 

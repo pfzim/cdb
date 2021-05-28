@@ -66,7 +66,7 @@ EOT;
 		WHERE
 			t.`tid` = 3
 			AND (t.`flags` & 0x0001) = 0
-		ORDER BY d.`name`, m.`port`, m.`name`
+		ORDER BY t.`flags`, d.`name`, m.`port`, m.`name`
 	")))
 	{
 
@@ -105,7 +105,7 @@ EOT;
 				LEFT JOIN @mac AS dm
 					ON
 						dm.`name` = d.`name`
-						AND (dm.`flags` & (0x0010 | 0x0040)) = (0x0010 | 0x0040)                    -- Only exist and active in IT Invent
+						AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)                    -- Only exist and active in IT Invent
 				WHERE
 					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
 					AND (
@@ -127,14 +127,14 @@ EOT;
 		$html .= '</table>';
 	}
 	
-	$html .= '<p>Обозначения: R - исключен из проверок навсегда, T - временно исключен, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер</p>';
+	$html .= '<p>Обозначения: R - исключен из проверок навсегда, T - временно исключен, I - from IT Invent, N - from netdev, A - active in IT Invent, S - серийный номер, M - перемещаемое устройство, D - обнаружены дубликаты в ИТ Инвент</p>';
 	$html .= $table;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=check-tasks-status">Обновить статус заявок из системы HelpDesk</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tasks-itinvent">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_NET, MAIL_TO_INVENT, MAIL_TO_RITM), CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_ITINVENT_MAIL_TO, CDB_TITLE.': Opened tasks IT Invent', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

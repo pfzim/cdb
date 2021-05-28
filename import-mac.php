@@ -23,6 +23,9 @@
 		\todo Переделать механизм обработки исключений MAC адресов из проверок. Выполнено!
 		Настройки исключений полностью перенесены в конфигурационный файл в параметры MAC_EXCLUDE_ARRAY
 		и IP_MASK_EXCLUDE_LIST.
+		
+		Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию
+		серийного номера вместо MAC адреса.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -110,6 +113,40 @@
 				$line = strtok("\n");
 				continue;
 			}
+
+			/************* NEW EDITION *************
+
+			// Определяем это серийный номер или MAC. Убираем лишние символы
+
+			$is_sn = false;
+			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
+			{
+				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
+			}
+			else
+			{
+				$is_sn = true;
+				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
+			}
+
+			if(!$is_sn && $db->select_ex($result, rpv("SELECT ms.`sn` FROM @mac_sn AS ms WHERE ms.`mac` = ! LIMIT 1", $mac)))
+			{
+				$is_sn = true;
+				$mac = $result[0][0];
+			}
+
+			if(empty($mac))
+			{
+				$code = 1;
+				$error_msg .= 'Warning: Empty MAC or SN. Line '.$line_no.';';
+
+				error_log(date('c').'  Warning: Empty MAC or SN ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+
+				$line = strtok("\n");
+				continue;
+			}
+
+			// ************* END NEW EDITION *************/
 			
 			if($row[3] === $net_dev)
 			{
@@ -148,12 +185,14 @@
 				}
 			}
 			
-			// Исключение по MAC адресу, имени коммутатора, порту
-			
 			$excluded = 0x0000;
+			
+			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 			
 			if(!$is_sn)
 			{
+				// Исключение по MAC адресу, имени коммутатора, порту
+			
 				foreach(MAC_EXCLUDE_ARRAY as &$excl)
 				{
 					if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
@@ -166,24 +205,24 @@
 						break;
 					}
 				}
-			}
-			
-			// Исключение по IP адресу
+		
+				// Исключение по IP адресу
 
-			if(!empty($row[2]) && ($excluded & 0x0002) == 0)
-			{
-				$masks = explode(';', IP_MASK_EXCLUDE_LIST);
-				foreach($masks as &$mask)
+				if(!empty($row[2]) && ($excluded & 0x0002) == 0)
 				{
-					if(cidr_match($row[2], $mask))
+					$masks = explode(';', IP_MASK_EXCLUDE_LIST);
+					foreach($masks as &$mask)
 					{
-						$excluded = 0x0002;
-						error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac.log');
-						break;
+						if(cidr_match($row[2], $mask))
+						{
+							$excluded = 0x0002;
+							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac.log');
+							break;
+						}
 					}
 				}
 			}
-
+			
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{

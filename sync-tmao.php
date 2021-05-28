@@ -152,7 +152,7 @@
 
 		while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
 		{
-			if(preg_match('/'.TMAC_EXCLUDE_REGEX.'/i', $row['SLF_ApplicationPath']) === 0)
+			if(preg_match('/'.TMAC_EXCLUDE_REGEX.'/i', $row['SLF_ApplicationPath']))
 			{
 				continue;
 			}

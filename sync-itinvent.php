@@ -32,6 +32,7 @@
 		133			1			MAC Адрес ТСД
 		149			1			MAC Адрес 3
 		163			1			Усилитель 3G: mac-адрес 2
+		210			1			MAC Адрес 4
 
 		List all fields:
 
@@ -82,8 +83,8 @@
 		exit;
 	}
 
-	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100)) WHERE `flags` & (0x0010 | 0x0040 | 0x0100)"));
+	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200)) WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200)"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `flags` & 0x0020 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
@@ -112,6 +113,7 @@
 			,m5.[FIELD_VALUE] AS mac5
 			,m6.[FIELD_VALUE] AS mac6
 			,m7.[FIELD_VALUE] AS mac7
+			,m8.[FIELD_VALUE] AS mac8
 		INTO #tmptable
 		FROM [ITEMS] AS item WITH (NOLOCK)
 		LEFT JOIN [FIELDS_VALUES] AS m1 WITH (NOLOCK) ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
@@ -121,6 +123,7 @@
 		LEFT JOIN [FIELDS_VALUES] AS m5 WITH (NOLOCK) ON m5.[ITEM_ID] = item.[ID] AND m5.[FIELD_NO] = 150 AND m5.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m6 WITH (NOLOCK) ON m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m7 WITH (NOLOCK) ON m7.[ITEM_ID] = item.[ID] AND m7.[FIELD_NO] = 163 AND m7.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m8 WITH (NOLOCK) ON m8.[ITEM_ID] = item.[ID] AND m8.[FIELD_NO] = 210 AND m8.[ITEM_NO] = 1
 		-- LEFT JOIN [BRANCHES] AS brn WITH (NOLOCK) ON brn.[BRANCH_NO] = item.[BRANCH_NO]
 		LEFT JOIN [LOCATIONS] AS loc WITH (NOLOCK) ON loc.[LOC_NO] = item.[LOC_NO]
 		WHERE
@@ -134,6 +137,7 @@
 				OR m5.[FIELD_VALUE] IS NOT NULL
 				OR m6.[FIELD_VALUE] IS NOT NULL
 				OR m7.[FIELD_VALUE] IS NOT NULL
+				OR m8.[FIELD_VALUE] IS NOT NULL
 			)
 	");
 
@@ -148,8 +152,10 @@
 		{
 			//if(in_array(intval($row['STATUS_NO']), $active_statuses)) // Временно отключил проверку статусов
 			{
-				$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
+				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
+				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);
+				$duplicate = 0;
 
 				// Load SN
 				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
@@ -175,6 +181,7 @@
 
 						if(intval($result[0][2]) & 0x0010 && $mac !== 'N/A' && $mac !== 'N\A' && $mac !== 'NA')    // Exist in IT Invent?
 						{
+							$duplicate = 0x0200;
 							echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
@@ -182,7 +189,7 @@
 							$row['INV_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | $active | $mobile,
+							0x0010 | $active | $mobile | $duplicate,
 							$row_id
 						));
 					}
@@ -190,7 +197,7 @@
 				}
 
 				// Load MACs
-				for($k = 1; $k <= 7; $k++)    // mac* fields count
+				for($k = 1; $k <= 8; $k++)    // mac* fields count
 				{
 					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 					if(!empty($mac) && strlen($mac) == 12)
@@ -215,6 +222,7 @@
 
 							if(intval($result[0][2]) & 0x0010)    // Exist in IT Invent?
 							{
+								$duplicate = 0x0200;
 								echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 							}
 
@@ -222,7 +230,7 @@
 								$row['INV_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
-								0x0010 | $active | $mobile,
+								0x0010 | $active | $mobile | $duplicate,
 								$row_id
 							));
 						}

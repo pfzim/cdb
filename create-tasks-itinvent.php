@@ -19,6 +19,8 @@
 		2.	Статус в карточке должен быть «Работает» или «Выдан пользователю для удаленной работы».
 
 		Если оборудование «засветилось» в сети и находится в статусе отличном от «Работает» и «Выдан пользователю для удаленной работы», то выясняете причину и принимаете соответствующие меры.
+		
+		Временно отключена проверка статуса в из карточки ИТ Инвент. Все статусы считаются валидными, главное присутствие оборудования в ИТ Инвент
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -40,7 +42,8 @@
 			AND (t.`flags` & (0x0001 | 0x8000)) = 0x8000        -- Task status is Opened
 			AND (
 				m.`flags` & (0x0002 | 0x0004)                   -- Temprary excluded or Premanently excluded
-				OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent
+				-- OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent      -- Temporary do not check status
+				OR (m.`flags` & 0x0010)     					-- Exist in IT Invent
 			)
 	")))
 	{
@@ -112,7 +115,8 @@
 				AND t.pid = m.id
 				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
+			-- (m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active    -- Temporary do not check status
+			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		GROUP BY m.`id`
 		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
 		ORDER BY RAND()
