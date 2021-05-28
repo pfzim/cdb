@@ -94,45 +94,17 @@
 			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
 			{
 				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
+
+				if($db->select_ex($result, rpv("SELECT ms.`sn` FROM @mac_sn AS ms WHERE ms.`mac` = ! LIMIT 1", $mac)))
+				{
+					$is_sn = true;
+					$mac = $result[0][0];
+				}
 			}
 			else
 			{
 				$is_sn = true;
 				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
-			}
-			
-			// Проверяем корректность данных
-
-			if(empty($mac) || (!$is_sn && strlen($mac) != 12))
-			{
-				$code = 1;
-				$error_msg .= 'Warning: Invalid MAC. Line '.$line_no.';';
-
-				error_log(date('c').'  Warning: Invalid MAC ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
-
-				$line = strtok("\n");
-				continue;
-			}
-
-			/************* NEW EDITION *************
-
-			// Определяем это серийный номер или MAC. Убираем лишние символы
-
-			$is_sn = false;
-			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
-			{
-				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
-			}
-			else
-			{
-				$is_sn = true;
-				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
-			}
-
-			if(!$is_sn && $db->select_ex($result, rpv("SELECT ms.`sn` FROM @mac_sn AS ms WHERE ms.`mac` = ! LIMIT 1", $mac)))
-			{
-				$is_sn = true;
-				$mac = $result[0][0];
 			}
 
 			if(empty($mac))
@@ -146,8 +118,8 @@
 				continue;
 			}
 
-			// ************* END NEW EDITION *************/
-			
+			// Получаем идентификатор родительского устройства
+
 			if($row[3] === $net_dev)
 			{
 				$last_sw_name = $net_dev;

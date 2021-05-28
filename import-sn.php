@@ -72,7 +72,7 @@
 			// Убираем лишние символы из MAC и SN
 
 			$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
-			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row[0]));
+			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row[1]));
 			
 			// Проверяем корректность данных
 
