@@ -49,7 +49,7 @@ EOT;
 				-- AND (fi.`flags` & 0x0010) = 0
 			WHERE
 				(f.`flags` & 0x0010) = 0
-				AND (fi.`flags` & 0x0020) = 0
+				AND (fi.`flags` & 0x0002) = 0
 			GROUP BY f.`path`
 			ORDER BY `cnt` DESC
 			LIMIT 100
@@ -105,7 +105,7 @@ EOT;
 					-- AND (fi.`flags` & 0x0010) = 0
 				WHERE
 					(f.`flags` & 0x0010) = 0
-					AND (fi.`flags` & 0x0020) = 0
+					AND (fi.`flags` & 0x0002) = 0
 				GROUP BY f.`path`
 				HAVING `cnt` > 0
 				ORDER BY `cnt`, f.`path`

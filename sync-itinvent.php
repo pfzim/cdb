@@ -164,9 +164,10 @@
 					$row_id = 0;
 					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0x0080 LIMIT 1", $mac)))
 					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #)",
+						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
 							$mac,
 							$row['INV_NO'],
+							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
 							0x0010 | 0x0080 | $active | $mobile
@@ -185,8 +186,9 @@
 							echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
-						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 							$row['INV_NO'],
+							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
 							0x0010 | $active | $mobile | $duplicate,
@@ -205,9 +207,10 @@
 						$row_id = 0;
 						if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0 LIMIT 1", $mac)))
 						{
-							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #)",
+							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
 								$mac,
 								$row['INV_NO'],
+								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
 								0x0010 | $active | $mobile
@@ -226,8 +229,9 @@
 								echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 							}
 
-							$db->put(rpv("UPDATE @mac SET `inv_no` = !, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+							$db->put(rpv("UPDATE @mac SET `inv_no` = !, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 								$row['INV_NO'],
+								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
 								0x0010 | $active | $mobile | $duplicate,

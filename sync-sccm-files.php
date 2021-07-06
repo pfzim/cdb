@@ -55,7 +55,7 @@
 	}
 
 	// Mark as Deleted all files before load
-	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE (`flags` & 0x0002 = 0)"));
+	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE ((`flags` & 0x0002) = 0)"));
 
 	// Load files inventory data
 	

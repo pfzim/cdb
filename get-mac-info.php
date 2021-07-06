@@ -46,6 +46,8 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
+				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
 			FROM
 				@mac AS m
@@ -73,6 +75,8 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
+				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
 			FROM
 				@mac AS m
@@ -100,6 +104,8 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
+				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
 			FROM
 				@mac AS m
@@ -129,6 +135,8 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
+				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
 			FROM
 				@mac AS m
@@ -175,6 +183,8 @@ EOT;
 	$html .= '<p>Hostname: '.$mac[0]['name'].'</p>';
 	$html .= '<p>IP: '.$mac[0]['ip'].'</p>';
 	$html .= '<p>NetDev: '.$mac[0]['netdev'].'</p>';
+	$html .= '<p>First seen: '.$mac[0]['first_seen'].'</p>';
+	$html .= '<p>Last seen: '.$mac[0]['last_seen'].'</p>';
 	$html .= '<p>Flags: '.flags_to_string(intval($mac[0]['flags']), $g_mac_flags, ', ').'</p>';
 	
 	$table = '<table>';
