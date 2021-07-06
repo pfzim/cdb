@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 4);
+	define('CDB_VERSION', 7);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
@@ -49,6 +49,17 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 
+	// Идентификаторы свойств объектов
+
+	define('CDB_PROP_USERACCOUNTCONTROL',			101);
+	define('CDB_PROP_OPERATINGSYSTEM',				102);
+	define('CDB_PROP_OPERATINGSYSTEMVERSION',		103);
+	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',	104);
+	define('CDB_PROP_MAILBOX_QUOTA',				105);
+	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);
+	define('CDB_PROP_PWDLASTSET',					107);
+	define('CDB_PROP_SID',							108);
+	
 /**
 	Отправка почтового сообщения
 
@@ -246,6 +257,11 @@ $g_ac_flags = array(
 	'Fixed'
 );
 
+$g_files_inventory_flags = array(
+	'',
+	'Deleted'
+);
+
 
 /**
 	Функция преобразует значения бит в человекочитабельный вид
@@ -401,6 +417,7 @@ function walk_route($route, $action)
 			'report-vuln-top-servers',
 			'report-vuln-top',
 			'report-vuln-top-netdev',
+			'report-users-lastlogon',
 			'report-itinvent-files-top'
 		),
 		'cron-weekly' => array(
@@ -483,6 +500,9 @@ function walk_route($route, $action)
 		),
 		'report-laps' => array(
 			'@report-laps.php'
+		),
+		'report-users-lastlogon' => array(
+			'@report-users-lastlogon.php'
 		),
 		'report-tasks-status' => array(
 			'@report-tasks-status.php'
@@ -571,6 +591,9 @@ function walk_route($route, $action)
 		),
 		'test' => array(
 			'@test.php'
+		),
+		'temp-fix-mac-sn' => array(
+			'@temp-fix-mac-sn.php'
 		)
 	);
 

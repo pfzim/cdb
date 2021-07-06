@@ -59,7 +59,7 @@ FROM c_computers AS c
 | 0x020000 | Vulnerabilities (mass problem)            |
 | 0x040000 | Net errors                                |
 | 0x080000 | IT Invent software                        |
-| Переделать на:                                       |
+| Передела | ть на:                                    |
 | 0x00FF00 | Mask tasks codes                          |
 | 0x000100 | Mbox unlim Task was created in HelpDesk   |
 | 0x000200 | IT Invent Move was created in HelpDesk    |

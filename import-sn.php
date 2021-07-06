@@ -100,6 +100,20 @@
 
 				error_log(date('c').'  Error: When INSERT to DB ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-sn.log');
 			}
+
+			// Обновляем данные в таблице mac
+			
+			// Проверяем существование SN в таблице mac
+			if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND m.`flags` & 0x0080 LIMIT 1", $sn)))
+			{
+				// Если запись с таким SN уже существует, то помечаем дубликат с таким MAC как временно исключенный.
+				$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `mac` = ! AND (`flags` & (0x0002 | 0x0004)) = 0 LIMIT 1", $mac));
+			}
+			else
+			{
+				// Если запись с таким SN не существует, то у записи с таким MAC меняем MAC на SN.
+				$db->put(rpv("UPDATE @mac SET `mac` = {s1}, `flags` = (`flags` | 0x0080) WHERE `mac` = {s0} AND (`flags` & 0x0080) = 0 LIMIT 1", $mac, $sn));
+			}
 		}
 
 		$line = strtok("\n");
