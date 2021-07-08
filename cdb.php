@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 7);
+	define('CDB_VERSION', 9);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
@@ -48,18 +48,8 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.flags.php');
 
-	// Идентификаторы свойств объектов
-
-	define('CDB_PROP_USERACCOUNTCONTROL',			101);
-	define('CDB_PROP_OPERATINGSYSTEM',				102);
-	define('CDB_PROP_OPERATINGSYSTEMVERSION',		103);
-	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',	104);
-	define('CDB_PROP_MAILBOX_QUOTA',				105);
-	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);
-	define('CDB_PROP_PWDLASTSET',					107);
-	define('CDB_PROP_SID',							108);
-	
 /**
 	Отправка почтового сообщения
 
@@ -145,26 +135,6 @@ function sql_date_cmp($date1, $date2)
 }
 
 /**
-	Функция возвращает текстовое представление статуса шифрования TMEE
-
-	@param [in] $code  Числовой код шифрования
-	@return Преобразованный в читаемый вид код шифрования
-	
-	\todo Переделать на массив
-*/
-function tmee_status($code)
-{
-	switch($code)
-	{
-		case 1: return 'Not Encrypted';
-		case 2: return 'Encrypted';
-		case 3: return 'Encrypting';
-		case 4: return 'Decrypting';
-	}
-	return 'Unknown';
-}
-
-/**
  *  @brief Функция проверяет соотствие IP адреса маске CIDR
  *  
  *  @param [in] $ip IP адрес
@@ -182,151 +152,6 @@ function cidr_match($ip, $cidr)
     }
 
     return false;
-}
-
-$g_tasks_flags = array(
-	'Заявка закрыта',
-	'',
-	'',
-	'Не установлена квота на ПЯ',
-	'Неправильное местоположение в IT Invent',
-	'Выяснить причиную повторения заявок IT Invent',
-	'Несоответствие baseline установка обновлений',
-	'Блокировка ПО TMAC',
-	'Не установлен или не работает TMEE',
-	'Не установлен или не работает TMAO',
-	'Имя не соответствует шаблону',
-	'Не установлен или не работает LAPS',
-	'Не установлен или не работает агент SCCM',
-	'Возможна установка пустого пароля',
-	'Устаревшая ОС',
-	'Отсутствует в IT Invent',
-	'Обнаружена уязвимость'
-);
-
-$g_comp_flags = array(
-	'Disabled',
-	'Deleted',
-	'Hide',
-	'Temp sync flag',
-	'Active Directory',
-	'Apex One',
-	'Encryption Endpoint',
-	'Configuration Manager'
-);
-
-$g_comp_short_flags = array(
-	'D',
-	'R',
-	'H',
-	'T',
-	'A',
-	'O',
-	'E',
-	'C'
-);
-
-$g_mac_flags = array(
-	'',
-	'Temporary excluded',
-	'Permanently excluded',
-	'',
-	'IT Invent',
-	'netdev',
-	'Active',
-	'Serial number',
-	'Mobile device',
-	'Duplicate detected'
-);
-
-$g_mac_short_flags = array(
-	'',
-	'T',
-	'R',
-	'',
-	'I',
-	'N',
-	'A',
-	'S',
-	'M',
-	'D'
-);
-
-$g_ac_flags = array(
-	'',
-	'Fixed'
-);
-
-$g_files_inventory_flags = array(
-	'',
-	'Deleted'
-);
-
-
-/**
-	Функция преобразует значения бит в человекочитабельный вид
-
-	@param [in] $flags  Числовое значение битовых флагов
-	@param [in] $texts  Массив с текстовым описанием флагов
-	@param [in] $delimiter  Разделитель. По умолчанию равен ' '
-	@param [in] $notset  Текстовое значение для неустановленного бита. По умолчанию равен ''
-	@return Значения бит преобразованные в читабельный текст
-*/
-function flags_to_string($flags, $texts, $delimiter = ' ', $notset = '')
-{
-	$result = '';
-	$delim = '';
-	for($i = 0; $i < count($texts); $i++)
-	{
-		if(($flags >> $i) & 0x01)
-		{
-			$result .= $delim.$texts[$i];
-			$delim = $delimiter;
-		}
-		else
-		{
-			$result .= $notset;
-		}
-	}
-	return $result;
-}
-
-/**
-	Функция возвращает текстовое представление кода
-
-	@param [in] $code  Числовой код
-	@return Преобразованный в читаемый вид код
-*/
-function code_to_string($codes, $code)
-{
-	if(isset($codes[$code]))
-	{
-		return $codes[$code];
-	}
-
-	return 'Unknown';
-}
-
-/**
-	Устаревшая функция заменена flags_to_string.
-	\sa flags_to_string()
-	\todo Заменить во всех модулях на flags_to_string()
-*/
-function tasks_flags_to_string($flags)  // replace with flags_to_string() later
-{
-	global $g_tasks_flags;
-
-	$result = '';
-	$delimiter = '';
-	for($i = 0; $i < count($g_tasks_flags); $i++)
-	{
-		if(($flags >> $i) & 0x01)
-		{
-			$result .= $delimiter.$g_tasks_flags[$i];
-			$delimiter = ' ';
-		}
-	}
-	return $result;
 }
 
 /**
@@ -414,6 +239,7 @@ function walk_route($route, $action)
 			'report-tasks-itinvent',
 			'report-new-mac',
 			'report-laps',
+			'report-wsus',
 			'report-vuln-top-servers',
 			'report-vuln-top',
 			'report-vuln-top-netdev',
@@ -500,6 +326,9 @@ function walk_route($route, $action)
 		),
 		'report-laps' => array(
 			'@report-laps.php'
+		),
+		'report-wsus' => array(
+			'@report-wsus.php'
 		),
 		'report-users-lastlogon' => array(
 			'@report-users-lastlogon.php'

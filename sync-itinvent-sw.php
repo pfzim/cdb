@@ -166,7 +166,6 @@
 									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | 0x0010) WHERE `id` = # LIMIT 1", $row['id']));
 									
 									break;
-									
 								}
 							}
 							break;
