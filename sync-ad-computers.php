@@ -17,7 +17,7 @@
 
 	$i = 0;
 
-	$ldap = ldap_connect(LDAP_HOST, LDAP_PORT);
+	$ldap = ldap_connect(LDAP_URI);
 	if($ldap)
 	{
 		ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);

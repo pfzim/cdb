@@ -83,8 +83,8 @@
 		exit;
 	}
 
-	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200)) WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200)"));
+	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, set status = 0
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200)), `status` = 0 WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200)"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `flags` & 0x0020 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
