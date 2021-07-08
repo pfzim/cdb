@@ -42,7 +42,7 @@ CREATE TABLE `c_ac_log` (
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `i_app_path` (`app_path`(1024)) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1966 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2381 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,7 +66,7 @@ CREATE TABLE `c_computers` (
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `i_name` (`name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=4082548 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4083300 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -85,7 +85,7 @@ CREATE TABLE `c_devices` (
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `i_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=20571 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=21808 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -103,7 +103,7 @@ CREATE TABLE `c_files` (
   PRIMARY KEY (`id`),
   KEY `i_filename` (`filename`),
   FULLTEXT KEY `i_path` (`path`)
-) ENGINE=InnoDB AUTO_INCREMENT=719070 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=830384 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -134,6 +134,7 @@ CREATE TABLE `c_mac` (
   `pid` int(10) unsigned NOT NULL DEFAULT 0,
   `name` varchar(255) NOT NULL DEFAULT '',
   `inv_no` varchar(16) NOT NULL DEFAULT '',
+  `status` int(10) unsigned NOT NULL DEFAULT 0,
   `branch_no` int(11) NOT NULL DEFAULT -1,
   `loc_no` int(10) unsigned NOT NULL DEFAULT 0,
   `mac` varchar(45) NOT NULL DEFAULT '',
@@ -145,8 +146,9 @@ CREATE TABLE `c_mac` (
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `i_name` (`name`),
-  KEY `i_mac` (`mac`)
-) ENGINE=InnoDB AUTO_INCREMENT=147031 DEFAULT CHARSET=utf8;
+  KEY `i_mac` (`mac`),
+  KEY `i_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=158050 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -183,7 +185,7 @@ CREATE TABLE `c_net_errors` (
   PRIMARY KEY (`id`),
   KEY `i_pid` (`pid`),
   KEY `i_port` (`port`)
-) ENGINE=InnoDB AUTO_INCREMENT=4275 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4612 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -202,7 +204,7 @@ CREATE TABLE `c_persons` (
   `lname` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13866 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=14251 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -269,7 +271,25 @@ CREATE TABLE `c_tasks` (
   `operid` varchar(36) NOT NULL,
   `opernum` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27039 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=30073 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `c_users`
+--
+
+DROP TABLE IF EXISTS `c_users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `c_users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `login` varchar(255) NOT NULL,
+  `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
+  `sid` varchar(15) DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -306,7 +326,7 @@ CREATE TABLE `c_vuln_scans` (
   PRIMARY KEY (`id`),
   KEY `i_plugin_id` (`plugin_id`),
   KEY `i_pid` (`pid`)
-) ENGINE=InnoDB AUTO_INCREMENT=374624 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=410654 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -323,7 +343,7 @@ CREATE TABLE `c_vulnerabilities` (
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`plugin_id`),
   KEY `i_severity` (`severity`)
-) ENGINE=InnoDB AUTO_INCREMENT=149901 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=151370 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -350,4 +370,4 @@ CREATE TABLE `c_vv_history` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-05-28 15:32:22
+-- Dump completed on 2021-07-08 17:32:43
