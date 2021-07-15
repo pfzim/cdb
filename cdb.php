@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 9);
+	define('CDB_VERSION', 10);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
@@ -154,6 +154,11 @@ function cidr_match($ip, $cidr)
     return false;
 }
 
+function cdb_log($message)
+{
+	error_log(date('c').'  '.$message."\n", 3, '/var/log/cdb/cdb.log');
+}
+
 /**
 	Функция для выполнения маршрута (запуска модулей)
 	\param [in] $route Массив с описанием маршрутов
@@ -169,6 +174,8 @@ function walk_route($route, $action)
 		exit;
 	}
 
+	cdb_log('INFO: Start action: '.$action);
+	
 	foreach($route[$action] as &$operation)
 	{
 		if($operation[0] == '@')
@@ -176,10 +183,12 @@ function walk_route($route, $action)
 			$module_name = ROOTDIR.DIRECTORY_SEPARATOR.substr($operation, 1);
 			if(file_exists($module_name))
 			{
+				cdb_log('INFO: Call file: '.$module_name);
 				include($module_name);
 			}
 			else
 			{
+				cdb_log('ERROR: File not found: '.$module_name);
 				echo 'ERROR: '.$module_name.' - file not found!';
 			}
 		}
