@@ -13,6 +13,7 @@
 		  - ip     - ip адрес подключенного оборудования
 		  - sw_id  - имя коммутатора
 		  - port   - порт коммутатора в который подключено оборудование
+		  - vlan   - номер VLAN (опционально)
 		  
 		\todo Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг.
 		Флаг обнулять при обновлении записи. Выполнено!
@@ -76,8 +77,8 @@
 		{
 			// Парсим сторку
 			
-			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port
-			if(count($row) != 5)
+			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port,vlan
+			if(count($row) < 5)
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect line format. Line '.$line_no.';';
@@ -86,6 +87,12 @@
 
 				$line = strtok("\n");
 				continue;
+			}
+			
+			$vlan = '';
+			if(isset($row[5]))
+			{
+				$vlan = $row[5];
 			}
 			
 			// Определяем это серийный номер или MAC. Убираем лишние символы
@@ -198,12 +205,13 @@
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
-				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), NOW(), #)",
+				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `vlan`, `first`, `date`, `flags`) VALUES (#, !, !, !, !, !, NOW(), NOW(), #)",
 					$pid,
 					$row[1],  // name
 					$mac,
 					$row[2],  // ip
 					$row[4],  // port
+					$vlan,    // vlan
 					0x0020 | $excluded | ($is_sn ? 0x0080 : 0x0000)
 				)))
 				{
@@ -213,11 +221,12 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = !, `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
 					$row[4],  // port
+					$vlan,    // vlan
 					0x0020 | $excluded,
 					$row_id
 				));
