@@ -432,9 +432,6 @@ function walk_route($route, $action)
 		),
 		'temp-fix-mac-sn' => array(
 			'@temp-fix-mac-sn.php'
-		),
-		'temp-exclude-mac' => array(
-			'@temp-exclude-mac.php'
 		)
 	);
 
