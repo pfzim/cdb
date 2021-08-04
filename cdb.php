@@ -415,6 +415,9 @@ function walk_route($route, $action)
 		'import-mac' => array(
 			'@import-mac.php'
 		),
+		'import-mac-test' => array(
+			'@import-mac-test.php'
+		), // remove it if works fine
 		'import-sn' => array(
 			'@import-sn.php'
 		),
