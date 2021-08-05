@@ -67,7 +67,7 @@
 			// Парсим сторку
 			
 			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port,vlan
-			if(count($row) != 5 || count($row) != 6)
+			if(!(count($row) == 5 || count($row) == 6))
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect line format (count:'.count($row).'). Line '.$line_no.';';
