@@ -415,9 +415,9 @@ function walk_route($route, $action)
 		'import-mac' => array(
 			'@import-mac.php'
 		),
-		'import-mac-test' => array(
-			'@import-mac-test.php'
-		), // remove it if works fine
+		'import-mac-old' => array(
+			'@import-mac-old.php'
+		), // old mac, no vlan (backup)
 		'import-sn' => array(
 			'@import-sn.php'
 		),
