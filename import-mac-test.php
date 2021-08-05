@@ -184,7 +184,7 @@
 				}
 			}
 			
-			$row_id = 0; $vlan = (count($row)==6)?(is_numeric($row[5])?intval($row[5]):"DEFAULT"):"DEFAULT");
+			$row_id = 0; $vlan = $row[5] ?? "DEFAULT";
 
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
