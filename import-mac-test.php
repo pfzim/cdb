@@ -54,7 +54,7 @@
 
 	$line_no = 0;
 	
-	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-mac.log');
+	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-mac-test.log');
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
@@ -70,9 +70,9 @@
 			if(count($row) != 5 || count($row) != 6)
 			{
 				$code = 1;
-				$error_msg .= 'Warning: Incorrect line format. Line '.$line_no.';';
+				$error_msg .= 'Warning: Incorrect line format (count:'.count($row).'). Line '.$line_no.';';
 				
-				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'; count:'.count($row).'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
 
 				$line = strtok("\n");
 				continue;
@@ -101,7 +101,7 @@
 				$code = 1;
 				$error_msg .= 'Warning: Empty MAC or SN. Line '.$line_no.';';
 
-				error_log(date('c').'  Warning: Empty MAC or SN ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+				error_log(date('c').'  Warning: Empty MAC or SN ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
 
 				$line = strtok("\n");
 				continue;
@@ -125,11 +125,11 @@
 					{
 						if($db->put(rpv("UPDATE @devices SET `pid` = # WHERE `id` = # LIMIT 1", $dev_id, $pid)))
 						{
-							error_log(date('c').'  Error: Update device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
+							error_log(date('c').'  Error: Update device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac-test.log');
 						}
 						else
 						{
-							error_log(date('c').'  Info: Updated device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
+							error_log(date('c').'  Info: Updated device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac-test.log');
 						}
 					}
 				}
@@ -141,7 +141,7 @@
 					}
 					else
 					{
-						error_log(date('c').'  Error: Insert new device ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
+						error_log(date('c').'  Error: Insert new device ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
 					}
 				}
 			}
@@ -162,7 +162,7 @@
 					)
 					{
 						$excluded = 0x0002;
-						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac.log');
+						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac-test.log');
 						break;
 					}
 				}
@@ -177,7 +177,7 @@
 						if(cidr_match($row[2], $mask))
 						{
 							$excluded = 0x0002;
-							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac.log');
+							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac-test.log');
 							break;
 						}
 					}
