@@ -1,5 +1,6 @@
 <?php
 	// Import MAC addresses
+
 	/**
 		\file
 		\brief API для загрузки MAC адресов с сетевых устройств.
@@ -12,8 +13,17 @@
 		  - ip     - ip адрес подключенного оборудования
 		  - sw_id  - имя коммутатора
 		  - port   - порт коммутатора в который подключено оборудование
-		  - vlan   - VLAN ID (integer) for device
 		  
+		\todo Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг.
+		Флаг обнулять при обновлении записи. Выполнено!
+		\todo Ручное исключение из проверок навсегда производить через флаг 0x0004.
+		Временное исключение до первого обнаружения и исключения по фильтрам производить через флаг 0x0002.
+		Флаг 0x0002 обнулять при импорте. Выполнено!
+		
+		\todo Переделать механизм обработки исключений MAC адресов из проверок. Выполнено!
+		Настройки исключений полностью перенесены в конфигурационный файл в параметры MAC_EXCLUDE_ARRAY
+		и IP_MASK_EXCLUDE_LIST.
+		
 		Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию
 		серийного номера вместо MAC адреса.
 	*/
@@ -54,7 +64,7 @@
 
 	$line_no = 0;
 	
-	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-mac-test.log');
+	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-mac.log');
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
@@ -66,19 +76,20 @@
 		{
 			// Парсим сторку
 			
-			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port,vlan
-			if(!(count($row) == 5 || count($row) == 6))
+			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port
+			if(count($row) != 5)
 			{
 				$code = 1;
-				$error_msg .= 'Warning: Incorrect line format (count:'.count($row).'). Line '.$line_no.';';
+				$error_msg .= 'Warning: Incorrect line format. Line '.$line_no.';';
 				
-				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'; count:'.count($row).'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
+				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 
 				$line = strtok("\n");
 				continue;
 			}
 			
 			// Определяем это серийный номер или MAC. Убираем лишние символы
+
 			$is_sn = false;
 			if(preg_match('/^[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}$/i', $row[0]))
 			{
@@ -101,7 +112,7 @@
 				$code = 1;
 				$error_msg .= 'Warning: Empty MAC or SN. Line '.$line_no.';';
 
-				error_log(date('c').'  Warning: Empty MAC or SN ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
+				error_log(date('c').'  Warning: Empty MAC or SN ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 
 				$line = strtok("\n");
 				continue;
@@ -125,11 +136,11 @@
 					{
 						if($db->put(rpv("UPDATE @devices SET `pid` = # WHERE `id` = # LIMIT 1", $dev_id, $pid)))
 						{
-							error_log(date('c').'  Error: Update device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac-test.log');
+							error_log(date('c').'  Error: Update device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
 						}
 						else
 						{
-							error_log(date('c').'  Info: Updated device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac-test.log');
+							error_log(date('c').'  Info: Updated device info (id = '.$pid.', set pid = '.$dev_id.")\n", 3, '/var/log/cdb/import-mac.log');
 						}
 					}
 				}
@@ -141,7 +152,7 @@
 					}
 					else
 					{
-						error_log(date('c').'  Error: Insert new device ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac-test.log');
+						error_log(date('c').'  Error: Insert new device ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-mac.log');
 					}
 				}
 			}
@@ -162,7 +173,7 @@
 					)
 					{
 						$excluded = 0x0002;
-						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac-test.log');
+						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, '/var/log/cdb/import-mac.log');
 						break;
 					}
 				}
@@ -177,7 +188,7 @@
 						if(cidr_match($row[2], $mask))
 						{
 							$excluded = 0x0002;
-							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac-test.log');
+							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, '/var/log/cdb/import-mac.log');
 							break;
 						}
 					}
@@ -187,7 +198,7 @@
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
-				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".(intval($row[5]) ?? "NULL").")",
+				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`) VALUES (#, !, !, !, !, NOW(), NOW(), #)",
 					$pid,
 					$row[1],  // name
 					$mac,
@@ -202,7 +213,7 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".(intval($row[5]) ?? "NULL").", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
