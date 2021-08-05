@@ -184,7 +184,8 @@
 				}
 			}
 			
-			$row_id = 0; $vlan = iif((count($row)==6 && is_numeric($row[5])), intval($row[5]), "DEFAULT");
+			$row_id = 0; $vlan = (count($row)==6)?(is_numeric($row[5])?intval($row[5]):"DEFAULT"):"DEFAULT");
+
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `vlan`, `first`, `date`, `flags`) VALUES (#, !, !, !, !, !, NOW(), NOW(), #)",
