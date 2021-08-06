@@ -186,9 +186,10 @@
 			}
 			
 			$row_id = 0;
+			$vlan = (intval($row[5]) == 0) ? "NULL" : intval($row[5]);
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
-				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".(intval($row[5]) ?? "NULL").")",
+				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".$vlan.")",
 					$pid,
 					$row[1],  // name
 					$mac,
@@ -203,7 +204,7 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".(intval($row[5]) ?? "NULL").", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".$vlan.", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
