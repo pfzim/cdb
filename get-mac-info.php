@@ -46,6 +46,7 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				m.`vlan`,
 				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
 				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
@@ -75,6 +76,7 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				m.`vlan`,
 				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
 				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
@@ -104,6 +106,7 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				m.`vlan`,
 				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
 				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
@@ -135,6 +138,7 @@ EOT;
 				m.`name`,
 				d.`name` AS netdev,
 				m.`port`,
+				m.`vlan`,
 				DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS last_seen,
 				DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS first_seen,
 				m.`flags`
@@ -182,6 +186,7 @@ EOT;
 	$html .= '<p>Inv.No: '.$mac[0]['inv_no'].'</p>';
 	$html .= '<p>Hostname: '.$mac[0]['name'].'</p>';
 	$html .= '<p>IP: '.$mac[0]['ip'].'</p>';
+	$html .= '<p>VLAN: '.$mac[0]['vlan'].'</p>';
 	$html .= '<p>NetDev: '.$mac[0]['netdev'].'</p>';
 	$html .= '<p>First seen: '.$mac[0]['first_seen'].'</p>';
 	$html .= '<p>Last seen: '.$mac[0]['last_seen'].'</p>';
