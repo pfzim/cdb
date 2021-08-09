@@ -95,6 +95,7 @@
 			,m.`mac`
 			,DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`
 			,m.`port`
+			,m.`vlan`
 			,m.`flags`
 			-- ,m.`branch_no`
 			-- ,m.`loc_no`
@@ -160,6 +161,7 @@
 					."\nDNS имя: ".$row['m_name']
 					."\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nПорт: ".$row['port']
+					."\nVLAN ID: ".$row['vlan']
 					."\nВремя регистрации: ".$row['regtime']
 					."\n\nИнвентарный номер коммутатора/маршрутизатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no'])
 					."\nDNS имя: ".$row['netdev']
