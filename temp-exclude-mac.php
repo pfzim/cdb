@@ -44,7 +44,7 @@
 		{
 			if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
 			   && (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-			   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'/i', $port))
+			   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $port))
 			)
 			{
 				echo 'MAC excluded: '.$mac.'    '.$last_sw_name.'    '.$port."\n";
