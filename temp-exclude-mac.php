@@ -31,15 +31,20 @@
 		return false;
 	}
 
-	function is_excluded($mac, $last_sw_name, $port, $ip)
+	function is_excluded($mac, $last_sw_name, $port, $ip, $vlan)
 	{
 		//echo $mac.'    '.$last_sw_name.'    '.$port."\n";
+		
+		if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
+			echo 'MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n";
+			return TRUE;
+		}
 
 		foreach(MAC_EXCLUDE_ARRAY as &$excl)
 		{
 			if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
 			   && (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-			   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $port))
+			   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'/i', $port))
 			)
 			{
 				echo 'MAC excluded: '.$mac.'    '.$last_sw_name.'    '.$port."\n";
@@ -79,6 +84,7 @@
 			m.`ip`,
 			d.`name` AS `netdev`,
 			m.`port`
+			m.`vlan`
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid` AND d.`type` = 3
@@ -87,7 +93,7 @@
 	{
 		foreach($result as &$row)
 		{
-			if(is_excluded($row['mac'], $row['netdev'], $row['port'], $row['ip']))
+			if(is_excluded($row['mac'], $row['netdev'], $row['port'], $row['ip'], $row['vlan']))
 			{
 				$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $row['id']));
 				$i++;

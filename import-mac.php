@@ -148,45 +148,45 @@
 			}
 			
 			$excluded = 0x0000;
+			$vlan = (intval($row[5]) == 0) ? "NULL" : intval($row[5]);
 			
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 			
 			if(!$is_sn)
 			{
-				// Исключение по MAC адресу, имени коммутатора, порту
+				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 			
-				foreach(MAC_EXCLUDE_ARRAY as &$excl)
-				{
-					if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
-					   && (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-					   && (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
-					)
-					{
-						$excluded = 0x0002;
-						error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
-						break;
-					}
-				}
-		
-				// Исключение по IP адресу
-
-				if(!empty($row[2]) && ($excluded & 0x0002) == 0)
-				{
-					$masks = explode(';', IP_MASK_EXCLUDE_LIST);
-					foreach($masks as &$mask)
-					{
-						if(cidr_match($row[2], $mask))
-						{
+				if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
+					$excluded = 0x0002;
+					error_log(date('c').'  MAC excluded: '.$mac' by VLAN ID: '.$vlan."\n", 3, $path_log);
+				} else {
+					foreach(MAC_EXCLUDE_ARRAY as &$excl) {
+						if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
+						&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
+						&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
+						) {
 							$excluded = 0x0002;
-							error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
+							error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
 							break;
 						}
 					}
-				}
+			
+					// Исключение по IP адресу
+					if(!empty($row[2]) && ($excluded & 0x0002) == 0) {
+						$masks = explode(';', IP_MASK_EXCLUDE_LIST);
+						foreach($masks as &$mask)
+						{
+							if(cidr_match($row[2], $mask))
+							{
+								$excluded = 0x0002;
+								error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
+								break;
+							}
+						}
+				}}
 			}
 			
 			$row_id = 0;
-			$vlan = (intval($row[5]) == 0) ? "NULL" : intval($row[5]);
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".$vlan.")",
