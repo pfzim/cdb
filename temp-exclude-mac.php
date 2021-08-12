@@ -83,7 +83,7 @@
 			m.`mac`,
 			m.`ip`,
 			d.`name` AS `netdev`,
-			m.`port`
+			m.`port`,
 			m.`vlan`
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
