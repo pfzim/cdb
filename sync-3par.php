@@ -32,6 +32,7 @@
 			if(@ssh2_auth_password($conn, TPAR_USER, TPAR_PASSWD))
 			{
 				$stream = ssh2_exec($conn, 'showvv -showcols Id,Name,Usr_RawRsvd_MB -p -type base -notree');
+				#$stream = ssh2_exec($conn, 'showvv -showcols Id,Name,Usr_Rsvd_MB,VSize_MB -p -type base -notree');
 				if($stream !== FALSE)
 				{
 					stream_set_blocking($stream, true);

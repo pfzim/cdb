@@ -158,7 +158,7 @@
 			
 				if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
 					$excluded = 0x0002;
-					error_log(date('c').'  MAC excluded: '.$mac' by VLAN ID: '.$vlan."\n", 3, $path_log);
+					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
 				} else {
 					foreach(MAC_EXCLUDE_ARRAY as &$excl) {
 						if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
