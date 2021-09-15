@@ -123,9 +123,9 @@ EOT;
 	")))
 	{
 		$html .= '<table>';
-		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th></tr>';
-		$html .= '<tr><td>Оборудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td></tr>';
-		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td></tr>';
+		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th><th>Лимит заявок</th></tr>';
+		$html .= '<tr><td>Оборудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td><th>'.TASKS_LIMIT_ITINVENT.'</th></tr>';
+		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td><th>'.TASKS_LIMIT_ITINVENT_MOVE.'</th></tr>';
 		$html .= '</table>';
 	}
 	
