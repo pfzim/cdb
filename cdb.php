@@ -233,7 +233,7 @@ function walk_route($route, $action)
 			'create-tasks-ac',
 			'create-tasks-laps',
 			'create-tasks-rename',
-//			'create-tasks-sccm',
+			'create-tasks-sccm',
 			'create-tasks-epwd',
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
