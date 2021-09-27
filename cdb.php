@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 10);
+	define('CDB_VERSION', 11);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
