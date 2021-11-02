@@ -155,6 +155,7 @@
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);
+				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['CI_TYPE']) == 1) ? 0x0400 : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
 				// Load SN
@@ -170,7 +171,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | 0x0080 | $active | $mobile
+							0x0010 | 0x0080 | $active | $mobile| $bcc
 						)))
 						{
 							$row_id = $db->last_id();
@@ -191,7 +192,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | $active | $mobile | $duplicate,
+							0x0010 | $active | $mobile | $bcc | $duplicate,
 							$row_id
 						));
 					}
@@ -213,7 +214,7 @@
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
-								0x0010 | $active | $mobile
+								0x0010 | $active | $mobile | $bcc
 							)))
 							{
 								$row_id = $db->last_id();
@@ -234,7 +235,7 @@
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
-								0x0010 | $active | $mobile | $duplicate,
+								0x0010 | $active | $mobile | $bcc | $duplicate,
 								$row_id
 							));
 						}

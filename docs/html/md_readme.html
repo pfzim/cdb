@@ -201,6 +201,8 @@ $(function() {
 <td class="markdownTableBodyNone">0x0100  </td><td class="markdownTableBodyNone">This is mobile device (do not check location)   </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">0x0200  </td><td class="markdownTableBodyNone">Duplicate detected   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x0400  </td><td class="markdownTableBodyNone">Backup communication channel (ДКС)</td></tr>
 </table>
 <p>SQL example: </p><div class="fragment"><div class="line">SELECT m.`id`, m.`mac`, m.`ip`, m.`name`, m.`inv_no`, d.`name` AS `netdev`, m.`port`, m.`first`, m.`date`,</div>
 <div class="line">    CONCAT(</div>
@@ -211,7 +213,8 @@ $(function() {
 <div class="line">        IF(m.`flags` &amp; 0x0040, &#39;ActiveInv;&#39;, &#39;&#39;),</div>
 <div class="line">        IF(m.`flags` &amp; 0x0080, &#39;SN;&#39;, &#39;&#39;),</div>
 <div class="line">        IF(m.`flags` &amp; 0x0100, &#39;Mobile;&#39;, &#39;&#39;),</div>
-<div class="line">        IF(m.`flags` &amp; 0x0200, &#39;Duplicate detected;&#39;, &#39;&#39;)</div>
+<div class="line">        IF(m.`flags` &amp; 0x0200, &#39;Duplicate detected;&#39;, &#39;&#39;),</div>
+<div class="line">        IF(m.`flags` &amp; 0x0400, &#39;Backup communication channel;&#39;, &#39;&#39;)</div>
 <div class="line">    ) AS `flags_to_string`</div>
 <div class="line">FROM c_mac AS m</div>
 <div class="line">LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3</div>
