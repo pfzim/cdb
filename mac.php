@@ -17,6 +17,8 @@
 		  - type  - Тип адреса:
 		    - 1 - mac is MAC address,
 		    - 2 - mac is SN.
+		
+		пример: /cdb/cdb.php?action=mac&type=1&do=exclude&mac=***
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;

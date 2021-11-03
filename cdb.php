@@ -253,7 +253,8 @@ function walk_route($route, $action)
 			'report-vuln-top',
 			'report-vuln-top-netdev',
 			'report-users-lastlogon',
-			'report-itinvent-files-top'
+			'report-itinvent-files-top',
+			'report-itinvent-bcc'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
@@ -356,6 +357,9 @@ function walk_route($route, $action)
 		),
 		'report-itinvent-files-top-1' => array(
 			'@report-itinvent-files-top-1.php'
+		),
+		'report-itinvent-bcc' => array(
+			'@report-itinvent-bcc.php'
 		),
 		'report-new-mac' => array(
 			'@report-new-mac.php'
