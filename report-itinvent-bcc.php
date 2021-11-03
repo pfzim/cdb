@@ -42,7 +42,7 @@ EOT;
 		`mac`,
 		`ip`,
 		`inv_no`,
-		DATE_FORMAT(`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+		DATE_FORMAT(`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`
 	FROM @mac
 	WHERE `loc_no` IN 
 		(SELECT DISTINCT `loc_no`
