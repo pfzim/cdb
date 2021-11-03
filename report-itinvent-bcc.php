@@ -1,5 +1,5 @@
 <?php
-	// Report Backup communication channel (ДКС - Дежурные Каналы Связи)
+	// Report Backup communication channel (ДКС - Дополнительные Каналы Связи)
 
 	/**
 		\file
@@ -29,7 +29,7 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт по Дежурным Каналам Связи</h1>
+	<h1>Отчёт по Дополнительным Каналам Связи</h1>
 EOT;
 
 	$table = '<table>';
