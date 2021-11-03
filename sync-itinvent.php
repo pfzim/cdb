@@ -83,8 +83,8 @@
 		exit;
 	}
 
-	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, set status = 0
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200)), `status` = 0 WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200)"));
+	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200 | 0x0400)), `status` = 0 WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200 | 0x0400)"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `flags` & 0x0020 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
@@ -155,7 +155,7 @@
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);
-				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['CI_TYPE']) == 1) ? 0x0400 : 0x0000); //backup communication channel (ДКС)
+				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? 0x0400 : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
 				// Load SN
