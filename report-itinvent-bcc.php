@@ -38,6 +38,7 @@ EOT;
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 	SELECT 
+		`id`,
 		`name`,
 		`mac`,
 		`ip`,
