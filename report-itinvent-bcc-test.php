@@ -11,7 +11,7 @@
 
 	echo "\nreport-itinvent-bcc:\n";
 
-	$xtml = <<<'EOT'
+	$xml = <<<'EOT'
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.4</version>
