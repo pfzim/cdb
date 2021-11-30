@@ -99,10 +99,10 @@ EOT;
 		$strxml = $dom->saveXML();
 		$handle = fopen("./out/bbc.xml", "c");
 		fwrite($handle, $strxml);
-		echo 'XML updated: OK';
+		fclose($handle);
 	} catch (Exception $e) {
 		echo 'XML updated: FAILED';
 		echo 'Caught exception: ',  $e->getMessage(), "\n";
 	} finally {
-		fclose($handle);
+		echo 'XML updated: OK';
 	}
