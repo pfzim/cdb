@@ -65,7 +65,7 @@ EOT;
             <interfaces>
                 <interface>
                     <type>SNMP</type>
-			EOT;
+EOT;
             $xmlhosts .= '<ip>'.$row['ip'].'</ip>';
             $xmlhosts .= <<<'EOT'
                     <port>161</port>
@@ -81,7 +81,7 @@ EOT;
             </interfaces>
             <inventory_mode>DISABLED</inventory_mode>
         </host>
-			EOT;
+EOT;
 
 			echo 'Added'.$row['id'].': '.$row['ip']."\r\n";
 			$i++;
