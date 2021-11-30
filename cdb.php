@@ -254,7 +254,8 @@ function walk_route($route, $action)
 			'report-vuln-top-netdev',
 			'report-users-lastlogon',
 			'report-itinvent-files-top',
-			'report-itinvent-bcc'
+			'report-itinvent-bcc',
+			'report-itinvent-bcc-test'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
