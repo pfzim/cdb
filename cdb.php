@@ -360,7 +360,7 @@ function walk_route($route, $action)
 		),
 		'report-itinvent-bcc' => array(
 			'@report-itinvent-bcc.php'
-		),
+		), //BCC xml report TODO: remove after testing
 		'report-itinvent-bcc-test' => array(
 			'@report-itinvent-bcc-test.php'
 		),
@@ -412,6 +412,9 @@ function walk_route($route, $action)
 		),
 		'sync-nessus' => array(
 			'@sync-nessus.php'
+		),
+		'sync-zabbix' => array(
+			'@sync-zabbix.php'
 		),
 		'get-computer-info' => array(
 			'@get-computer-info.php'
