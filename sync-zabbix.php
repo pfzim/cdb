@@ -25,15 +25,17 @@
 		);
 	}
 
-	function call_json_zabbix(string $in_method, string $in_auth, array $in_params) {
+	function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
 		$message = json_encode( array(
 			'jsonrpc' => '2.0', 
 			'id' => new_guid(), 
-			'auth' => $in_auth,
 			'method' => $in_method, 
-			'params' => $in_params
+			'params' => $in_params,
+			'auth' => $in_auth
 		));
-
+		echo "Initial RPC:\r\n";
+		var_dump($message);
+		echo "\r\n";
 		$ch = curl_init(ZABBIX_URL.'/api_jsonrpc.php');
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;'));
 		curl_setopt($ch, CURLOPT_POST, 1);
@@ -48,7 +50,7 @@
 
 
 	// start authentification
-	$retval = call_json_zabbix('user.login','',array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
+	$retval = call_json_zabbix('user.login',null,array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
 	if($retval !== FALSE) {
 		var_dump($retval);
 		echo "\r\n\r\n";
