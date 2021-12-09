@@ -11,10 +11,24 @@
 	echo "\nsync-zabbix:\n";
 	$i = 0;
 
+	function new_guid(): string {
+    	return sprintf(
+			'%04X%04X-%04X-%04X-%04X-%04X%04X%04X', 
+			mt_rand(0, 65535), 
+			mt_rand(0, 65535), 
+			mt_rand(0, 65535), 
+			mt_rand(16384, 20479), 
+			mt_rand(32768, 49151), 
+			mt_rand(0, 65535), 
+			mt_rand(0, 65535), 
+			mt_rand(0, 65535)
+		);
+	}
+
 	function call_json_zabbix(string $in_method, string $in_auth, array $in_params) {
 		$message = json_encode( array(
 			'jsonrpc' => '2.0', 
-			'id' => com_create_guid(), 
+			'id' => new_guid(), 
 			'auth' => $in_auth,
 			'method' => $in_method, 
 			'params' => $in_params
