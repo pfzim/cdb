@@ -25,7 +25,7 @@
 		);
 	}
 
-	function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
+	function call_json_zabbix(string $in_method, string $in_auth, array $in_params) {
 		$message = json_encode( array(
 			'jsonrpc' => '2.0', 
 			'id' => new_guid(), 
@@ -45,19 +45,42 @@
 
 		$result = curl_exec($ch);
 		curl_close($ch);
-		return $result;
-	}
+
+		if($result !== FALSE) {
+			$rdecoded = json_decode($result, TRUE);
+			if(array_key_exists('error',$rdecoded)) {
+				echo "ERROR:\r\n";
+				var_dump($rdecoded['error']);
+			} elseif(!array_key_exists('result',$rdecoded)) {
+				echo "ERROR: RPC result format unexpected\r\n";
+				var_dump($rdecoded);
+			} else {
+				return $rdecoded['result'];
+			}
+		}
+		return null;
+}
 
 
 	// start authentification
-	$retval = call_json_zabbix('user.login',null,array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
-	if($retval !== FALSE) {
+	$retval = call_json_zabbix('user.login', null, array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
+	if(!is_null ($retval)) {
+		$auth_key = $retval;
+		
+		//get BBC list
+		$retval = call_json_zabbix('host.get', $auth_key, 
+			array(
+				'output=' => ['hostid','host','status','proxy_hostid'],
+				'selectInterfaces' => ['hostid','host','status','proxy_hostid'],
+				'selectGroups' => 'extend'
+				)
+			);
+		echo "BBC list:\r\n";
 		var_dump($retval);
-		echo "\r\n\r\n";
-		var_dump(@json_decode($retval, TRUE));
-	} else {
-		echo 'ERROR'."\r\n\r\n"	;
+	} else { 
+		echo "Authentification error.\r\n";
 	}
+
 	/** TODO:
 	if($result !== FALSE) {
 		$scans_list = @json_decode($result, true);
