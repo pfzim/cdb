@@ -25,7 +25,7 @@
 		);
 	}
 
-	function call_json_zabbix(string $in_method, string $in_auth, array $in_params) {
+	function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
 		$message = json_encode( array(
 			'jsonrpc' => '2.0', 
 			'id' => new_guid(), 
