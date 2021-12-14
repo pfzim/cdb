@@ -99,7 +99,7 @@
 					if(isset($group['groupid'])){
 						$sGroups .= $group['groupid'].';';
 			}}}
-			$host_fixed = (preg_replace('/^(bcc_)/i','',$host['host']);
+			$host_fixed = preg_replace('/^(bcc_)/i','',$host['host']);
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
 				$bState = ($host['status']==0?'True':'False');
