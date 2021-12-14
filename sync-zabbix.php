@@ -110,7 +110,7 @@
 					,array(&$host['proxy_hostid'], SQLSRV_PARAM_OUT)
 					,array(&$bState, SQLSRV_PARAM_OUT)
 				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = '?', @hostname = '?', @hostid = '?', @proxyid = '?', @statzabbix = '?'";
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = '?', @hostname = '?', @hostid = ?, @proxyid = ?, @statzabbix = '?'";
 				$proc_exec = sqlsrv_prepare($conn, $sql, $proc_params);
 				if (!sqlsrv_execute($proc_exec)) {
 					echo "Procedure spZabbix_update_bcc fail!";
