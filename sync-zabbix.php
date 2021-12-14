@@ -102,12 +102,14 @@
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
 				$bState = ($host['status']==0?'True':'False');
-				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups:'.$sGroups."\r\n";
+				$iHost = intval($host['hostid']);
+				$iProxy = intval($host['proxy_hostid']);
+				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$iHost.' proxy:'.$iProxy.' status:'.$bState.' groups:'.$sGroups."\r\n";
 				$proc_params = array(
 					array(&$sIP['ip'], SQLSRV_PARAM_IN)
 					,array(&$host['host'], SQLSRV_PARAM_IN)
-					,array(&$host['hostid'], SQLSRV_PARAM_IN)
-					,array(&$host['proxy_hostid'], SQLSRV_PARAM_IN)
+					,array(&$iHost, SQLSRV_PARAM_IN)
+					,array(&$iProxy, SQLSRV_PARAM_IN)
 					,array(&$bState, SQLSRV_PARAM_IN)
 				);
 				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = '?', @hostname = '?', @hostid = ?, @proxyid = ?, @statzabbix = '?'";
@@ -117,6 +119,7 @@
 					print_r(sqlsrv_errors());
 					//die;
 				}
+				echo "<br />";
 			}
 		}
 	} else {
