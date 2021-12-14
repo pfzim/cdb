@@ -76,18 +76,19 @@
 				)
 			);
 		// echo "BBC list:\r\n"; var_dump($retval);
+		
+		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
 					if(isset($group['groupid'])){
 						$sGroups .= $group['groupid'].';';
-					}
-				}
+			}}}
+			// each IP = unique record in DB
+			foreach($host['interfaces'] as &$sIP) {
+				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.($host['status']==0?'True':'False').' groups:'.$sGroups."\r\n";
 			}
-			echo $host['host'].' id:'.$host['hostid'].' ip:'.$host['interfaces'][0]['ip'].' proxy:'.$host['proxy_id'].' status:'.($host['status']==0?'True':'False').' groups:'.$sGroups."\r\n";
-
-			//$hostArray = array();
 		}
 	} else {
 		echo "Authentification error.\r\n";
