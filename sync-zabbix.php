@@ -59,8 +59,15 @@
 			}
 		}
 		return null;
-}
+	}
 
+	//CtulhuDB connection string
+	$params = array(
+		'Database' =>				CTULHU_DB_NAME,
+		'UID' =>					CTULHU_DB_USER,
+		'PWD' =>					CTULHU_DB_PASSWD,
+		'ReturnDatesAsStrings' =>	true
+	);
 
 	// start authentification
 	$retval = call_json_zabbix('user.login', null, array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
@@ -77,6 +84,13 @@
 			);
 		// echo "BBC list:\r\n"; var_dump($retval);
 		
+		//connect to CtulhuDB
+		$conn = sqlsrv_connect(CTULHU_DB_HOST, $params);
+		if($conn === false) {
+			print_r(sqlsrv_errors());
+			exit(1);
+		}
+
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
@@ -88,6 +102,20 @@
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
 				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.($host['status']==0?'True':'False').' groups:'.$sGroups."\r\n";
+				$proc_params = array(
+					array(&$sIP['ip'], SQLSRV_PARAM_OUT)
+					,array(&$host['host'], SQLSRV_PARAM_OUT)
+					,array(&$host['hostid'], SQLSRV_PARAM_OUT)
+					,array(&$host['proxy_hostid'], SQLSRV_PARAM_OUT)
+					,array(($host['status']==0?'True':'False'), SQLSRV_PARAM_OUT)
+				);
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = '?', @hostname = '?', @hostid = '?', @proxyid = '?', @statzabbix = '?'";
+				$proc_exec = sqlsrv_prepare($conn, $sql, $proc_params);
+				if (!sqlsrv_execute($proc_exec)) {
+					echo "Procedure spZabbix_update_bcc fail!";
+					print_r(sqlsrv_errors());
+					//die;
+				}
 			}
 		}
 	} else {
@@ -97,18 +125,6 @@
 	/** TODO:
 
 	
-	$params = array(
-		'Database' =>				TMEE_DB_NAME,
-		'UID' =>					TMEE_DB_USER,
-		'PWD' =>					TMEE_DB_PASSWD,
-		'ReturnDatesAsStrings' =>	true
-	);
-
-	$conn = sqlsrv_connect(TMEE_DB_HOST, $params);
-	if($conn === false) {
-		print_r(sqlsrv_errors());
-		exit;
-	}
 
 	$result = sqlsrv_query($conn, "
 		SELECT
