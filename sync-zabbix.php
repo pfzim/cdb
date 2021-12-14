@@ -106,7 +106,7 @@
 				$proc_params = array(
 					array(&$sIP['ip'], SQLSRV_PARAM_IN)
 					,array(&$host['host'], SQLSRV_PARAM_IN)
-					,array(&$host['hostid'] SQLSRV_PARAM_IN)
+					,array(&$host['hostid'], SQLSRV_PARAM_IN)
 					,array(&$host['proxy_hostid'], SQLSRV_PARAM_IN)
 					,array(&$bState, SQLSRV_PARAM_IN)
 				);
