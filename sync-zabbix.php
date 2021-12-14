@@ -101,13 +101,14 @@
 			}}}
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
-				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.($host['status']==0?'True':'False').' groups:'.$sGroups."\r\n";
+				$bState = ($host['status']==0?'True':'False');
+				echo  $sIP['ip'].'=> hostname:'.$host['host'].' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups:'.$sGroups."\r\n";
 				$proc_params = array(
 					array(&$sIP['ip'], SQLSRV_PARAM_OUT)
 					,array(&$host['host'], SQLSRV_PARAM_OUT)
 					,array(&$host['hostid'], SQLSRV_PARAM_OUT)
 					,array(&$host['proxy_hostid'], SQLSRV_PARAM_OUT)
-					,array(($host['status']==0?'True':'False'), SQLSRV_PARAM_OUT)
+					,array(&$bState, SQLSRV_PARAM_OUT)
 				);
 				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = '?', @hostname = '?', @hostid = '?', @proxyid = '?', @statzabbix = '?'";
 				$proc_exec = sqlsrv_prepare($conn, $sql, $proc_params);
