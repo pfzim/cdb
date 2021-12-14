@@ -33,9 +33,9 @@
 			'params' => $in_params,
 			'auth' => $in_auth
 		));
-		echo "Initial RPC:\r\n";
-		var_dump($message);
-		echo "\r\n";
+		//DEBUG
+		//echo "Initial RPC:\r\n";
+		//var_dump($message); echo "\r\n";
 		$ch = curl_init(ZABBIX_URL.'/api_jsonrpc.php');
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;'));
 		curl_setopt($ch, CURLOPT_POST, 1);
@@ -67,7 +67,7 @@
 	if(!is_null ($retval)) {
 		$auth_key = $retval;
 		
-		//get BBC list
+		// get BBC list
 		$retval = call_json_zabbix('host.get', $auth_key, 
 			array(
 				'output=' => ['hostid','host','status','proxy_hostid'],
@@ -77,17 +77,15 @@
 			);
 		// echo "BBC list:\r\n"; var_dump($retval);
 		foreach($retval as &$host) {
-			$bInGroup = false;
+			$sGroups = null;
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
-					if(isset($group['groupid']) && $group['groupid']==='118'){
-						$bInGroup = true; break;
+					if(isset($group['groupid'])){
+						$sGroups .= $group['groupid'].';';
 					}
 				}
 			}
-			if($bInGroup) {
-				echo $host['host']." id:".$host['interfaces'][0]['hostid'];
-			}
+			echo $host['host'].' id:'.$host['hostid'].' ip:'.$host['interfaces'][0]['ip'].' proxy:'.$host['proxy_id'].' status:'.($host['status']==0?'True':'False').' groups:'.$sGroups."\r\n";
 
 			//$hostArray = array();
 		}
@@ -96,7 +94,34 @@
 	}
 
 	/** TODO:
-						
+
+	
+	$params = array(
+		'Database' =>				TMEE_DB_NAME,
+		'UID' =>					TMEE_DB_USER,
+		'PWD' =>					TMEE_DB_PASSWD,
+		'ReturnDatesAsStrings' =>	true
+	);
+
+	$conn = sqlsrv_connect(TMEE_DB_HOST, $params);
+	if($conn === false) {
+		print_r(sqlsrv_errors());
+		exit;
+	}
+
+	$result = sqlsrv_query($conn, "
+		SELECT
+			[DeviceName],
+			[LastSync],
+			[EncryptionStatus]
+		FROM [".TMEE_DB_NAME."].[dbo].[Device]
+		WHERE IsDeleted = 0
+		ORDER BY [LastSync]
+	");
+
+
+
+
 	foreach($scans['hosts'] as &$host)
 	{
 		//echo '  '.$host['host_id'].': '.$host['hostname']."\r\n";
