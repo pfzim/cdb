@@ -87,7 +87,7 @@
 				, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
 				)
 			);
-		echo "BBC list:\r\n"; var_dump($retval);
+		// echo "BBC list:\r\n"; var_dump($retval);
 		
 		//connect to CtulhuDB
 		$conn = sqlsrv_connect(CTULHU_DB_HOST, $params);
@@ -99,7 +99,7 @@
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
-			$jsonTriggers = json_encode(array_filter($host['triggers'] ,"zabbix_trigger_id"));
+			$jsonTriggers = json_encode(array_filter($host['triggers'] ,"zabbix_trigger_id"), JSON_UNESCAPED_UNICODE);
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
 					if(isset($group['groupid'])){
@@ -132,6 +132,7 @@
 		$result = sqlsrv_query($conn, "SELECT [ip],[hostname],[date] FROM [dbo].[fList_Bcc_Zabbix] ('10.92.104.4');");
 		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC)) {
 			var_dump($row);
+			echo "\r\n";
 		}
 		
 	} else {
