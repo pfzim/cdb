@@ -76,13 +76,13 @@
 		
 		// get BBC list
 		$retval = call_json_zabbix('host.get', $auth_key, 
-			array(
-				'output=' => ['hostid','host','status','proxy_hostid'],
-				'selectInterfaces' => ['interfaceid','ip'],
-				'selectGroups' => 'extend'
+			array('output=' => ['hostid','host','status','proxy_hostid']
+				, 'selectInterfaces' => ['interfaceid','ip']
+				, 'selectGroups' => 'extend'
+				, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
 				)
 			);
-		// echo "BBC list:\r\n"; var_dump($retval);
+		echo "BBC list:\r\n"; var_dump($retval);
 		
 		//connect to CtulhuDB
 		$conn = sqlsrv_connect(CTULHU_DB_HOST, $params);
@@ -94,6 +94,7 @@
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
+			$jsonTriggers = json_encode($host['triggers']);
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
 					if(isset($group['groupid'])){
@@ -104,6 +105,7 @@
 			foreach($host['interfaces'] as &$sIP) {
 				$bState = ($host['status']==0?'True':'False');
 				echo  $sIP['ip'].'=> hostname:'.$host_fixed .' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups:'.$sGroups."\r\n";
+				echo 'Triggers: '.$jsonTriggers;
 				$proc_params = array(
 					array(&$sIP['ip'], SQLSRV_PARAM_IN)
 					,array(&$host_fixed, SQLSRV_PARAM_IN)
@@ -122,8 +124,11 @@
 			}
 		}
 
-		$result = sqlsrv_query($conn, "SELECT [ip],[hostname],[date] FROM [dbo].[fList_Bcc_Zabbix] ('010.092.104.004');");
-		var_dump($result);
+		$result = sqlsrv_query($conn, "SELECT [ip],[hostname],[date] FROM [dbo].[fList_Bcc_Zabbix] ('10.92.104.4');");
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC)) {
+			var_dump($row);
+		}
+		
 	} else {
 		echo "Authentification error.\r\n";
 	}
