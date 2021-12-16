@@ -60,6 +60,11 @@
 		}
 		return null;
 	}
+	
+	function zabbix_trigger_id(array $var) {
+		$testarray = ['20332','20535','20435'];
+		return in_array($var['templateid'],$testarray);
+	}
 
 	//CtulhuDB connection string
 	$params = array(
@@ -94,7 +99,7 @@
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
-			$jsonTriggers = json_encode($host['triggers']);
+			$jsonTriggers = json_encode(array_filter($host['triggers'] ,"zabbix_trigger_id"));
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
 					if(isset($group['groupid'])){
