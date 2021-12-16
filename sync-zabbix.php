@@ -121,9 +121,18 @@
 				echo "---------------------------\r\n";
 			}
 		}
+
+		$result = sqlsrv_query($conn, "SELECT [ip],[hostname],[date] FROM [dbo].[fList_Bcc_Zabbix] ('010.092.104.004');");
+		var_dump($result);
 	} else {
 		echo "Authentification error.\r\n";
 	}
+
+	// CLOSE CONNECTION
+	if($result !== FALSE) {
+		sqlsrv_free_stmt($result);
+	}
+	sqlsrv_close($conn);
 
 	/** TODO:
 
