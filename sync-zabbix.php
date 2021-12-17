@@ -128,13 +128,6 @@
 				echo "\r\n---------------------------\r\n";
 			}
 		}
-
-		$result = sqlsrv_query($conn, "SELECT [ip],[hostname] FROM [dbo].[fList_Bcc_Zabbix] ('10.92.104.4');");
-		$row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC);
-		var_dump($row["ip"]);
-		echo "\r\n";
-		var_dump($row["hostname"]);
-		echo "\r\n";
 		
 		// CLOSE CONNECTION
 		if($result !== FALSE) {

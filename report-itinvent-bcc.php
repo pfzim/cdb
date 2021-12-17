@@ -76,12 +76,13 @@ EOT;
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['inv_no'].'</td>';
 			$table .= '<td>'.$row['last_update'].'</td>';
-			$table .= '<td>'.$zbx_host.'</td>';
+			$table .= (empty($zbx_host))?('<td class="error">N/A</td>'):('<td class="pass">'.$zbx_host.'</td>');
 			$table .= '</tr>';
 
 			$i++;
 		}
 	}
+	sqlsrv_close($conn_ctulhu);
 
 	$table .= '</table>';
 
@@ -89,11 +90,11 @@ EOT;
 	$html .= $table;
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-itinvent-bcc">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
-
+/*	DEBUG
 	echo 'Total BCC: '.$i."\r\n";
 	echo '----------------------------------------'."\r\n";
 	echo $table;
-/*
+*/
 	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_NET), CDB_TITLE.': List BCCs', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
