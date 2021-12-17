@@ -67,7 +67,7 @@ EOT;
 			$ret_zbx = sqlsrv_query($conn_ctulhu, "SELECT [ip],[hostname] FROM [dbo].[fList_Bcc_Zabbix] ('".$row['ip']."');");
 			if(!empty($ret_zbx)){
 				$zbx_row = sqlsrv_fetch_array($ret_zbx, SQLSRV_FETCH_ASSOC);
-				$host_zbx = strtoupper($row["hostname"]));
+				$host_zbx = strtoupper($row["hostname"]);
 			}
 	
 			$table .= '<tr>';
