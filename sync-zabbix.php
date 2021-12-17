@@ -62,7 +62,7 @@
 	}
 	
 	function zabbix_trigger_id(array $var) {
-		$testarray = ['20332','20535','20435'];
+		$testarray = ['20332','20535','20435']; // TODO: перенести в конфиг
 		return in_array($var['templateid'],$testarray);
 	}
 
@@ -129,11 +129,12 @@
 			}
 		}
 
-		$result = sqlsrv_query($conn, "SELECT [ip],[hostname],[date] FROM [dbo].[fList_Bcc_Zabbix] ('10.92.104.4');");
-		while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) {
-			var_dump($row);
-			echo "\r\n";
-		}
+		$result = sqlsrv_query($conn, "SELECT [ip],[hostname] FROM [dbo].[fList_Bcc_Zabbix] ('10.92.104.4');");
+		$row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC));
+		var_dump($row["ip"]);
+		echo "\r\n";
+		var_dump($row["hostname"]);
+		echo "\r\n";
 		
 		// CLOSE CONNECTION
 		if($result !== FALSE) {
