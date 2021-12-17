@@ -63,11 +63,11 @@ EOT;
 	")))
 	{
 		foreach($result as &$row) {
-			$host_zbx = "";
-			$ret_zbx = sqlsrv_query($conn_ctulhu, "SELECT [ip],[hostname] FROM [dbo].[fList_Bcc_Zabbix] ('".$row['ip']."');");
-			if(!empty($ret_zbx)){
-				$zbx_row = sqlsrv_fetch_array($ret_zbx, SQLSRV_FETCH_ASSOC);
-				$host_zbx = strtoupper($row["hostname"]);
+			$zbx_host = "";
+			$zbx_ret = sqlsrv_query($conn_ctulhu, "SELECT [ip],[hostname] FROM [dbo].[fList_Bcc_Zabbix] ('".$row['ip']."');");
+			$zbx_row = sqlsrv_fetch_array($zbx_ret, SQLSRV_FETCH_ASSOC);
+			if(!empty($zbx_row)){
+				$zbx_host = strtoupper($zbx_row["hostname"]);
 			}
 	
 			$table .= '<tr>';
@@ -76,7 +76,7 @@ EOT;
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['inv_no'].'</td>';
 			$table .= '<td>'.$row['last_update'].'</td>';
-			$table .= '<td>'.$host_zbx.'</td>';
+			$table .= '<td>'.$zbx_host.'</td>';
 			$table .= '</tr>';
 
 			$i++;
