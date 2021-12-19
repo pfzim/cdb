@@ -10,7 +10,6 @@
 
 	echo "\nsync-zabbix:\n";
 	$i = 0;
-	define('ZABBIX_Template_Array', ['20332','20535','20435']); // TODO: перенести в конфиг
 
 	function new_guid(): string {
     	return sprintf(
@@ -135,6 +134,7 @@
 		echo "Synced {$i} hosts\r\n";
 
 		//Add new hosts to Zabbix
+		$i = 0;
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
@@ -167,6 +167,7 @@
 			);
 			//var_dump($retval); break;
 			if(! is_null($retval)) {
+				$i++;
 				$proc_params = array(
 					array(&$itinv_row['ip'], SQLSRV_PARAM_IN)
 					, array(&$zbx_hostname, SQLSRV_PARAM_IN)
@@ -174,9 +175,9 @@
 				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @statzabbix = 'True';";
 				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
 			}
-			break;
+			//break;
 		}
-
+		echo "Added {$i} hosts\r\n";
 
 		// CLOSE CONNECTION
 		sqlsrv_close($conn_ctulhu);
