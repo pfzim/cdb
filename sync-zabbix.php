@@ -81,7 +81,7 @@
 		
 		// get BBC list
 		$retval = call_json_zabbix('host.get', $auth_key, 
-			array('output=' => ['hostid','host','status','proxy_hostid']
+			array('output' => ['hostid','host','status','proxy_hostid']
 				, 'selectInterfaces' => ['interfaceid','ip']
 				, 'selectGroups' => 'extend'
 				, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
@@ -117,8 +117,10 @@
 					,array(&$host['hostid'], SQLSRV_PARAM_IN)
 					,array(&$host['proxy_hostid'], SQLSRV_PARAM_IN)
 					,array(&$bState, SQLSRV_PARAM_IN)
+					,array(&$sGroups, SQLSRV_PARAM_IN)
+					,array(&$jsonTriggers, SQLSRV_PARAM_IN)
 				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid = ?, @proxyid = ?, @statzabbix = ?;";
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid = ?, @proxyid = ?, @statzabbix = ?, @groups = ?, @triggers = ?;";
 				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
 				if (!sqlsrv_execute($proc_exec)) {
 					echo "Procedure spZabbix_update_bcc fail!\r\n";
@@ -134,8 +136,34 @@
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
-			var_dump($itinv_row);
-			break;
+			$zbx_hostname = strtoupper($itinv_row['hostname']);
+			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
+			
+			$retval = /*call_json_zabbix('host.create', $auth_key, */
+				array('host' => $zbx_hostname
+					, 'groups' => array('groupid'=> 'zzz')
+					, 'templates ' => array('templateid'=> 'zzz')
+					, 'proxy_hostid' => 'zzz'
+					, 'interfaces' => [
+						array('type' => '2'
+							, 'main' => '1'
+							, 'useip' => '1'
+							, 'dns' => ''
+							, 'port' => '161'
+							, 'ip' => 'zzz'
+							, 'details' => 
+							array('version' => '3'
+								, 'bulk' => '1'
+								, 'securityname' => 'zzz'
+								, 'securitylevel' => '2'
+								, 'authpassphrase' => 'zzz'
+								, 'privpassphrase' => 'zzz'
+							)
+						)
+					]
+				//)
+			);
+			var_dump($retval); break;
 		}
 
 
