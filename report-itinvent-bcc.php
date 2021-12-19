@@ -71,7 +71,7 @@ EOT;
 			} else {
 				$proc_params = array(
 					array(&$row['ip'], SQLSRV_PARAM_IN)
-					,array(&$row['host'], SQLSRV_PARAM_IN)
+					,array(&$row['name'], SQLSRV_PARAM_IN)
 				);
 				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?;";
 				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
