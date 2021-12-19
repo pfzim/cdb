@@ -90,8 +90,8 @@
 		// echo "BBC list:\r\n"; var_dump($retval);
 		
 		//connect to CtulhuDB
-		$conn = sqlsrv_connect(CTULHU_DB_HOST, $params);
-		if($conn === false) {
+		$conn_ctulhu = sqlsrv_connect(CTULHU_DB_HOST, $params);
+		if($conn_ctulhu === false) {
 			print_r(sqlsrv_errors());
 			exit(1);
 		}
@@ -119,7 +119,7 @@
 					,array(&$bState, SQLSRV_PARAM_IN)
 				);
 				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid = ?, @proxyid = ?, @statzabbix = ?;";
-				$proc_exec = sqlsrv_prepare($conn, $sql, $proc_params);
+				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
 				if (!sqlsrv_execute($proc_exec)) {
 					echo "Procedure spZabbix_update_bcc fail!\r\n";
 					print_r(sqlsrv_errors());
@@ -129,8 +129,18 @@
 			}
 		}
 		
+
+		//Add new hosts to Zabbix
+		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
+		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
+		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
+			var_dump($itinv_row);
+			break;
+		}
+
+
 		// CLOSE CONNECTION
-		sqlsrv_close($conn);
+		sqlsrv_close($conn_ctulhu);
 	} else {
 		echo "Authentification error.\r\n";
 	}

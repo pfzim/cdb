@@ -78,7 +78,7 @@ EOT;
 				if (!sqlsrv_execute($proc_exec)) {
 					echo "Procedure spZabbix_update_bcc fail!\r\n";
 					print_r(sqlsrv_errors());
-					die;
+					// die;
 				}
 			}
 	
