@@ -138,11 +138,11 @@
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
-			$zbx_hostname = ZABBIX_Host_Prefix.strtoupper($itinv_row['hostname']);
+			$zbx_hostname = strtoupper($itinv_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
 			
 			$retval = call_json_zabbix('host.create', $auth_key,
-				array('host' => $zbx_hostname
+				array('host' => ZABBIX_Host_Prefix.$zbx_hostname
 					, 'groups' => array('groupid'=> ZABBIX_Host_Group)
 					, 'templates ' => array('templateid'=> ZABBIX_Host_Template)
 					, 'proxy_hostid' => ZABBIX_Host_Proxy
@@ -165,7 +165,16 @@
 					]
 				)
 			);
-			var_dump($retval); break;
+			//var_dump($retval); break;
+			if(! is_null($retval)) {
+				$proc_params = array(
+					array(&$itinv_row['ip'], SQLSRV_PARAM_IN)
+					, array(&$zbx_hostname, SQLSRV_PARAM_IN)
+				);
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @statzabbix = 'True';";
+				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
+			}
+			break;
 		}
 
 
