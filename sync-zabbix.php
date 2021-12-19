@@ -130,9 +130,6 @@
 		}
 		
 		// CLOSE CONNECTION
-		if($result !== FALSE) {
-			sqlsrv_free_stmt($result);
-		}
 		sqlsrv_close($conn);
 	} else {
 		echo "Authentification error.\r\n";

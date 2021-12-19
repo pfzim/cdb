@@ -68,6 +68,18 @@ EOT;
 			$zbx_row = sqlsrv_fetch_array($zbx_ret, SQLSRV_FETCH_ASSOC);
 			if(!empty($zbx_row)){
 				$zbx_host = strtoupper($zbx_row["hostname"]);
+			} else {
+				$proc_params = array(
+					array(&$row['ip'], SQLSRV_PARAM_IN)
+					,array(&$row['host'], SQLSRV_PARAM_IN)
+				);
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?;";
+				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
+				if (!sqlsrv_execute($proc_exec)) {
+					echo "Procedure spZabbix_update_bcc fail!\r\n";
+					print_r(sqlsrv_errors());
+					die;
+				}
 			}
 	
 			$table .= '<tr>';
