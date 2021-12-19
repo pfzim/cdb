@@ -98,7 +98,8 @@
 
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
-			$sGroups = null;
+			$sGroups = null; $i++;
+
 			$jsonTriggers = json_encode(array_values(array_filter($host['triggers'] ,"zabbix_trigger_id")), JSON_UNESCAPED_UNICODE);
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
@@ -110,8 +111,8 @@
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
 				$bState = ($host['status']==0?'True':'False');
-				echo  $sIP['ip'].'=> hostname:'.$host_fixed .' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups:'.$sGroups."\r\n";
-				echo 'Triggers: '.$jsonTriggers;
+				//echo  $sIP['ip'].'=> hostname:'.$host_fixed .' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups '.$sGroups."\r\n";
+				//echo 'Triggers: '.$jsonTriggers;
 				$proc_params = array(
 					array(&$sIP['ip'], SQLSRV_PARAM_IN)
 					,array(&$host_fixed, SQLSRV_PARAM_IN)
@@ -128,10 +129,10 @@
 					print_r(sqlsrv_errors());
 					//die;
 				}
-				echo "\r\n---------------------------\r\n";
+				//echo "\r\n---------------------------\r\n";
 			}
 		}
-		
+		echo "Synced {$i} hosts\r\n";
 
 		//Add new hosts to Zabbix
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
@@ -140,7 +141,7 @@
 			$zbx_hostname = ZABBIX_Host_Prefix.strtoupper($itinv_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
 			
-			$retval = /*call_json_zabbix('host.create', $auth_key, */
+			$retval = call_json_zabbix('host.create', $auth_key,
 				array('host' => $zbx_hostname
 					, 'groups' => array('groupid'=> ZABBIX_Host_Group)
 					, 'templates ' => array('templateid'=> ZABBIX_Host_Template)
@@ -162,7 +163,7 @@
 							)
 						)
 					]
-				//)
+				)
 			);
 			var_dump($retval); break;
 		}
