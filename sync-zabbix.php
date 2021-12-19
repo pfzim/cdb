@@ -10,6 +10,7 @@
 
 	echo "\nsync-zabbix:\n";
 	$i = 0;
+	define('ZABBIX_Template_Array', ['20332','20535','20435']); // TODO: перенести в конфиг
 
 	function new_guid(): string {
     	return sprintf(
@@ -62,8 +63,7 @@
 	}
 	
 	function zabbix_trigger_id(array $var) {
-		$testarray = ['20332','20535','20435']; // TODO: перенести в конфиг
-		return in_array($var['templateid'],$testarray);
+		return in_array($var['templateid'], ZABBIX_Template_Array);
 	}
 
 	//CtulhuDB connection string
@@ -99,12 +99,13 @@
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
 			$sGroups = null;
-			$jsonTriggers = json_encode(array_filter($host['triggers'] ,"zabbix_trigger_id"), JSON_UNESCAPED_UNICODE);
+			$jsonTriggers = json_encode(array_values(array_filter($host['triggers'] ,"zabbix_trigger_id")), JSON_UNESCAPED_UNICODE);
 			if(isset($host['groups'])) {
 				foreach($host['groups'] as &$group) {
 					if(isset($group['groupid'])){
 						$sGroups .= $group['groupid'].';';
 			}}}
+			if( !is_null($sGroups) ) { $sGroups = ';'.$sGroups; }
 			$host_fixed = preg_replace('/^(bcc_)/i','',$host['host']);
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
@@ -136,28 +137,28 @@
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
-			$zbx_hostname = strtoupper($itinv_row['hostname']);
+			$zbx_hostname = ZABBIX_Host_Prefix.strtoupper($itinv_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
 			
 			$retval = /*call_json_zabbix('host.create', $auth_key, */
 				array('host' => $zbx_hostname
-					, 'groups' => array('groupid'=> 'zzz')
-					, 'templates ' => array('templateid'=> 'zzz')
-					, 'proxy_hostid' => 'zzz'
+					, 'groups' => array('groupid'=> ZABBIX_Host_Group)
+					, 'templates ' => array('templateid'=> ZABBIX_Host_Template)
+					, 'proxy_hostid' => ZABBIX_Host_Proxy
 					, 'interfaces' => [
 						array('type' => '2'
 							, 'main' => '1'
 							, 'useip' => '1'
 							, 'dns' => ''
 							, 'port' => '161'
-							, 'ip' => 'zzz'
+							, 'ip' => $itinv_row['ip']
 							, 'details' => 
 							array('version' => '3'
 								, 'bulk' => '1'
-								, 'securityname' => 'zzz'
+								, 'securityname' => ZABBIX_Host_SecName
 								, 'securitylevel' => '2'
-								, 'authpassphrase' => 'zzz'
-								, 'privpassphrase' => 'zzz'
+								, 'authpassphrase' => ZABBIX_Host_SecAuth
+								, 'privpassphrase' => ZABBIX_Host_SecPass
 							)
 						)
 					]
