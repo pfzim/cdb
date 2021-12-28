@@ -49,6 +49,7 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.flags.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.ctulhumon.php');
 
 /**
 	Отправка почтового сообщения
@@ -221,6 +222,7 @@ function walk_route($route, $action)
 			'sync-sccm',
 			'sync-itinvent',
 			'sync-itinvent-sw',
+			'sync-zabbix',
 			'sync-nessus',
 			'mark-after-sync'
 		),
@@ -360,10 +362,7 @@ function walk_route($route, $action)
 		),
 		'report-itinvent-bcc' => array(
 			'@report-itinvent-bcc.php'
-		), //BCC xml report TODO: remove after testing
-		'report-itinvent-bcc-test' => array(
-			'@report-itinvent-bcc-test.php'
-		),
+		), 
 		'report-new-mac' => array(
 			'@report-new-mac.php'
 		),
