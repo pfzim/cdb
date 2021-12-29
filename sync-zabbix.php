@@ -106,7 +106,7 @@
 		//Add new hosts to Zabbix
 		$i = 0;
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
-		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
+		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] ();");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
 			$zbx_hostname = strtoupper($itinv_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
