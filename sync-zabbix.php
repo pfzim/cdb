@@ -48,6 +48,7 @@
 		while($removed_row = sqlsrv_fetch_array($removed_ret, SQLSRV_FETCH_ASSOC)) {
 			$zbx_hostname = strtoupper($removed_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$removed_row['ip']}\r\n";
+			var_dump($removed_row);
 			$i++;
 			// TODO: add actualy working code
 			/*
@@ -61,7 +62,7 @@
 			//break;
 			*/
 		}
-		echo "Added {$i} hosts\r\n";
+		echo "Removed {$i} hosts\r\n";
 
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
