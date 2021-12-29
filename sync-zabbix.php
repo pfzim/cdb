@@ -46,14 +46,14 @@
 		echo "\r\n\r\nRemoving hosts from Zabbix:\r\n";
 		$removed_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Zabbix_ToRemove]('".(ZABBIX_Host_Groups['Default'])."');");
 		while($removed_row = sqlsrv_fetch_array($removed_ret, SQLSRV_FETCH_ASSOC)) {
-			var_dump($removed_row);
+			// var_dump($removed_row);
 			$zbx_hostname = strtoupper($removed_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$removed_row['ip']}\r\n";
 			$i++;
 			// TODO: add actualy working code
 			/*
-			$retval = call_json_zabbix('host.remove', $auth_key,
-				array('hostid' => '???')
+			$retval = call_json_zabbix('host.delete', $auth_key,
+				array($removed_row['hostid'])
 			);
 			var_dump($retval); break;
 			if( is_null($retval) ) {
@@ -134,7 +134,7 @@
 					]
 				)
 			);
-			//var_dump($retval); break;
+			var_dump($retval); break;
 			if(! is_null($retval)) {
 				$i++;
 				$proc_params = array(
