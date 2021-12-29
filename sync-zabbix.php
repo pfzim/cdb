@@ -103,7 +103,7 @@
 		echo "Synced {$i} hosts\r\n";
 
 		//Add new hosts to Zabbix
-		$i = 0;
+		$i = 0;  $tru = 'True';
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
@@ -135,14 +135,15 @@
 				)
 			);
 			var_dump($retval); break;
-			if(! is_null($retval)) {
+			if(! is_null($retval) and !is_null($retval['hostids'][0])) {
 				$i++;
 				$proc_params = array(
 					array(&$itinv_row['ip'], SQLSRV_PARAM_IN)
 					, array(&$zbx_hostname, SQLSRV_PARAM_IN)
-					, 'True'
+					, array(&$retval['hostids'][0], SQLSRV_PARAM_IN)
+					, array(&$tru, SQLSRV_PARAM_IN)
 				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @statzabbix = ?;";
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid =? , @statzabbix = ?;";
 				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
 			}
 			//break;
