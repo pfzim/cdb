@@ -100,7 +100,7 @@
 				//echo "\r\n---------------------------\r\n";
 			}
 		}
-		echo "Synced {$i} hosts\r\n";
+		echo "Synced from ITinvent {$i} hosts.\r\n";
 
 		//Add new hosts to Zabbix
 		$i = 0;  $tru = 'True';
@@ -134,7 +134,7 @@
 					]
 				)
 			);
-			var_dump($retval); //break;
+			//var_dump($retval); break;
 			if(! is_null($retval) and !is_null($retval['hostids'][0])) {
 				$i++;
 				$proc_params = array(

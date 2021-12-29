@@ -60,6 +60,7 @@ EOT;
 		FROM @mac
 		WHERE (`flags` & 0x0400) > 0 AND (`flags` & 0x0040) > 0 AND `loc_no` <> 0)
 	AND PORT LIKE 'self'
+	ORDER BY `name`
 	")))
 	{
 		foreach($result as &$row) {
