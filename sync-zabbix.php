@@ -9,7 +9,7 @@
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-zabbix:\n";
-	$i = 0;
+	$tru = 'True';
 
 	//CtulhuDB connection string
 	$params = array(
@@ -24,7 +24,7 @@
 	if(!is_null ($retval)) {
 		$auth_key = $retval;
 
-		// get BBC list
+		// get BCC list
 		$retval = call_json_zabbix('host.get', $auth_key, 
 			array('output' => ['hostid','host','status','proxy_hostid']
 				, 'selectInterfaces' => ['interfaceid','ip']
@@ -32,7 +32,7 @@
 				, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
 				)
 			);
-		// echo "BBC list:\r\n"; var_dump($retval);
+		// echo "BCC list:\r\n"; var_dump($retval);
 		
 		//connect to CtulhuDB
 		$conn_ctulhu = sqlsrv_connect(CTULHU_DB_HOST, $params);
@@ -65,6 +65,7 @@
 		echo "Removed {$i} hosts\r\n\r\n";
 
 		// checking hosts 1 by 1
+		$i = 0;
 		foreach($retval as &$host) {
 			$sGroups = null; $i++;
 
@@ -75,7 +76,7 @@
 						$sGroups .= $group['groupid'].';';
 			}}}
 			if( !is_null($sGroups) ) { $sGroups = ';'.$sGroups; }
-			$host_fixed = preg_replace('/^(bcc_)/i','',$host['host']);
+			$host_fixed = preg_replace('/^('.ZABBIX_Host_Prefix.')/i','',$host['host']);
 			// each IP = unique record in DB
 			foreach($host['interfaces'] as &$sIP) {
 				$bState = ($host['status']==0?'True':'False');
@@ -103,7 +104,7 @@
 		echo "Synced from ITinvent {$i} hosts.\r\n";
 
 		//Add new hosts to Zabbix
-		$i = 0;  $tru = 'True';
+		$i = 0;
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] () where [statzabbix] is null;");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
