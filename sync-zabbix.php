@@ -9,8 +9,7 @@
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-zabbix:\n";
-	$tru = 'True';
-
+	
 	//CtulhuDB connection string
 	$params = array(
 		'Database' =>				CTULHU_DB_NAME,
@@ -50,8 +49,6 @@
 			$zbx_hostname = strtoupper($removed_row['hostname']);
 			echo "Host {$zbx_hostname} with ip {$removed_row['ip']}\r\n";
 			$i++;
-			// TODO: add actualy working code
-			/*
 			$retval = call_json_zabbix('host.delete', $auth_key,
 				array($removed_row['hostid'])
 			);
@@ -59,8 +56,6 @@
 			if( is_null($retval) ) {
 				echo "Error removing host {$zbx_hostname}\r\n";
 			}
-			//break;
-			*/
 		}
 		echo "Removed {$i} hosts\r\n\r\n";
 
@@ -104,7 +99,7 @@
 		echo "Synced from ITinvent {$i} hosts.\r\n";
 
 		//Add new hosts to Zabbix
-		$i = 0;
+		$i = 0; $tru = 'True';
 		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
 		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] ();");
 		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
