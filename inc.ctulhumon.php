@@ -42,8 +42,8 @@ function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
 	if($result !== FALSE) {
 		$rdecoded = json_decode($result, TRUE);
 		if(array_key_exists('error',$rdecoded)) {
-			echo "ERROR:\r\n";
-			var_dump($rdecoded['error']);
+			//echo "ERROR:\r\n";
+			//var_dump($rdecoded['error']);
 		} elseif(!array_key_exists('result',$rdecoded)) {
 			echo "ERROR: RPC result format unexpected\r\n";
 			var_dump($rdecoded);
