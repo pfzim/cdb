@@ -114,7 +114,7 @@
 			$retval = call_json_zabbix('host.create', $auth_key,
 				array('host' => ZABBIX_Host_Prefix.$zbx_hostname
 					, 'groups' => array('groupid'=> ZABBIX_Host_Groups['Default']) // TODO: add group logic
-					//, 'templates ' => array('templateid'=> ZABBIX_Host_Template)
+					, 'templates' => array('templateid'=> ZABBIX_Host_Template)
 					, 'proxy_hostid' => ZABBIX_Host_Proxy
 					, 'interfaces' => [
 						array('type' => '2'
