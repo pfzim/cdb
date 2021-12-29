@@ -59,6 +59,17 @@
 		}
 		echo "Removed {$i} hosts\r\n\r\n";
 
+		// if some hosts was removed, refresh list from zabbix
+		if($i > 0) {
+			$retval = call_json_zabbix('host.get', $auth_key, 
+				array('output' => ['hostid','host','status','proxy_hostid']
+					, 'selectInterfaces' => ['interfaceid','ip']
+					, 'selectGroups' => 'extend'
+					, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
+					)
+				);
+		}
+
 		// checking hosts 1 by 1
 		$i = 0;
 		foreach($retval as &$host) {
