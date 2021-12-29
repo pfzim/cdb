@@ -27,8 +27,8 @@ function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
 		'auth' => $in_auth
 	));
 	//DEBUG
-	echo "Initial RPC:\r\n";
-	var_dump($message); echo "\r\n";
+	//echo "Initial RPC:\r\n";
+	//var_dump($message); echo "\r\n";
 	$ch = curl_init(ZABBIX_URL.'/api_jsonrpc.php');
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;'));
 	curl_setopt($ch, CURLOPT_POST, 1);
@@ -42,8 +42,8 @@ function call_json_zabbix(string $in_method, $in_auth, array $in_params) {
 	if($result !== FALSE) {
 		$rdecoded = json_decode($result, TRUE);
 		if(array_key_exists('error',$rdecoded)) {
-			//echo "ERROR:\r\n";
-			//var_dump($rdecoded['error']);
+			echo "ERROR:\r\n";
+			var_dump($rdecoded['error']);
 		} elseif(!array_key_exists('result',$rdecoded)) {
 			echo "ERROR: RPC result format unexpected\r\n";
 			var_dump($rdecoded);
