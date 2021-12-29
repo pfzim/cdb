@@ -134,7 +134,7 @@
 					]
 				)
 			);
-			var_dump($retval); break;
+			var_dump($retval); //break;
 			if(! is_null($retval) and !is_null($retval['hostids'][0])) {
 				$i++;
 				$proc_params = array(
