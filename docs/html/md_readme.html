@@ -79,7 +79,8 @@ $(function() {
 <div class="line">        IF(c.`flags` &amp; 0x0080, &#39;SCCM;&#39;, &#39;&#39;)</div>
 <div class="line">    ) AS `flags_to_string`</div>
 <div class="line">FROM c_computers AS c</div>
-</div><!-- fragment --><p>Описание битовых флагов <code>flags</code> в таблице <code>tasks</code></p>
+</div><!-- fragment -->
+<p>Описание битовых флагов <code>flags</code> в таблице <code>tasks</code></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Bits  </th><th class="markdownTableHeadNone">Description   </th></tr>
@@ -163,8 +164,25 @@ $(function() {
 <td class="markdownTableBodyNone">0x001100  </td><td class="markdownTableBodyNone">IT Invent software   </td></tr>
 </table>
 <div class="fragment">
-<div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000008) | 0x01000000) WHERE <code>flags</code> &amp; 0x000008; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000010) | 0x02000000) WHERE <code>flags</code> &amp; 0x000010; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000020) | 0x03000000) WHERE <code>flags</code> &amp; 0x000020; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000040) | 0x04000000) WHERE <code>flags</code> &amp; 0x000040; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000080) | 0x05000000) WHERE <code>flags</code> &amp; 0x000080; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000100) | 0x06000000) WHERE <code>flags</code> &amp; 0x000100; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000200) | 0x07000000) WHERE <code>flags</code> &amp; 0x000200; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000400) | 0x08000000) WHERE <code>flags</code> &amp; 0x000400; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000800) | 0x09000000) WHERE <code>flags</code> &amp; 0x000800; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x001000) | 0x0A000000) WHERE <code>flags</code> &amp; 0x001000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x002000) | 0x0B000000) WHERE <code>flags</code> &amp; 0x002000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x004000) | 0x0C000000) WHERE <code>flags</code> &amp; 0x004000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x008000) | 0x0D000000) WHERE <code>flags</code> &amp; 0x008000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x010000) | 0x0E000000) WHERE <code>flags</code> &amp; 0x010000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x020000) | 0x0F000000) WHERE <code>flags</code> &amp; 0x020000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x040000) | 0x10000000) WHERE <code>flags</code> &amp; 0x040000; UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x080000) | 0x11000000) WHERE <code>flags</code> &amp; 0x080000;</div>
-<div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0xFF000000) | ((<code>flags</code> &amp; 0xFF000000) &gt;&gt; 16 )) WHERE <code>flags</code> &amp; 0xFF000000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000008) | 0x01000000) WHERE <code>flags</code> &amp; 0x000008;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000010) | 0x02000000) WHERE <code>flags</code> &amp; 0x000010;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000020) | 0x03000000) WHERE <code>flags</code> &amp; 0x000020;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000040) | 0x04000000) WHERE <code>flags</code> &amp; 0x000040;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000080) | 0x05000000) WHERE <code>flags</code> &amp; 0x000080;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000100) | 0x06000000) WHERE <code>flags</code> &amp; 0x000100;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000200) | 0x07000000) WHERE <code>flags</code> &amp; 0x000200;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000400) | 0x08000000) WHERE <code>flags</code> &amp; 0x000400;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x000800) | 0x09000000) WHERE <code>flags</code> &amp; 0x000800;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x001000) | 0x0A000000) WHERE <code>flags</code> &amp; 0x001000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x002000) | 0x0B000000) WHERE <code>flags</code> &amp; 0x002000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x004000) | 0x0C000000) WHERE <code>flags</code> &amp; 0x004000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x008000) | 0x0D000000) WHERE <code>flags</code> &amp; 0x008000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x010000) | 0x0E000000) WHERE <code>flags</code> &amp; 0x010000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x020000) | 0x0F000000) WHERE <code>flags</code> &amp; 0x020000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x040000) | 0x10000000) WHERE <code>flags</code> &amp; 0x040000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0x080000) | 0x11000000) WHERE <code>flags</code> &amp; 0x080000;</div>
+  <div class="line">UPDATE c_tasks SET <code>flags</code> = ((<code>flags</code> &amp; ~0xFF000000) | </div>
+  <div class="line">   ((<code>flags</code> &amp; 0xFF000000) &gt;&gt; 16 )) WHERE <code>flags</code> &amp; 0xFF000000;</div>
 </div><!-- fragment -->
 <p>Описание битовых флагов <code>flags</code> в таблице <code>ac_log</code></p>
 <table class="markdownTable">
@@ -220,7 +238,8 @@ $(function() {
 <div class="line">    ) AS `flags_to_string`</div>
 <div class="line">FROM c_mac AS m</div>
 <div class="line">LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3</div>
-</div><!-- fragment --><p>Возможные значения колонки <code>type</code> в таблице <code>devices</code></p>
+</div><!-- fragment -->
+<p>Возможные значения колонки <code>type</code> в таблице <code>devices</code></p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Value  </th><th class="markdownTableHeadNone">Description   </th></tr>

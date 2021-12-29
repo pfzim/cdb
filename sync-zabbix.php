@@ -23,7 +23,7 @@
 	$retval = call_json_zabbix('user.login', null, array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
 	if(!is_null ($retval)) {
 		$auth_key = $retval;
-		
+
 		// get BBC list
 		$retval = call_json_zabbix('host.get', $auth_key, 
 			array('output' => ['hostid','host','status','proxy_hostid']
@@ -40,6 +40,28 @@
 			print_r(sqlsrv_errors());
 			exit(1);
 		}
+
+		// Remove hosts from Zabbix using previous Sync state result
+		$i = 0;
+		echo "\r\n\r\nRemoving hosts from Zabbix:\r\n";
+		$removed_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Zabbix_ToRemove]('".(ZABBIX_Host_Groups['Default'])."');");
+		while($removed_row = sqlsrv_fetch_array($removed_ret, SQLSRV_FETCH_ASSOC)) {
+			$zbx_hostname = strtoupper($removed_row['hostname']);
+			echo "Host {$zbx_hostname} with ip {$removed_row['ip']}\r\n";
+			$i++;
+			// TODO: add actualy working code
+			/*
+			$retval = call_json_zabbix('host.remove', $auth_key,
+				array('hostid' => '???')
+			);
+			var_dump($retval); break;
+			if( is_null($retval) ) {
+				echo "Error removing host {$zbx_hostname}\r\n";
+			}
+			//break;
+			*/
+		}
+		echo "Added {$i} hosts\r\n";
 
 		// checking hosts 1 by 1
 		foreach($retval as &$host) {
@@ -89,7 +111,7 @@
 			
 			$retval = call_json_zabbix('host.create', $auth_key,
 				array('host' => ZABBIX_Host_Prefix.$zbx_hostname
-					, 'groups' => array('groupid'=> ZABBIX_Host_Group)
+					, 'groups' => array('groupid'=> ZABBIX_Host_Groups['Default']) // TODO: add associate group logic
 					, 'templates ' => array('templateid'=> ZABBIX_Host_Template)
 					, 'proxy_hostid' => ZABBIX_Host_Proxy
 					, 'interfaces' => [
@@ -117,8 +139,9 @@
 				$proc_params = array(
 					array(&$itinv_row['ip'], SQLSRV_PARAM_IN)
 					, array(&$zbx_hostname, SQLSRV_PARAM_IN)
+					, 'True'
 				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @statzabbix = 'True';";
+				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @statzabbix = ?;";
 				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
 			}
 			//break;
