@@ -146,7 +146,8 @@
 				.'&Message='.urlencode(
 					'Выявлена проблема с антивирусом Trend Micro Apex One.'
 					."\n\nПК: ".$row['name']
-					."\nВерсия антивирусной базы: ".$row['ao_script_ptn']
+					."\nВерсия антивирусной базы: "
+					.$row['ao_script_ptn']
 					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
 					."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"
 				)

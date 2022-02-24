@@ -34,7 +34,7 @@
 		define('ROOTDIR', dirname(__FILE__));
 	}
 
-	define('CDB_VERSION', 10);
+	define('CDB_VERSION', 11);
 
 	if(!file_exists(ROOTDIR.DIRECTORY_SEPARATOR.'inc.config.php'))
 	{
@@ -49,6 +49,7 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.flags.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.ctulhumon.php');
 
 /**
 	Отправка почтового сообщения
@@ -221,6 +222,7 @@ function walk_route($route, $action)
 			'sync-sccm',
 			'sync-itinvent',
 			'sync-itinvent-sw',
+			'sync-zabbix',
 			'sync-nessus',
 			'mark-after-sync'
 		),
@@ -233,7 +235,7 @@ function walk_route($route, $action)
 			'create-tasks-ac',
 			'create-tasks-laps',
 			'create-tasks-rename',
-//			'create-tasks-sccm',
+			'create-tasks-sccm',
 			'create-tasks-epwd',
 			'create-tasks-epwd-persons',
 			'create-tasks-itinvent',
@@ -253,7 +255,8 @@ function walk_route($route, $action)
 			'report-vuln-top',
 			'report-vuln-top-netdev',
 			'report-users-lastlogon',
-			'report-itinvent-files-top'
+			'report-itinvent-files-top',
+			'report-itinvent-bcc'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
@@ -357,6 +360,9 @@ function walk_route($route, $action)
 		'report-itinvent-files-top-1' => array(
 			'@report-itinvent-files-top-1.php'
 		),
+		'report-itinvent-bcc' => array(
+			'@report-itinvent-bcc.php'
+		), 
 		'report-new-mac' => array(
 			'@report-new-mac.php'
 		),
@@ -406,6 +412,9 @@ function walk_route($route, $action)
 		'sync-nessus' => array(
 			'@sync-nessus.php'
 		),
+		'sync-zabbix' => array(
+			'@sync-zabbix.php'
+		),
 		'get-computer-info' => array(
 			'@get-computer-info.php'
 		),
@@ -415,6 +424,9 @@ function walk_route($route, $action)
 		'import-mac' => array(
 			'@import-mac.php'
 		),
+		'import-mac-old' => array(
+			'@import-mac-old.php'
+		), // old mac, no vlan (backup)
 		'import-sn' => array(
 			'@import-sn.php'
 		),

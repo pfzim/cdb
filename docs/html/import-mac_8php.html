@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.19"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Snezhinka: Файл import-mac.php</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">Snezhinka
+   </div>
+   <div id="projectbrief">Контроль расхождений</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.19 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">Файл import-mac.php</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>API для загрузки MAC адресов с сетевых устройств.  
+<a href="#details">Подробнее...</a></p>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>API для загрузки MAC адресов с сетевых устройств. </p>
+<p>Входящие параметры:</p><ul>
+<li>netdev - имя сетевого устройства передающего данные</li>
+<li><p class="startli">list - список данных, описание колонок:</p><ul>
+<li>mac - MAC адрес подключенного оборудования</li>
+<li>name - имя подключенного оборудования (hostname)</li>
+<li>ip - ip адрес подключенного оборудования</li>
+<li>sw_id - имя коммутатора</li>
+<li>port - порт коммутатора в который подключено оборудование</li>
+</ul>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Необходимо сделать:</a></b></dt><dd>Вместо удаления адреса из БД помечать его как удаленный. Для этого добавить новый флаг. Флаг обнулять при обновлении записи. Выполнено! </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Необходимо сделать:</a></b></dt><dd>Ручное исключение из проверок навсегда производить через флаг 0x0004. Временное исключение до первого обнаружения и исключения по фильтрам производить через флаг 0x0002. Флаг 0x0002 обнулять при импорте. Выполнено!</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Необходимо сделать:</a></b></dt><dd>Переделать механизм обработки исключений MAC адресов из проверок. Выполнено! Настройки исключений полностью перенесены в конфигурационный файл в параметры MAC_EXCLUDE_ARRAY и IP_MASK_EXCLUDE_LIST.</dd></dl>
+</li>
+</ul>
+<p>Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию серийного номера вместо MAC адреса. </p>
+</div></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой&#160;<a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.19
+</small></address>
+</body>
+</html>

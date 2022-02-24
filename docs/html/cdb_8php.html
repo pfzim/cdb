@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.19"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Snezhinka: Файл cdb.php</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">Snezhinka
+   </div>
+   <div id="projectbrief">Контроль расхождений</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.19 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Функции</a>  </div>
+  <div class="headertitle">
+<div class="title">Файл cdb.php</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>Главный модуль.  
+<a href="#details">Подробнее...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Функции</h2></td></tr>
+<tr class="memitem:a2c01b0fa7c0a14926060cc0e4f7e1477"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cdb_8php.html#a2c01b0fa7c0a14926060cc0e4f7e1477">php_mailer</a> ($to, $subject, $html, $plain)</td></tr>
+<tr class="memdesc:a2c01b0fa7c0a14926060cc0e4f7e1477"><td class="mdescLeft">&#160;</td><td class="mdescRight">Отправка почтового сообщения  <a href="cdb_8php.html#a2c01b0fa7c0a14926060cc0e4f7e1477">Подробнее...</a><br /></td></tr>
+<tr class="separator:a2c01b0fa7c0a14926060cc0e4f7e1477"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a175566d039944b3ab0e083eaf54f2392"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cdb_8php.html#a175566d039944b3ab0e083eaf54f2392">sql_date_cmp</a> ($date1, $date2)</td></tr>
+<tr class="memdesc:a175566d039944b3ab0e083eaf54f2392"><td class="mdescLeft">&#160;</td><td class="mdescRight">Функция сравнения двух SQL дат  <a href="cdb_8php.html#a175566d039944b3ab0e083eaf54f2392">Подробнее...</a><br /></td></tr>
+<tr class="separator:a175566d039944b3ab0e083eaf54f2392"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a9c00bb8054f1dd7edf5ce39861c088"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cdb_8php.html#a7a9c00bb8054f1dd7edf5ce39861c088">cidr_match</a> ($ip, $cidr)</td></tr>
+<tr class="memdesc:a7a9c00bb8054f1dd7edf5ce39861c088"><td class="mdescLeft">&#160;</td><td class="mdescRight">Функция проверяет соотствие IP адреса маске CIDR.  <a href="cdb_8php.html#a7a9c00bb8054f1dd7edf5ce39861c088">Подробнее...</a><br /></td></tr>
+<tr class="separator:a7a9c00bb8054f1dd7edf5ce39861c088"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a169c7da5a6208797e8c85647e1a7dd54"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cdb_8php.html#a169c7da5a6208797e8c85647e1a7dd54">walk_route</a> ($route, $action)</td></tr>
+<tr class="memdesc:a169c7da5a6208797e8c85647e1a7dd54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Функция для выполнения маршрута (запуска модулей)  <a href="cdb_8php.html#a169c7da5a6208797e8c85647e1a7dd54">Подробнее...</a><br /></td></tr>
+<tr class="separator:a169c7da5a6208797e8c85647e1a7dd54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>Главный модуль. </p>
+<p>Здесь определены общие для всех модулей функции. Отсюда запускаются все остальные модули. </p>
+</div><h2 class="groupheader">Функции</h2>
+<a id="a7a9c00bb8054f1dd7edf5ce39861c088"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a9c00bb8054f1dd7edf5ce39861c088">&#9670;&nbsp;</a></span>cidr_match()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cidr_match </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$ip</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$cidr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Функция проверяет соотствие IP адреса маске CIDR. </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">$ip</td><td>IP адрес </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">$cidr</td><td>Маска CIDR. Например: 10.12.54.0/24 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Возвращает</dt><dd>True if equal </dd></dl>
+
+</div>
+</div>
+<a id="a2c01b0fa7c0a14926060cc0e4f7e1477"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c01b0fa7c0a14926060cc0e4f7e1477">&#9670;&nbsp;</a></span>php_mailer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">php_mailer </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$to</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$subject</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$html</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$plain</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Отправка почтового сообщения </p>
+<dl class="section return"><dt>Возвращает</dt><dd>true - if success </dd></dl>
+
+</div>
+</div>
+<a id="a175566d039944b3ab0e083eaf54f2392"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a175566d039944b3ab0e083eaf54f2392">&#9670;&nbsp;</a></span>sql_date_cmp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sql_date_cmp </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$date1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$date2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Функция сравнения двух SQL дат </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">$date1</td><td>Дата в формате 'YYYY-MM-DD HH:MM:SS' </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">$date2</td><td>Дата в формате 'YYYY-MM-DD HH:MM:SS' </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Возвращаемые значения</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>если даты равны </td></tr>
+    <tr><td class="paramname">-1</td><td>если дата $date1 меньше $date2 </td></tr>
+    <tr><td class="paramname">1</td><td>если дата $date1 больше $date2 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a169c7da5a6208797e8c85647e1a7dd54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a169c7da5a6208797e8c85647e1a7dd54">&#9670;&nbsp;</a></span>walk_route()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">walk_route </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$route</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>$action</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Функция для выполнения маршрута (запуска модулей) </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">$route</td><td>Массив с описанием маршрутов </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">$action</td><td>Команда для выполнения </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой&#160;<a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.19
+</small></address>
+</body>
+</html>

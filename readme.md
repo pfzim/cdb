@@ -197,6 +197,7 @@ LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3
 | 0x0008 |                                           |
 
 Возможные значения колонки `oid` в таблицах `properties_*`
+
 | Value  | PHP constant                              | Description                               |
 |--------|-------------------------------------------|-------------------------------------------|
 | 101    | CDB_PROP_USERACCOUNTCONTROL               | AD UserAccountControl                     |
@@ -206,6 +207,7 @@ LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3
 | 105    | CDB_PROP_MAILBOX_QUOTA                    | Mailbox quota (Unlimited = 0)             |
 
 Возможные значения колонки `tid` в таблицах `tasks` и `properties_*`
+
 | Value  | Description                               |
 |--------|-------------------------------------------|
 | 1      | When `pid` from `computers` table         |

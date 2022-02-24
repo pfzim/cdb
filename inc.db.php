@@ -280,6 +280,7 @@ class MySQLDB
 			return FALSE;
 		}
 
+		set_time_limit(150);
 		$res = mysqli_query($this->link_rw, $query);
 		if(!$res)
 		{

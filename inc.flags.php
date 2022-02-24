@@ -87,7 +87,8 @@ $g_mac_flags = array(
 	'Active',
 	'Serial number',
 	'Mobile device',
-	'Duplicate detected'
+	'Duplicate detected',
+	'Backup CommChannel'
 );
 
 $g_mac_short_flags = array(

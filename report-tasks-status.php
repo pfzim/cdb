@@ -176,15 +176,15 @@ EOT;
 	}
 
 	$html .= '<table>';
-	$html .= '<tr><th>Проблема</th><th>Проблемных ПК</th><th>Открыто заявок</th></tr>';
-	$html .= '<tr><td>Устаревшая БД антивируса</td><td>'.$result[0]['p_tmao'].' (ТТ: '.$result[0]['p_tmao_tt'].')</td><td>'.$result[0]['o_tmao'].'</td></tr>';
-	$html .= '<tr><td>Не зашифрован ноутбук</td><td>'.$result[0]['p_tmee'].'</td><td>'.$result[0]['o_tmee'].'</td></tr>';
-	$html .= '<tr><td>Не обновляется пароль LAPS</td><td>'.$result[0]['p_laps'].'</td><td>'.$result[0]['o_laps'].'</td></tr>';
-	$html .= '<tr><td>Агент SCCM не активен</td><td>'.$result[0]['p_sccm'].'</td><td>'.$result[0]['o_sccm'].'</td></tr>';
-	$html .= '<tr><td>Имя ПК не соответствует стандарту именования</td><td>'.$result[0]['p_name'].'</td><td>'.$result[0]['o_name'].'</td></tr>';
-	$html .= '<tr><td>Давно не устанавливались обновления</td><td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td><td>'.$result[0]['o_wsus'].'</td></tr>';
-	$html .= '<tr><td>Не установлена квота на ПЯ</td><td>'.$result[0]['p_mbxq'].'</td><td>'.$result[0]['o_mbxq'].'</td></tr>';
-	$html .= '<tr><td>Устаревшая операционная система</td><td>'.$result[0]['p_os'].'</td><td>'.$result[0]['o_os'].'</td></tr>';
+	$html .= '<tr><th>Проблема</th><th>Проблемных ПК</th><th>Открыто заявок</th><th>Лимит заявок</th></tr>';
+	$html .= '<tr><td>Устаревшая БД антивируса</td><td>'.$result[0]['p_tmao'].' (ТТ: '.$result[0]['p_tmao_tt'].')</td><td>'.$result[0]['o_tmao'].'</td><td>'.TASKS_LIMIT_TMAO_GUP.'</td></tr>';
+	$html .= '<tr><td>Не зашифрован ноутбук</td><td>'.$result[0]['p_tmee'].'</td><td>'.$result[0]['o_tmee'].'</td><td>∞</td></tr>';
+	$html .= '<tr><td>Не обновляется пароль LAPS</td><td>'.$result[0]['p_laps'].'</td><td>'.$result[0]['o_laps'].'</td><td>'.TASKS_LIMIT_LAPS.'</td></tr>';
+	$html .= '<tr><td>Агент SCCM не активен</td><td>'.$result[0]['p_sccm'].'</td><td>'.$result[0]['o_sccm'].'</td><td>'.TASKS_LIMIT_SCCM.'</td></tr>';
+	$html .= '<tr><td>Имя ПК не соответствует стандарту именования</td><td>'.$result[0]['p_name'].'</td><td>'.$result[0]['o_name'].'</td><td>'.TASKS_LIMIT_RENAME.'</td></tr>';
+	$html .= '<tr><td>Давно не устанавливались обновления</td><td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td><td>'.$result[0]['o_wsus'].'</td><td>'.TASKS_LIMIT_WSUS_GUP.'</td></tr>';
+	$html .= '<tr><td>Не установлена квота на ПЯ</td><td>'.$result[0]['p_mbxq'].'</td><td>'.$result[0]['o_mbxq'].'</td><td>'.TASKS_LIMIT_MBX.'</td></tr>';
+	$html .= '<tr><td>Устаревшая операционная система</td><td>'.$result[0]['p_os'].'</td><td>'.$result[0]['o_os'].'</td><td>'.TASKS_LIMIT_OS.'</td></tr>';
 	$html .= '</table>';
 
 	$html .= '<br /><table>';

@@ -76,6 +76,7 @@
 			m.`mac`,
 			m.`ip`,
 			m.`port`,
+			m.`vlan`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
 			m.`flags`,
 			COUNT(*) AS `issues`
@@ -128,6 +129,7 @@
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']
 					."\nПорт: ".$row['port']
+					."\nVLAN ID: ".$row['vlan']
 					."\nВремя регистрации: ".$row['regtime']
 					."\nКоличество повторных заявок: ".$row['issues']
 					."\n\nКод работ: IIV09"

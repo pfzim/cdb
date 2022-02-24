@@ -161,7 +161,7 @@
 								}
 								else
 								{
-									echo 'ERROR: Get hosts'."\r\n\r\n"	;
+									echo 'ERROR'."\r\n\r\n"	;
 								}
 							}
 						}
@@ -169,14 +169,14 @@
 				}
 				else
 				{
-					echo 'ERROR: Get scan'."\r\n\r\n"	;
+					echo 'ERROR'."\r\n\r\n"	;
 				}
 			}
 		}
 	}
 	else
 	{
-		echo 'ERROR: Get scans list'."\r\n\r\n"	;
+		echo 'ERROR'."\r\n\r\n"	;
 	}
 
 	echo 'Count: '.$i."\n";

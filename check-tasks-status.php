@@ -77,7 +77,7 @@ function get_status_name($strings, $code)
 
 	if(!preg_match('/Set-Cookie:\s+('.HELPDESK_COOKIE.'=[^; ]+)/', $result, $matches))
 	{
-		echo 'HelpDesk login failed!\r\n';
+		echo 'HelpDesk login failed!';
 		return;
 	}
 	

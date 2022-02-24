@@ -14,19 +14,6 @@
 
 	/*
 
-		Список загружаемых полей:
-			FIELD_NO	ITEM_NO		FIELD_NAME
-			168			111			EXE1
-			178			111			EXE2
-			179			111			EXE3
-			180			111			EXE4
-			181			111			EXE5
-			182			111			Path1
-			183			111			Path2
-			184			111			Path3
-			185			111			Path4
-			186			111			Path5
-
 		List all fields:
 
 		SELECT [FIELD_NO]
@@ -166,6 +153,7 @@
 									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | 0x0010) WHERE `id` = # LIMIT 1", $row['id']));
 									
 									break;
+									
 								}
 							}
 							break;

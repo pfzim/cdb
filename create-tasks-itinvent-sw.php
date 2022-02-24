@@ -33,7 +33,7 @@
 		LEFT JOIN c_computers AS c
 			ON t.`pid` = c.`id`
 		LEFT JOIN c_files_inventory AS fi
-			ON fi.`pid` = c.`id` AND fi.`flags` & 0x0002 = 0
+			ON fi.`pid` = c.`id` AND fi.`flags` & 0x0020 = 0
 		LEFT JOIN c_files AS f
 			ON fi.`fid` = f.`id`
 		WHERE
@@ -91,7 +91,7 @@
 		LEFT JOIN @files_inventory AS fi
 			ON
 				fi.`pid` = c.`id`
-				AND (fi.`flags` & 0x0002) = 0                     -- File not Deleted
+				AND (fi.`flags` & 0x0020) = 0                     -- File not Deleted
 		LEFT JOIN @files AS f
 			ON fi.`fid` = f.`id`
 		WHERE

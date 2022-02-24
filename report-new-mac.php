@@ -35,7 +35,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>MAC/SN</th><th>Name</th><th>IP</th><th>netdev</th><th>Port</th><th>First seen</th><th>Flags</th></tr>';
+	$table .= '<tr><th>MAC/SN</th><th>Name</th><th>IP</th><th>netdev</th><th>Port</th><th>VLAN</th><th>First seen</th><th>Flags</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -46,6 +46,7 @@ EOT;
 			d.`name` AS `d_name`,
 			m.`ip`,
 			m.`port`,
+			m.`vlan`,
 			DATE_FORMAT(m.`first`, '%d.%m.%Y %H:%i:%s') AS `first_seen`,
 			m.`flags` AS `m_flags`
 		FROM @mac AS m
@@ -66,6 +67,7 @@ EOT;
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['d_name'].'</td>';
 			$table .= '<td>'.$row['port'].'</td>';
+			$table .= '<td>'.$row['vlan'].'</td>';
 			$table .= '<td>'.$row['first_seen'].'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['m_flags']), $g_mac_short_flags, '', '-').'</td>';
 			$table .= '</tr>';

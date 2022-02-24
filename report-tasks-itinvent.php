@@ -35,7 +35,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>netdev</th><th>Port</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>HD Date</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
+	$table .= '<tr><th>netdev</th><th>Port</th><th>VLAN</th><th>Name</th><th>MAC/SN</th><th>IP</th><th>Last seen</th><th>HD Task</th><th>HD Date</th><th>Reason</th><th>Source</th><th>Issues</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -44,6 +44,7 @@ EOT;
 			m.`name` AS `m_name`,
 			d.`name` AS `d_name`,
 			m.`port`,
+			m.`vlan`,
 			m.`ip`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_seen`,
 			m.`mac`,
@@ -75,6 +76,7 @@ EOT;
 			$table .= '<tr>';
 			$table .= '<td>'.$row['d_name'].'</td>';
 			$table .= '<td>'.$row['port'].'</td>';
+			$table .= '<td>'.$row['vlan'].'</td>';
 			$table .= '<td>'.$row['m_name'].'</td>';
 			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id'].'">'.$row['mac'].'</a></td>';
 			$table .= '<td>'.$row['ip'].'</td>';
@@ -121,9 +123,9 @@ EOT;
 	")))
 	{
 		$html .= '<table>';
-		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th></tr>';
-		$html .= '<tr><td>Оборудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td></tr>';
-		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td></tr>';
+		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th><th>Лимит заявок</th></tr>';
+		$html .= '<tr><td>Оборудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td><td>'.TASKS_LIMIT_ITINVENT.'</td></tr>';
+		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td><td>'.TASKS_LIMIT_ITINVENT_MOVE.'</td></tr>';
 		$html .= '</table>';
 	}
 	
