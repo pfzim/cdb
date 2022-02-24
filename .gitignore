@@ -4,6 +4,8 @@ docs/
 Doxyfile
 _doxygen.cmd
 
+old/
+
 temp-cidr.php
 temp-close-all-ac.php
 temp-close-all-itinvent.php
