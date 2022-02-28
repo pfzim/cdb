@@ -33,16 +33,16 @@
 		LEFT JOIN @mac AS m
 			ON m.`id` = t.`pid`
 		LEFT JOIN @devices AS d
-			ON d.`id` = m.`pid` AND d.`type` = 3
+			ON d.`id` = m.`pid` AND d.`type` = {%DT_NETDEV}
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)       -- Valid devices is only that exist and active in IT Invent and have SN
+				AND (dm.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})       -- Valid devices is only that exist and active in IT Invent and have SN
 		WHERE
-			t.`tid` = 3
-			AND (t.`flags` & (0x0001 | 0x0010)) = 0x0010                                         -- Task status is Opened
+			t.`tid` = {%TID_MAC}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}                                         -- Task status is Opened
 			AND (
-				(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) <> 0x0070    -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
+				(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) <> ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})   -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
 				OR (
 					dm.`branch_no` IS NOT NULL
 					AND dm.`loc_no` IS NOT NULL
@@ -69,7 +69,7 @@
 				if($xml !== FALSE)
 				{
 					echo $row['inv_no'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -82,7 +82,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0010)) = 0x0010")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -107,21 +107,21 @@
 			-- ,dm.`loc_no`
 			-- ,dm.`date`
 			-- ,hex(dm.`flags`)
-			-- (SELECT BIT_OR(t.`flags`) FROM @tasks AS t WHERE t.`pid` = m.`id` AND t.`tid = 3 AND (t.flags & (0x0001 | 0x0010)) = 0x0010) AS t_flags
+			-- (SELECT BIT_OR(t.`flags`) FROM @tasks AS t WHERE t.`pid` = m.`id` AND t.`tid = {%TID_MAC} AND (t.flags & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}) AS t_flags
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
-			ON d.`id` = m.`pid` AND d.`type` = 3
+			ON d.`id` = m.`pid` AND d.`type` = {%DT_NETDEV}
 		LEFT JOIN @mac AS dm
 			ON
 				dm.`name` = d.`name`
-				AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)  -- Valid devices is only that exist and active in IT Invent and have SN
+				AND (dm.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})  -- Valid devices is only that exist and active in IT Invent and have SN
 		LEFT JOIN @tasks AS t
 			ON
-				t.`tid` = 3
+				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND (t.flags & (0x0001 | 0x0010)) = 0x0010
+				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_TEMP_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
 			AND (
 				dm.`branch_no` IS NULL
 				OR dm.`loc_no` IS NULL
@@ -131,7 +131,7 @@
 				)
 			)
 		GROUP BY m.`id`, dm.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x0010) = 0
+		HAVING (BIT_OR(t.`flags`) & {%TF_INV_MOVE}) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -159,7 +159,7 @@
 					'Обнаружено расхождение в IT Invent: местоположение оборудования отличается от местоположения коммутатора/маршрутизатора, в который оно подключено.'
 					."\n\nИнвентарный номер оборудования: ".$row['m_inv_no']
 					."\nDNS имя: ".$row['m_name']
-					."\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+					."\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nПорт: ".$row['port']
 					."\nVLAN ID: ".$row['vlan']
 					."\nВремя регистрации: ".$row['regtime']
@@ -183,7 +183,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['m_name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x0010, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_MOVE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

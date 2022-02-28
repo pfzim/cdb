@@ -21,14 +21,14 @@
 		LEFT JOIN @persons AS p
 			ON p.`id` = t.`pid`
 		LEFT JOIN @properties_int AS j_quota
-			ON j_quota.`tid` = 2
+			ON j_quota.`tid` = {%TID_PERSONS}
 			AND j_quota.`pid` = t.`pid`
-			AND j_quota.`oid` = #
+			AND j_quota.`oid` = {%CDB_PROP_MAILBOX_QUOTA}
 		WHERE
-			t.`tid` = 2
-			AND(t.`flags` & (0x0001 | 0x0008)) = 0x0008
-			AND (p.`flags` & (0x0001 | 0x0002 | 0x0004) OR (j_quota.`value` <> 0))
-	", CDB_PROP_MAILBOX_QUOTA)))
+			t.`tid` = {%TID_PERSONS}
+			AND(t.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}
+			AND (p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED}) OR (j_quota.`value` <> 0))
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -48,7 +48,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -62,7 +62,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x2000)) = 0x2000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -71,19 +71,19 @@
 		SELECT p.`id`, p.`login`, p.`dn`, p.`flags`
 		FROM @persons AS p
 		LEFT JOIN @tasks AS t
-			ON t.`tid` = 2
+			ON t.`tid` = {%TID_PERSONS}
 			AND t.`pid` = p.`id`
-			AND (t.`flags` & (0x0001 | 0x0008)) = 0x0008
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}
 		LEFT JOIN @properties_int AS j_quota
-			ON j_quota.`tid` = 2
+			ON j_quota.`tid` = {%TID_PERSONS}
 			AND j_quota.`pid` = p.`id`
-			AND j_quota.`oid` = #
+			AND j_quota.`oid` = {%CDB_PROP_MAILBOX_QUOTA}
 		WHERE
-			(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+			(p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED})) = 0
 			AND j_quota.`value` = 0
 		GROUP BY p.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x0008) = 0
-	", CDB_PROP_MAILBOX_QUOTA)))
+		HAVING (BIT_OR(t.`flags`) & {%TF_MBOX_UNLIM}) = 0
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -114,7 +114,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (2, #, 0x0008, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TF_MBOX_UNLIM}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

@@ -56,13 +56,13 @@
 							//echo '  '.$host['host_id'].': '.$host['hostname']."\r\n";
 
 							$row_id = 0;
-							if($db->select_ex($res, rpv("SELECT d.`id` FROM @devices AS d WHERE d.type = 4 AND d.`name` = ! LIMIT 1", $host['hostname'])))
+							if($db->select_ex($res, rpv("SELECT d.`id` FROM @devices AS d WHERE d.type = {%DT_VULN_HOST} AND d.`name` = ! LIMIT 1", $host['hostname'])))
 							{
 								$row_id = $res[0][0];
 							}
 							else
 							{
-								if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES (4, 0, !, 0)", $host['hostname'])))
+								if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES ({%DT_VULN_HOST}, 0, !, 0)", $host['hostname'])))
 								{
 									$row_id = $db->last_id();
 								}
@@ -143,7 +143,7 @@
 															SET
 																`scan_date` = !,
 																`folder_id` = #,
-																`flags` = (`flags` & ~0x0002)     -- reset Fixed flag
+																`flags` = (`flags` & ~{%VSF_FIXED})     -- reset Fixed flag
 															WHERE
 																`id` = #
 															LIMIT 1

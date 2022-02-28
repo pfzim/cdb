@@ -10,8 +10,8 @@
 		GET method parameters:
 		  - id - идентификатор ПК в БД
 		  - do - операция:
-		    - show    - сбрасывает флаг 0x0004,
-		    - hide    - устанавливает флаг 0x0004.
+		    - show    - сбрасывает флаг CF_HIDED,
+		    - hide    - устанавливает флаг CF_HIDED.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -20,12 +20,12 @@
 	{
 		if($_GET['do'] === 'show')
 		{
-			$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~0x0004) WHERE `id` = # LIMIT 1", $_GET['id']));
+			$db->put(rpv("UPDATE @computers SET `flags` = (`flags` & ~{%CF_HIDED}) WHERE `id` = # LIMIT 1", $_GET['id']));
 			echo 'OK';
 		}
 		else if($_GET['do'] === 'hide')
 		{
-			$db->put(rpv("UPDATE @computers SET `flags` = (`flags` | 0x0004) WHERE `id` = # LIMIT 1", $_GET['id']));
+			$db->put(rpv("UPDATE @computers SET `flags` = (`flags` | {%CF_HIDED}) WHERE `id` = # LIMIT 1", $_GET['id']));
 			echo 'OK';
 		}
 	}

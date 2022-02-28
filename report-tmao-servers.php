@@ -69,7 +69,7 @@ EOT;
 			FROM
 				@computers
 			WHERE
-				(`flags` & (0x0002 | 0x0004)) = 0
+				(`flags` & ({%CF_DELETED} | {%CF_HIDED})) = 0
 				AND `ao_script_ptn` < (SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG."
 				AND `name` REGEXP {s0}
 			ORDER BY `name`

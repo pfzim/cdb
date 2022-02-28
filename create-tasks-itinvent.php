@@ -38,12 +38,12 @@
 		LEFT JOIN @mac AS m
 			ON m.`id` = t.`pid`
 		WHERE
-			t.`tid` = 3
-			AND (t.`flags` & (0x0001 | 0x8000)) = 0x8000        -- Task status is Opened
+			t.`tid` = {%TID_MAC}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}              -- Task status is Opened
 			AND (
-				m.`flags` & (0x0002 | 0x0004)                   -- Temprary excluded or Premanently excluded
-				-- OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent      -- Temporary do not check status
-				OR (m.`flags` & 0x0010)     					-- Exist in IT Invent
+				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
+				-- OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent      -- Temporary do not check status
+				OR (m.`flags` & {%MF_EXIST_IN_ITINV})     					              -- Exist in IT Invent
 			)
 	")))
 	{
@@ -64,7 +64,7 @@
 				if($xml !== FALSE)
 				{
 					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -91,7 +91,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x8000)) = 0x8000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -112,14 +112,14 @@
 			ON d.`id` = m.`pid`
 		LEFT JOIN @tasks AS t
 			ON
-				t.`tid` = 3
+				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND (t.flags & (0x0001 | 0x8000)) = 0x8000
+				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}
 		WHERE
-			-- (m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active    -- Temporary do not check status
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
+			-- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active    -- Temporary do not check status
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		GROUP BY m.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x8000) = 0
+		HAVING (BIT_OR(t.`flags`) & {%TF_INV_ADD}) = 0
 		ORDER BY RAND()
 	")))
 	{
@@ -145,8 +145,8 @@
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
-					'Обнаружено сетевое устройство '.((intval($row['flags']) & 0x0080) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
-					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+					'Обнаружено сетевое устройство '.((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
+					."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nDNS name: ".$row['name']
 					."\nIP: ".$row['ip']
 					."\n\nУстройство подключено к: ".$row['netdev']
@@ -171,7 +171,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x8000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_ADD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

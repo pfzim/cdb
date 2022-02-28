@@ -53,15 +53,15 @@ EOT;
 				SELECT COUNT(*)
 				FROM @tasks AS i1
 				WHERE i1.`pid` = m.`pid`
-					AND i1.`tid` = 1
-					AND (i1.`flags` & (m.`flags` | 0x0001)) = (m.`flags` | 0x0001)
+					AND i1.`tid` = {%TID_COMPUTERS}
+					AND (i1.`flags` & (m.`flags` | {%TF_CLOSED})) = (m.`flags` | {%TF_CLOSED})
 					AND i1.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE
-			m.`tid` = 1
-			AND (m.`flags` & 0x0001) = 0
+			m.`tid` = {%TID_COMPUTERS}
+			AND (m.`flags` & {%TF_CLOSED}) = 0
 		ORDER BY j1.`name`
 	")))
 	{
@@ -75,7 +75,7 @@ EOT;
 			$table .= '<td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.tasks_flags_to_string(intval($row['flags'])).'</td>';
-			$table .= '<td>'.flags_to_string(intval($row['j1_flags']) & 0x00F0, $g_comp_short_flags, '', '-').'</td>';
+			$table .= '<td>'.flags_to_string(intval($row['j1_flags']) & CF_MASK_EXIST, $g_comp_short_flags, '', '-').'</td>';
 			$table .= '<td'.((intval($row['issues']) > 3)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
 
@@ -87,47 +87,47 @@ EOT;
 
 	if(!$db->select_assoc_ex($result, rpv("
 			SELECT
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
-			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `o_tmao`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `o_tmee`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {d4} DAY)) AS `p_laps`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0800)) = 0x0800) AS `o_laps`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x1000)) = 0x1000) AS `o_sccm`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0 AND m.`name` NOT REGEXP {s2}) AS `p_name`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0400)) = 0x0400) AS `o_name`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")) AS `p_tmao_tt`,
+			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}) AS `o_tmao`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_TMEE})) = {%TF_TMEE}) AS `o_tmee`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {d4} DAY)) AS `p_laps`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_LAPS})) = {%TF_LAPS}) AS `o_laps`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_SCCM})) = {%TF_SCCM}) AS `o_sccm`,
+			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`name` NOT REGEXP {s2}) AS `p_name`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_PC_RENAME})) = {%TF_PC_RENAME}) AS `o_name`,
 			(
 				SELECT
 					COUNT(*)
 				FROM @properties_str AS os
 				LEFT JOIN @computers AS c
 					ON
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
 					AND os.`pid` = c.`id`
 				WHERE
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_OPERATINGSYSTEM."
-					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 					AND c.`name` NOT REGEXP {s0}
 			) AS `p_os`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x4000)) = 0x4000) AS `o_os`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}) AS `o_os`,
 			(
 				SELECT
 					COUNT(*)
 				FROM @properties_int AS os
 				LEFT JOIN @computers AS c
 					ON
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
 					AND os.`pid` = c.`id`
 				WHERE
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 					AND os.`value` <> 1
 			) AS `p_wsus`,
 			(
@@ -136,34 +136,34 @@ EOT;
 				FROM @properties_int AS os
 				LEFT JOIN @computers AS c
 					ON
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
 					AND os.`pid` = c.`id`
 				WHERE
-					os.`tid` = 1
+					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = ".CDB_PROP_BASELINE_COMPLIANCE_HOTFIX."
-					AND (c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 					AND os.`value` <> 1
 					AND c.`name` REGEXP {s1}
 			) AS `p_wsus_tt`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0040)) = 0x0040) AS `o_wsus`,
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_WIN_UPDATE})) = {%TF_WIN_UPDATE}) AS `o_wsus`,
 			(
 				SELECT COUNT(*)
 				FROM @persons AS p
 				LEFT JOIN @properties_int AS j_quota
-					ON j_quota.`tid` = 2
+					ON j_quota.`tid` = {%TID_PERSONS}
 					AND j_quota.`pid` = p.`id`
 					AND j_quota.`oid` = ".CDB_PROP_MAILBOX_QUOTA."
 				WHERE
-					(p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+					(p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED})) = 0
 					AND j_quota.`value` = 0
 			) AS `p_mbxq`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0008)) = 0x0008) AS `o_mbxq`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0010)) = 0x0010) AS `objects_from_ad`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0020)) = 0x0020) AS `objects_from_tmao`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0040)) = 0x0040) AS `objects_from_tmee`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0080)) = 0x0080) AS `objects_from_sccm`,
-			(SELECT COUNT(*) FROM @persons WHERE (`flags` & (0x0010)) = 0x0010) AS `users_from_ad`
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}) AS `o_mbxq`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_AD})) = {%CF_EXIST_AD}) AS `objects_from_ad`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_TMAO})) = {%CF_EXIST_TMAO}) AS `objects_from_tmao`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_TMEE})) = {%CF_EXIST_TMEE}) AS `objects_from_tmee`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_SCCM})) = {%CF_EXIST_SCCM}) AS `objects_from_sccm`,
+			(SELECT COUNT(*) FROM @persons WHERE (`flags` & ({%PF_EXIST_AD})) = {%PF_EXIST_AD}) AS `users_from_ad`
 		",
 		CDB_REGEXP_SERVERS,
 		CDB_REGEXP_SHOPS,

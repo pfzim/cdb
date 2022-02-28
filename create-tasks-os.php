@@ -29,17 +29,17 @@
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
 		LEFT JOIN @properties_str AS j_os
-			ON j_os.`tid` = 1
+			ON j_os.`tid` = {%TID_COMPUTERS}
 			AND j_os.`pid` = t.`pid`
-			AND j_os.`oid` = #
+			AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}
 			AND (
-				c.`flags` & (0x0001 | 0x0002 | 0x0004)
+				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 			)
-	", CDB_PROP_OPERATINGSYSTEM)))
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -59,7 +59,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -73,36 +73,35 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x4000)) = 0x4000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}")))
 	{
 		$i = intval($result[0][0]);
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
 			SELECT
-				m.`id`,
-				m.`name`,
-				m.`dn`,
-				m.`flags`,
+				c.`id`,
+				c.`name`,
+				c.`dn`,
+				c.`flags`,
 				j_os.`value` AS `os`
-			FROM @computers AS m
+			FROM @computers AS c
 			LEFT JOIN @tasks AS t
 				ON
-				t.`tid` = 1
-				AND t.`pid` = m.`id`
-				AND (t.`flags` & (0x0001 | 0x4000)) = 0x4000
+				t.`tid` = {%TID_COMPUTERS}
+				AND t.`pid` = c.`id`
+				AND (t.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}
 			LEFT JOIN @properties_str AS j_os
-				ON j_os.`tid` = 1
-				AND j_os.`pid` = m.`id`
-				AND j_os.`oid` = #
+				ON j_os.`tid` = {%TID_COMPUTERS}
+				AND j_os.`pid` = c.`id`
+				AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 			WHERE
-				(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
-				AND m.`name` NOT REGEXP {s1}
-			GROUP BY m.`id`
-			HAVING (BIT_OR(t.`flags`) & 0x4000) = 0
+				AND c.`name` NOT REGEXP {s0}
+			GROUP BY c.`id`
+			HAVING (BIT_OR(t.`flags`) & {%TF_OS_REINSTALL}) = 0
 		",
-		CDB_PROP_OPERATINGSYSTEM,
 		CDB_REGEXP_SERVERS
 	)))
 	{
@@ -125,7 +124,7 @@
 					'Версия операционной системы не соответсвует стандартам компании.'
 					."\nПК: ".$row['name']
 					."\nТекущая версия ОС: ".$row['os']
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 					."\nКод работ: OSUP\n\n".WIKI_URL.'/Департамент%20ИТ%20Отдел%20ИТ%20поддержки%20Регионов%20(ТСА).Установка-ОС-с-использованием-SCCM.ashx'
 				)
 			);
@@ -136,7 +135,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x4000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_OS_REINSTALL}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

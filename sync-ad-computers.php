@@ -55,7 +55,7 @@
 									$account['cn'][0],
 									$account['dn'],
 									$laps_exp,
-									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
+									(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD
 								)))
 								{
 									$row_id = $db->last_id();
@@ -65,10 +65,10 @@
 							{
 								// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
 								$row_id = $result[0][0];
-								$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~(0x0001 | 0x0002 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
+								$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_TEMP_MARK})) | #) WHERE `id` = # LIMIT 1",
 									$account['dn'],
 									$laps_exp,
-									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
+									(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD,
 									$row_id
 								));
 							}

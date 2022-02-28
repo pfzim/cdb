@@ -143,7 +143,7 @@
 		$row_id = 0;
 		if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['DeviceName'])))
 		{
-			if($db->put(rpv("INSERT INTO @computers (`name`, `sccm_lastsync`, `flags`) VALUES (!, !, 0x0080)",
+			if($db->put(rpv("INSERT INTO @computers (`name`, `sccm_lastsync`, `flags`) VALUES (!, !, {%CF_EXIST_SCCM})",
 				$row['DeviceName'],
 				$lastsync
 			)))
@@ -154,7 +154,7 @@
 		else
 		{
 			$row_id = $res[0][0];
-			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `flags` = ((`flags` & ~0x0008) | 0x0080) WHERE `id` = # LIMIT 1",
+			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_SCCM}) WHERE `id` = # LIMIT 1",
 				$lastsync,
 				$row_id
 			));

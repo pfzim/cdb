@@ -23,14 +23,14 @@
 		LEFT JOIN @persons AS j1
 			ON j1.`id` = m.`pid`
 		LEFT JOIN @properties_int AS j2
-			ON j2.`tid` = 2
+			ON j2.`tid` = {%TID_PERSONS}
 			AND j2.`pid` = m.`pid`
-			AND j2.`oid` = #
+			AND j2.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
 		WHERE
-			m.`tid` = 2
-			AND(m.`flags` & (0x0001 | 0x2000)) = 0x2000
-			AND (j1.`flags` & (0x0001 | 0x0002 | 0x0004) OR (j2.`value` & 0x020) = 0)
-	", CDB_PROP_USERACCOUNTCONTROL)))
+			m.`tid` = {%TID_PERSONS}
+			AND(m.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}
+			AND (j1.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED}) OR (j2.`value` & 0x020) = 0)
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -50,7 +50,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -64,7 +64,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x2000)) = 0x2000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -73,19 +73,19 @@
 		SELECT m.`id`, m.`login`, m.`dn`, m.`flags`
 		FROM @persons AS m
 		LEFT JOIN @tasks AS j1
-			ON j1.`tid` = 2
+			ON j1.`tid` = {%TID_PERSONS}
 			AND j1.`pid` = m.`id`
-			AND (j1.`flags` & (0x0001 | 0x2000)) = 0x2000
+			AND (j1.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}
 		LEFT JOIN @properties_int AS j2
-			ON j2.`tid` = 2
+			ON j2.`tid` = {%TID_PERSONS}
 			AND j2.`pid` = m.`id`
-			AND j2.`oid` = #
+			AND j2.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
 		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+			(m.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED})) = 0
 			AND j2.`value` & 0x020
 		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & 0x2000) = 0
-	", CDB_PROP_USERACCOUNTCONTROL)))
+		HAVING (BIT_OR(j1.`flags`) & {%TF_PASSWD}) = 0
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -115,7 +115,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (2, #, 0x2000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TF_PASSWD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

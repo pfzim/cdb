@@ -52,7 +52,7 @@ EOT;
 		FROM @mac AS m
 		LEFT JOIN @devices AS d ON d.`id` = m.`pid` AND d.`type` = 3
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020)) = 0x0020
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}
 			AND
 			m.`first` >= DATE_SUB(NOW(), INTERVAL 1 DAY)
 		ORDER BY d.`name`, m.`first`

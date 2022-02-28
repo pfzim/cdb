@@ -31,13 +31,13 @@
 
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
-	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $net_dev)))
+	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $net_dev)))
 	{
 		$dev_id = intval($result[0][0]);
 	}
 	else
 	{
-		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES (3, !, 0)", $net_dev)))
+		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES ({%DT_NETDEV}, !, 0)", $net_dev)))
 		{
 			$dev_id = $db->last_id();
 		}
@@ -104,15 +104,15 @@
 			// Обновляем данные в таблице mac
 			
 			// Проверяем существование SN в таблице mac
-			if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND m.`flags` & 0x0080 LIMIT 1", $sn)))
+			if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND m.`flags` & {%MF_SERIAL_NUM} LIMIT 1", $sn)))
 			{
 				// Если запись с таким SN уже существует, то помечаем дубликат с таким MAC как временно исключенный.
-				$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `mac` = ! AND (`flags` & (0x0002 | 0x0004)) = 0 LIMIT 1", $mac));
+				$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `mac` = ! AND (`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})) = 0 LIMIT 1", $mac));
 			}
 			else
 			{
 				// Если запись с таким SN не существует, то у записи с таким MAC меняем MAC на SN.
-				$db->put(rpv("UPDATE @mac SET `mac` = {s1}, `flags` = (`flags` | 0x0080) WHERE `mac` = {s0} AND (`flags` & 0x0080) = 0 LIMIT 1", $mac, $sn));
+				$db->put(rpv("UPDATE @mac SET `mac` = {s1}, `flags` = (`flags` | {%MF_SERIAL_NUM}) WHERE `mac` = {s0} AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac, $sn));
 			}
 		}
 

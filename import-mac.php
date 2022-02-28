@@ -41,13 +41,13 @@
 	
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
-	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $net_dev)))
+	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $net_dev)))
 	{
 		$dev_id = intval($result[0][0]);
 	}
 	else
 	{
-		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES (3, !, 0)", $net_dev)))
+		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES ({%DT_NETDEV}, !, 0)", $net_dev)))
 		{
 			$dev_id = $db->last_id();
 		}
@@ -119,7 +119,7 @@
 			{
 				$pid = 0;
 				$last_sw_name = $row[3];
-				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[3])))
+				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $row[3])))
 				{
 					$pid = intval($result[0][0]);
 					if(intval($result[0][1]) != $dev_id)    // && $pid != $dev_id  - лишнее, подразумевается в первом if
@@ -136,7 +136,7 @@
 				}
 				else
 				{
-					if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES (3, #, !, 0)", $dev_id, $row[3])))
+					if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES ({%DT_NETDEV}, #, !, 0)", $dev_id, $row[3])))
 					{
 						$pid = $db->last_id();
 					}
@@ -157,7 +157,7 @@
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 			
 				if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
-					$excluded = 0x0002;
+					$excluded = MF_TEMP_EXCLUDED;
 					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
 				} else {
 					foreach(MAC_EXCLUDE_ARRAY as &$excl) {
@@ -165,20 +165,20 @@
 						&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
 						&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
 						) {
-							$excluded = 0x0002;
+							$excluded = MF_TEMP_EXCLUDED;
 							error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
 							break;
 						}
 					}
 			
 					// Исключение по IP адресу
-					if(!empty($row[2]) && ($excluded & 0x0002) == 0) {
+					if(!empty($row[2]) && ($excluded & MF_TEMP_EXCLUDED) == 0) {
 						$masks = explode(';', IP_MASK_EXCLUDE_LIST);
 						foreach($masks as &$mask)
 						{
 							if(cidr_match($row[2], $mask))
 							{
-								$excluded = 0x0002;
+								$excluded = MF_TEMP_EXCLUDED;
 								error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
 								break;
 							}
@@ -187,7 +187,7 @@
 			}
 			
 			$row_id = 0;
-			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $mac, $is_sn ? 0x0080 : 0x0000 )))
+			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $mac, $is_sn ? MF_SERIAL_NUM : 0x0000 )))
 			{
 				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".$vlan.")",
 					$pid,
@@ -195,7 +195,7 @@
 					$mac,
 					$row[2],  // ip
 					$row[4],  // port
-					0x0020 | $excluded | ($is_sn ? 0x0080 : 0x0000)
+					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
 				)))
 				{
 					$row_id = $db->last_id();
@@ -204,12 +204,12 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".$vlan.", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~0x0002) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".$vlan.", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | #) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
 					$row[4],  // port
-					0x0020 | $excluded,
+					MF_FROM_NETDEV | $excluded,
 					$row_id
 				));
 			}

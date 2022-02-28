@@ -30,17 +30,17 @@
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
 		LEFT JOIN @properties_int AS j_up
-			ON j_up.`tid` = 1
+			ON j_up.`tid` = {%TID_COMPUTERS}
 			AND j_up.`pid` = t.`pid`
-			AND j_up.`oid` = #
+			AND j_up.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_WIN_UPDATE})) = {%TF_WIN_UPDATE}
 			AND (
-				c.`flags` & (0x0001 | 0x0002 | 0x0004)
+				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 				OR j_up.`value` = 1
 			)
-	", CDB_PROP_BASELINE_COMPLIANCE_HOTFIX)))
+	")))
 	{
 		foreach($result as &$row)
 		{
@@ -60,7 +60,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -80,22 +80,22 @@
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c ON c.id = t.pid
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
-			AND c.`dn` LIKE '%".LDAP_OU_SHOPS."'
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_WIN_UPDATE})) = {%TF_WIN_UPDATE}
+			AND c.`dn` LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{
 		$count_gup = intval($result[0][0]);
 	}
-	
+
 	if($db->select_ex($result, rpv("
 		SELECT COUNT(*)
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c ON c.id = t.pid
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
-			AND c.`dn` NOT LIKE '%".LDAP_OU_SHOPS."'
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_WIN_UPDATE})) = {%TF_WIN_UPDATE}
+			AND c.`dn` NOT LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{
 		$count_goo = intval($result[0][0]);
@@ -112,31 +112,28 @@
 			FROM @computers AS c
 			LEFT JOIN @tasks AS t
 				ON
-				t.`tid` = 1
+				t.`tid` = {%TID_COMPUTERS}
 				AND t.`pid` = c.`id`
-				AND (t.`flags` & (0x0001 | 0x0040)) = 0x0040
+				AND (t.`flags` & ({%TF_CLOSED} | {%TF_WIN_UPDATE})) = {%TF_WIN_UPDATE}
 			LEFT JOIN @properties_int AS j_up
-				ON j_up.`tid` = 1
+				ON j_up.`tid` = {%TID_COMPUTERS}
 				AND j_up.`pid` = c.`id`
-				AND j_up.`oid` = #
+				AND j_up.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
 			LEFT JOIN @properties_str AS j_os
-				ON j_os.`tid` = 1
+				ON j_os.`tid` = {%TID_COMPUTERS}
 				AND j_os.`pid` = c.`id`
-				AND j_os.`oid` = #
+				AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 			LEFT JOIN @properties_str AS j_ver
-				ON j_ver.`tid` = 1
+				ON j_ver.`tid` = {%TID_COMPUTERS}
 				AND j_ver.`pid` = c.`id`
-				AND j_ver.`oid` = #
+				AND j_ver.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION}
 			WHERE
-				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND j_up.`value` <> 1
-				AND c.`name` NOT REGEXP {s3}
+				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
-			HAVING (BIT_OR(t.`flags`) & 0x0040) = 0
+			HAVING (BIT_OR(t.`flags`) & {%TF_WIN_UPDATE}) = 0
 		",
-		CDB_PROP_BASELINE_COMPLIANCE_HOTFIX,
-		CDB_PROP_OPERATINGSYSTEM,
-		CDB_PROP_OPERATINGSYSTEMVERSION,
 		CDB_REGEXP_SERVERS
 	)))
 	{
@@ -174,7 +171,7 @@
 					'Необходимо устранить проблему установки обновлений ОС.'
 					."\nПК: ".$row['name']
 					."\nОперационная система: ".$row['os'].' ('.$row['ver'].')'
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 					."\nКод работ: OSUP\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция-Устранение-ошибок-установки-обновлений.ashx'
 				)
 			);
@@ -186,7 +183,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x0040, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_WIN_UPDATE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

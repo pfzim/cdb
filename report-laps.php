@@ -41,9 +41,9 @@ EOT;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
 		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & (0x0001 | 0x0800)) = 0x0800
+		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & ({%TF_CLOSED} | {%TF_LAPS})) = {%TF_LAPS}
 		WHERE
-			(m.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+			(m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
 		GROUP BY m.`id`
 		ORDER BY m.`name`
@@ -52,7 +52,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & 0x0800)
+			if(intval($row['flags']) & TF_LAPS)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 				$opened++;

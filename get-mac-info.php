@@ -118,7 +118,7 @@ EOT;
 					d.`id` = m.`pid`
 			WHERE
 				m.`mac` = !
-			ORDER BY (m.`flags` & 0x0080) = 0x0080
+			ORDER BY (m.`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM}
 			LIMIT 1
 			",
 			strtolower(preg_replace('/[^0-9a-f]/i', '', $_GET['mac']))))
@@ -150,7 +150,7 @@ EOT;
 					d.`id` = m.`pid`
 			WHERE
 				m.`mac` = !
-				AND (m.`flags` & 0x0080)
+				AND (m.`flags` & {%MF_SERIAL_NUM})
 			LIMIT 1
 			",
 			$_GET['sn']))

@@ -57,16 +57,16 @@ EOT;
 				SELECT COUNT(*)
 				FROM @tasks AS t2
 				WHERE t2.`pid` = t.`pid`
-					AND t2.`tid` = 3
-					AND (t2.`flags` & (t.`flags` | 0x0001)) = (t.`flags` | 0x0001)
+					AND t2.`tid` = {%TID_MAC}
+					AND (t2.`flags` & (t.`flags` | {%TF_CLOSED})) = (t.`flags` | {%TF_CLOSED})
 					AND t2.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
 		FROM @tasks AS t
 		LEFT JOIN @mac AS m ON m.`id` = t.`pid`
 		LEFT JOIN @devices AS d ON d.`id` = m.`pid`
 		WHERE
-			t.`tid` = 3
-			AND (t.`flags` & 0x0001) = 0
+			t.`tid` = {%TID_MAC}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 		ORDER BY t.`flags`, d.`name`, m.`port`, m.`name`
 	")))
 	{
@@ -97,19 +97,19 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020)) = 0x0020) AS `inv_problems`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x8000)) = 0x8000) AS `inv_opened`,
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `inv_problems`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}) AS `inv_opened`,
 			(
 				SELECT COUNT(*)
 				FROM @mac AS m
 				LEFT JOIN @devices AS d
-					ON d.`id` = m.`pid` AND d.`type` = 3
+					ON d.`id` = m.`pid` AND d.`type` = {%DT_NETDEV}
 				LEFT JOIN @mac AS dm
 					ON
 						dm.`name` = d.`name`
-						AND (dm.`flags` & (0x0010 | 0x0040 | 0x0080)) = (0x0010 | 0x0040 | 0x0080)                    -- Only exist and active in IT Invent
+						AND (dm.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})                    -- Only exist and active in IT Invent
 				WHERE
-					(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040 | 0x0100)) = 0x0070    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
+					(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
 					AND (
 						dm.`branch_no` IS NULL
 						OR dm.`loc_no` IS NULL
@@ -119,7 +119,7 @@ EOT;
 						)
 					)
 			) AS `p_iimv`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0010)) = 0x0010) AS `o_iimv`
+			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}) AS `o_iimv`
 	")))
 	{
 		$html .= '<table>';

@@ -12,7 +12,7 @@
 
 	// Remove not existing PC after all syncs
 	
-	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~0x0008) | 0x0002) WHERE `flags` & 0x0008")))
+	if($db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_DELETED}) WHERE `flags` & {%CF_TEMP_MARK}")))
 	{
 		echo "DONE\n";
 	}
@@ -21,7 +21,7 @@
 		echo "FAILED\n";
 	}
 
-	if($db->put(rpv("UPDATE @persons SET `flags` = ((`flags` & ~0x0008) | 0x0002) WHERE `flags` & 0x0008")))
+	if($db->put(rpv("UPDATE @persons SET `flags` = ((`flags` & ~{%PF_TEMP_MARK}) | {%PF_DELETED}) WHERE `flags` & {%PF_TEMP_MARK}")))
 	{
 		echo "DONE\n";
 	}

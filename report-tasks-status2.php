@@ -136,7 +136,7 @@ EOT;
 		SELECT j1.`id`, j1.`name`, j1.`ao_script_ptn`, DATE_FORMAT(j1.`ao_ptnupdtime`, '%d.%m.%Y %H:%i:%s') AS `last_update`, j1.`ee_encryptionstatus`, DATE_FORMAT(j1.`ee_lastsync`, '%d.%m.%Y %H:%i:%s') AS `last_sync`, m.`operid`, m.`opernum`, m.`flags`
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
-		WHERE (m.`flags` & 0x0001) = 0
+		WHERE (m.`flags` & {%TF_CLOSED}) = 0
 		ORDER BY j1.`name`
 	")))
 	{
@@ -161,10 +161,10 @@ EOT;
 
 	if($db->select_ex($result, rpv("
 		SELECT
-		(SELECT COUNT(*) FROM @computers WHERE (`flags` & (0x0001 | 0x0004 | 0x0002)) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
-		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & (0x0001 | 0x0004 | 0x0002)) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0200)) = 0x0200) AS `c3`,
-		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & (0x0001 | 0x0100)) = 0x0100) AS `c4`
+		(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `name` regexp '^(([[:digit:]]{4}-[nNwW])|([Pp][Cc]-))[[:digit:]]+$' AND `ao_script_ptn` = 0) AS `c1`,
+		(SELECT COUNT(*) FROM @computers WHERE `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `ee_encryptionstatus` <> 2) AS `c2`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}) AS `c3`,
+		(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_TMEE})) = {%TF_TMEE}) AS `c4`
 	")))
 	{
 		$problems_tmao = $result[0][0];

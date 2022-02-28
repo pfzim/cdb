@@ -16,7 +16,7 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT m.`id`, m.`address`, m.`name`
 		FROM @devices AS m
-		WHERE m.`type` = 1
+		WHERE m.`type` = {%DT_3PAR}
 	")))
 	{
 		foreach($result as &$row)

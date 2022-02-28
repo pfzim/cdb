@@ -160,9 +160,9 @@ require_once(ROOTDIR.'inc.config.php');
 				LEFT JOIN @files AS f
 					ON fi.`fid` = f.`id`
 				WHERE
-					-- (fi.`flags` & 0x0002) = 0                         -- File not Deleted
+					-- (fi.`flags` & {%FIF_DELETED}) = 0                         -- File not Deleted
 					-- AND 
-					-- (f.`flags` & 0x0010) = 0                      -- Not exist in IT Invent
+					-- (f.`flags` & {%FF_ALLOWED}) = 0                      -- Not exist in IT Invent
 					-- AND 
 					fi.`pid` = {d0}
 				ORDER

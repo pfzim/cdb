@@ -33,6 +33,10 @@
 		149			1			MAC Адрес 3
 		163			1			Усилитель 3G: mac-адрес 2
 		210			1			MAC Адрес 4
+		
+		TYPE_NO	CI_TYPE	TYPE_NAME
+		2       1       Ноутбук
+		85      1       Дублирующий канал связи
 
 		List all fields:
 
@@ -57,7 +61,20 @@
 			,[ADDINFO]
 			,[IMAGE_DATA]
 		FROM [ITINVENT].[dbo].[STATUS]
-  
+		
+		List all types:
+
+		SELECT [TYPE_NO]
+			  ,[CI_TYPE]
+			  ,[TYPE_NAME]
+			  ,[ADDINFO]
+			  ,[IMAGE_DATA]
+			  ,[NETWORK]
+			  ,[GEODATA]
+			  ,[PRINTER]
+			  ,[VENDOR_NO]
+		  FROM [ITINVENT].[dbo].[CI_TYPES]
+		  ORDER BY [TYPE_NO], [CI_TYPE]  
   */
 	
 	if(!defined('Z_PROTECTED')) exit;
@@ -84,10 +101,10 @@
 	}
 
 	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0010 | 0x0040 | 0x0100 | 0x0200 | 0x0400)), `status` = 0 WHERE `flags` & (0x0010 | 0x0040 | 0x0100 | 0x0200 | 0x0400)"));
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `flags` & 0x0020 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
@@ -153,9 +170,9 @@
 			//if(in_array(intval($row['STATUS_NO']), $active_statuses)) // Временно отключил проверку статусов
 			{
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
-				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
-				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? 0x0100 : 0x0000);
-				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? 0x0400 : 0x0000); //backup communication channel (ДКС)
+				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
+				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? MF_INV_MOBILEDEV : 0x0000);
+				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
 				// Load SN
@@ -163,7 +180,7 @@
 				if(!empty($mac))
 				{
 					$row_id = 0;
-					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0x0080 LIMIT 1", $mac)))
+					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $mac)))
 					{
 						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
 							$mac,
@@ -171,7 +188,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | 0x0080 | $active | $mobile| $bcc
+							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
 						)))
 						{
 							$row_id = $db->last_id();
@@ -181,9 +198,9 @@
 					{
 						$row_id = $result[0][0];
 
-						if(intval($result[0][2]) & 0x0010 && $mac !== 'N/A' && $mac !== 'N\A' && $mac !== 'NA')    // Exist in IT Invent?
+						if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $mac !== 'N/A' && $mac !== 'N\A' && $mac !== 'NA')    // Exist in IT Invent?
 						{
-							$duplicate = 0x0200;
+							$duplicate = MF_DUPLICATE;
 							echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
@@ -192,7 +209,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							0x0010 | $active | $mobile | $bcc | $duplicate,
+							MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
 							$row_id
 						));
 					}
@@ -206,7 +223,7 @@
 					if(!empty($mac) && strlen($mac) == 12)
 					{
 						$row_id = 0;
-						if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & 0x0080) = 0 LIMIT 1", $mac)))
+						if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
 						{
 							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
 								$mac,
@@ -214,7 +231,7 @@
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
-								0x0010 | $active | $mobile | $bcc
+								MF_EXIST_IN_ITINV | $active | $mobile | $bcc
 							)))
 							{
 								$row_id = $db->last_id();
@@ -224,9 +241,9 @@
 						{
 							$row_id = $result[0][0];
 
-							if(intval($result[0][2]) & 0x0010)    // Exist in IT Invent?
+							if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
 							{
-								$duplicate = 0x0200;
+								$duplicate = MF_DUPLICATE;
 								echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 							}
 
@@ -235,7 +252,7 @@
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
-								0x0010 | $active | $mobile | $bcc | $duplicate,
+								MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
 								$row_id
 							));
 						}

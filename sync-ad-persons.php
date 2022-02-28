@@ -87,7 +87,7 @@
 									@$account['givenname'][0],
 									@$account['initials'][0],
 									@$account['sn'][0],
-									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010
+									(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD
 								)))
 								{
 									$row_id = $db->last_id();
@@ -97,12 +97,12 @@
 							{
 								// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
 								$row_id = $result[0][0];
-								$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~(0x0001 | 0x0002 | 0x0008)) | #) WHERE `id` = # LIMIT 1",
+								$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_TEMP_MARK})) | #) WHERE `id` = # LIMIT 1",
 									$account['dn'],
 									@$account['givenname'][0],
 									@$account['initials'][0],
 									@$account['sn'][0],
-									(($account['useraccountcontrol'][0] & 0x02)?0x0001:0) | 0x0010,
+									(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD,
 									$row_id
 								));
 							}

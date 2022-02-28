@@ -61,7 +61,7 @@ EOT;
 	$html .= '<p>Encryption Endpoint status: '.tmee_status(intval($computer[0]['ee_encryptionstatus'])).'</p>';
 	$html .= '<p>LAPS expire time: '.$computer[0]['laps_exp'].'</p>';
 	$html .= '<p>Flags: '.flags_to_string(intval($computer[0]['flags']), $g_comp_flags, ', ').'</p>';
-	$html .= '<p>Action: '.((intval($computer[0]['flags']) & 0x0004) ? '<a href="'.CDB_URL.'/cdb.php?action=computer&do=show&id='.$computer[0]['id'].'">Show</a>':'<a href="'.CDB_URL.'/cdb.php?action=computer&do=hide&id='.$computer[0]['id'].'">Hide</a>').'</p>';
+	$html .= '<p>Action: '.((intval($computer[0]['flags']) & CF_HIDED) ? '<a href="'.CDB_URL.'/cdb.php?action=computer&do=show&id='.$computer[0]['id'].'">Show</a>':'<a href="'.CDB_URL.'/cdb.php?action=computer&do=hide&id='.$computer[0]['id'].'">Hide</a>').'</p>';
 
 	$db->select_assoc_ex($tasks, rpv("SELECT m.`id`, m.`pid`, m.`flags`, m.`date`, m.`operid`, m.`opernum` FROM @tasks AS m WHERE m.`pid` = # ORDER BY m.`date` DESC", $computer[0]['id']));
 
@@ -117,9 +117,9 @@ EOT;
 		LEFT JOIN @files AS f
 			ON fi.`fid` = f.`id`
 		WHERE
-			-- (fi.`flags` & 0x0002) = 0                         -- File not Deleted
+			-- (fi.`flags` & {%FIF_DELETED}) = 0                         -- File not Deleted
 			-- AND 
-			(f.`flags` & 0x0010) = 0                      -- Not exist in IT Invent
+			(f.`flags` & {%FF_ALLOWED}) = 0                      -- Not exist in IT Invent
 			AND fi.`pid` = #
 		ORDER
 			BY f.`path`, f.`filename`

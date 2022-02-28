@@ -15,6 +15,114 @@
 	define('CDB_PROP_PWDLASTSET',					107);
 	define('CDB_PROP_SID',							108);
 
+	// `flags` from `persons` table
+
+	define('PF_AD_DISABLED',        0x0001);
+	define('PF_DELETED',            0x0002);
+	define('PF_HIDED',              0x0004);
+	define('PF_TEMP_MARK',          0x0008);
+
+	define('PF_MASK_EXIST',         0x00F0);
+	define('PF_EXIST_AD',           0x0010);
+	//define('PF_EXIST_TMAO',         0x0020);
+	//define('PF_EXIST_TMEE',         0x0040);
+	//define('PF_EXIST_SCCM',         0x0080);
+
+	// `flags` from `computers` table
+
+	define('CF_AD_DISABLED',        0x0001);
+	define('CF_DELETED',            0x0002);
+	define('CF_HIDED',              0x0004);
+	define('CF_TEMP_MARK',          0x0008);
+
+	define('CF_MASK_EXIST',         0x00F0);
+	define('CF_EXIST_AD',           0x0010);
+	define('CF_EXIST_TMAO',         0x0020);
+	define('CF_EXIST_TMEE',         0x0040);
+	define('CF_EXIST_SCCM',         0x0080);
+
+	// `flags` from `tasks` table
+
+	define('TF_CLOSED',             0x000001);
+	define('TF_MBOX_UNLIM',         0x000008);
+	define('TF_INV_MOVE',           0x000010);
+	define('TF_INV_TASKFIX',        0x000020);
+	define('TF_WIN_UPDATE',         0x000040);
+	define('TF_TMAC',               0x000080);
+	define('TF_TMEE',               0x000100);
+	define('TF_TMAO',               0x000200);
+	define('TF_PC_RENAME',          0x000400);
+	define('TF_LAPS',               0x000800);
+	define('TF_SCCM',               0x001000);
+	define('TF_PASSWD',             0x002000);
+	define('TF_OS_REINSTALL',       0x004000);
+	define('TF_INV_ADD',            0x008000);
+	define('TF_VULN_FIX',           0x010000);
+	define('TF_VULN_FIX_MASS',      0x020000);
+	define('TF_NET_ERRORS',         0x040000);
+	define('TF_INV_SOFT',           0x080000);
+
+	// `flags` from `ac_log` table
+
+	define('ALF_FIXED',              0x0002);
+
+	// `flags` from `mac` table
+
+	define('MF_TEMP_EXCLUDED',      0x0002);
+	define('MF_PERM_EXCLUDED',      0x0004);
+	define('MF_EXIST_IN_ITINV',     0x0010);
+	define('MF_FROM_NETDEV',        0x0020);
+	define('MF_INV_ACTIVE',         0x0040);
+	define('MF_SERIAL_NUM',         0x0080);
+	define('MF_INV_MOBILEDEV',      0x0100);
+	define('MF_DUPLICATE',          0x0200);
+	define('MF_INV_BCCDEV',         0x0400);
+
+	// `type` from `devices` table
+
+	define('DT_3PAR',               1);
+	define('DT_HVCLUST',            2);
+	define('DT_NETDEV',             3);
+	define('DT_VULN_HOST',          4);
+
+	// `flags` from `net_errors` table
+
+	define('NEF_FIXED',       0x0002);
+
+	// `flags` from `vuln_scans` table
+
+	define('VSF_FIXED',       0x0002);
+	define('VSF_HIDED',       0x0004);
+
+	// `flags` from `vulnerbilities` table
+
+	define('VF_HIDED',        0x0004);
+
+	// `flags` from `devices` table
+
+	define('DF_DELETED',      0x0002);
+	define('DF_HIDED',        0x0004);
+
+	// `flags` from `files` table
+
+	define('FF_ALLOWED',      0x0010);
+
+	// `flags` from `files_inventory` table
+	
+	define('FIF_DELETED',     0x0002);
+
+	// `tid` from `properties_*` tables
+
+	define('TID_COMPUTERS',   1);
+	define('TID_PERSONS',     2);
+	define('TID_MAC',         3);
+	define('TID_AC_LOG',      4);
+	define('TID_VULN_SCANS',  5);
+	define('TID_VULNS',       6);
+	define('TID_DEVICES',     7);
+	define('TID_FILES',       8);
+
+
 /**
 	Функция возвращает текстовое представление статуса шифрования TMEE
 

@@ -58,7 +58,7 @@ EOT;
 		FROM @tasks AS m
 		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
 		WHERE
-			(m.`flags` & (0x0001 | 0x0400)) = 0x0400
+			(m.`flags` & ({%TF_CLOSED} | {%TF_PC_RENAME})) = {%TF_PC_RENAME}
 		ORDER BY j1.`name`
 	")))
 	{

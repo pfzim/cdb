@@ -37,13 +37,13 @@
 	
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
-	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $net_dev)))
+	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $net_dev)))
 	{
 		$dev_id = intval($result[0][0]);
 	}
 	else
 	{
-		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES (3, !, 0)", $net_dev)))
+		if($db->put(rpv("INSERT INTO @devices (`type`, `name`, `flags`) VALUES ({%DT_NETDEV}, !, 0)", $net_dev)))
 		{
 			$dev_id = $db->last_id();
 		}
@@ -85,7 +85,7 @@
 			{
 				$pid = 0;
 				$last_sw_id = $row[0];
-				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = 3 AND m.`name` = ! LIMIT 1", $row[0])))
+				if($db->select_ex($result, rpv("SELECT m.`id`, m.`pid` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $row[0])))
 				{
 					$pid = intval($result[0][0]);
 					if(intval($result[0][1]) != $dev_id)    // && $pid != $dev_id  - лишнее, подразумевается в первом if
@@ -102,7 +102,7 @@
 				}
 				else
 				{
-					if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES (3, #, !, 0)", $dev_id, $row[0])))
+					if($db->put(rpv("INSERT INTO @devices (`type`, `pid`, `name`, `flags`) VALUES ({%DT_NETDEV}, #, !, 0)", $dev_id, $row[0])))
 					{
 						$pid = $db->last_id();
 					}
@@ -130,7 +130,7 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @net_errors SET `pid` = #, `port` = !, `date` = NOW(), `scf` = #, `cse` = #, `ine` = #, `flags` = (`flags` & ~0x0002) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @net_errors SET `pid` = #, `port` = !, `date` = NOW(), `scf` = #, `cse` = #, `ine` = #, `flags` = (`flags` & ~{%NEF_FIXED}) WHERE `id` = # LIMIT 1",
 					$pid,
 					$row[1],  // port
 					$row[2],  // SingleCollisionFrames

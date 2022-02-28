@@ -23,10 +23,10 @@
 			LEFT JOIN @computers AS c
 				ON c.`id` = t.`pid`
 			WHERE
-				t.`tid` = 1
-				AND (t.`flags` & (0x0400 | 0x0001)) = 0x0400
+				t.`tid` = {%TID_COMPUTERS}
+				AND (t.`flags` & ({%TF_PC_RENAME} | {%TF_CLOSED})) = {%TF_PC_RENAME}
 				AND (
-					c.`flags` & (0x0001 | 0x0002 | 0x0004)
+					c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 					OR c.`name` REGEXP !
 				)
 		",
@@ -51,7 +51,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -65,7 +65,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x0400)) = 0x0400")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_PC_RENAME})) = {%TF_PC_RENAME}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -75,14 +75,14 @@
 			FROM @computers AS c
 			LEFT JOIN @tasks AS t
 				ON
-					t.`tid` = 1
+					t.`tid` = {%TID_COMPUTERS}
 					AND t.pid = c.id
-					AND (t.flags & (0x0001 | 0x0400)) = 0x0400
+					AND (t.flags & ({%TF_CLOSED} | {%TF_PC_RENAME})) = {%TF_PC_RENAME}
 			WHERE
-				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
-			HAVING (BIT_OR(t.`flags`) & 0x0400) = 0
+			HAVING (BIT_OR(t.`flags`) & {%TF_PC_RENAME}) = 0
 		",
 		CDB_REGEXP_VALID_NAMES
 	)))
@@ -105,7 +105,7 @@
 				'&Message='.urlencode(
 					"Имя ПК не соответствует шаблону. Переименуйте ПК ".$row['name'].
 					"\nDN: ".$row['dn'].
-					"\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ').
+					"\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ').
 					"\nКод работ: RNM01\n\n".
 					WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Регламент-именования-ресурсов-в-каталоге-Active-Directory.ashx'
 				)
@@ -118,7 +118,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x0400, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_PC_RENAME}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

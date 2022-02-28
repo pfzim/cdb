@@ -92,7 +92,7 @@
 			$row_id = 0;
 			if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['COMP_NAME'])))
 			{
-				if($db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`, `flags`) VALUES (!, !, #, !, 0x0020)",
+				if($db->put(rpv("INSERT INTO @computers (`name`, `ao_ptnupdtime`, `ao_script_ptn`, `ao_as_pstime`, `flags`) VALUES (!, !, #, !, {%CF_EXIST_TMAO})",
 					$row['COMP_NAME'],
 					$ptnupdtime,
 					$script_ptn,
@@ -105,7 +105,7 @@
 			else
 			{
 				$row_id = $res[0][0];
-				$db->put(rpv("UPDATE @computers SET `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~0x0008) | 0x0020) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @computers SET `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_TMAO}) WHERE `id` = # LIMIT 1",
 					$ptnupdtime,
 					$script_ptn,
 					$as_pstime,
@@ -123,7 +123,7 @@
 
 		// Mark very old events as fixed
 		
-		$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE ((`flags` & 0x0002) = 0) AND `last` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+		$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | {%CF_DELETED}) WHERE ((`flags` & {%CF_DELETED}) = 0) AND `last` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 
 		$result = sqlsrv_query($conn, "
 			SELECT
@@ -228,7 +228,7 @@
 							SET
 								`last` = !,
 								`cmdln` = !,
-								`flags` = (`flags` & ~0x0002)
+								`flags` = (`flags` & ~{%CF_DELETED})
 							WHERE
 								`id` = #
 							LIMIT 1

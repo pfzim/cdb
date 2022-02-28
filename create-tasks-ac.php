@@ -28,9 +28,9 @@
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0080 | 0x0001)) = 0x0080
-			AND c.`flags` & (0x0001 | 0x0002 | 0x0004)
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_TMAC} | {%TF_CLOSED})) = {%TF_TMAC}
+			AND c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 	")))
 	{
 		foreach($result as &$row)
@@ -51,8 +51,8 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
-					$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | 0x0002) WHERE (`flags` & 0x0002) = 0 AND `pid` = #", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | {%ALF_FIXED}) WHERE (`flags` & {%ALF_FIXED}) = 0 AND `pid` = #", $row['id']));
 					$i++;
 				}
 			}
@@ -66,7 +66,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x0080)) = 0x0080")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_TMAC})) = {%TF_TMAC}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -102,19 +102,19 @@
 				c.`flags`
 			FROM @computers AS c
 			LEFT JOIN @tasks AS t ON
-				t.`tid` = 1
+				t.`tid` = {%TID_COMPUTERS}
 				AND t.`pid` = c.`id`
-				AND (t.`flags` & (0x0001 | 0x0080)) = 0x0080
+				AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMAC})) = {%TF_TMAC}
 			LEFT JOIN @ac_log AS al ON
 				al.`pid` = c.`id`
 			WHERE
-				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
-				AND (al.`flags` & 0x0002) = 0
+				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND (al.`flags` & {%ALF_FIXED}) = 0
 				AND c.`name` REGEXP {s0}
 			GROUP BY c.`id`
 			HAVING 
-				(BIT_OR(t.`flags`) & 0x0080) = 0
-				-- AND (BIT_AND(al.`flags`) & 0x0002) = 0
+				(BIT_OR(t.`flags`) & {%TF_TMAC}) = 0
+				-- AND (BIT_AND(al.`flags`) & {%ALF_FIXED}) = 0
 				AND COUNT(al.`id`) > 0
 		",
 		CDB_REGEXP_OFFICES
@@ -139,7 +139,7 @@
 				FROM @ac_log AS al
 				WHERE
 					al.`pid` = #
-					AND (al.`flags` & 0x0002) = 0
+					AND (al.`flags` & {%ALF_FIXED}) = 0
 			",
 			$row['id'])))
 			{
@@ -172,7 +172,7 @@
 						."\nПК: ".$row['name']
 						//."\nПуть к заблокированному файлу: ".$row['app_path']
 						//."\nПроцесс запускавший файл: ".$row['cmdln']
-						."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+						."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 						."\nКод работ: AC001\n\n"//.WIKI_URL.'/Департамент%20ИТ.ashx'
 						."\n\nСписок обнаруженного и заблокированного ПО:".$message
 					)
@@ -191,7 +191,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x0080, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_TMAC}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 

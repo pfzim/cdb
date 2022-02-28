@@ -62,7 +62,7 @@
 		$row_id = 0;
 		if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['DeviceName'])))
 		{
-			if($db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`, `flags`) VALUES (!, !, #, 0x0040)",
+			if($db->put(rpv("INSERT INTO @computers (`name`, `ee_lastsync`, `ee_encryptionstatus`, `flags`) VALUES (!, !, #, {%CF_EXIST_TMEE})",
 				$row['DeviceName'], 
 				$lastsync, 
 				$row['EncryptionStatus']
@@ -74,7 +74,7 @@
 		else
 		{
 			$row_id = $res[0][0];
-			$db->put(rpv("UPDATE @computers SET `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~0x0008) | 0x0040) WHERE `id` = # LIMIT 1",
+			$db->put(rpv("UPDATE @computers SET `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_TMEE}) WHERE `id` = # LIMIT 1",
 				$lastsync, 
 				$row['EncryptionStatus'],
 				$row_id

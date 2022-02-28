@@ -28,14 +28,14 @@
 		$type = 0x0000;
 		if(!empty($_GET['type']) && intval($_GET['type']) == 2)
 		{
-			$type = 0x0080;
+			$type = MF_SERIAL_NUM;
 		}
 		
-		if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & 0x0080) = #) LIMIT 1", $_GET['mac'], $type)))
+		if($db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $_GET['mac'], $type)))
 		{
 			if($_GET['do'] === 'reset')
 			{
-				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~(0x0002 | 0x0004)) WHERE `id` = # LIMIT 1", $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})) WHERE `id` = # LIMIT 1", $result[0][0])))
 				{
 					echo 'OK';
 					return;
@@ -43,7 +43,7 @@
 			}
 			else if($_GET['do'] === 'exclude')
 			{
-				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0004), comment = ! WHERE `id` = # LIMIT 1", @$_GET['comment'], $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_PERM_EXCLUDED}), comment = ! WHERE `id` = # LIMIT 1", @$_GET['comment'], $result[0][0])))
 				{
 					echo 'OK';
 					return;
@@ -51,7 +51,7 @@
 			}
 			else if($_GET['do'] === 'delete')
 			{
-				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $result[0][0])))
+				if($db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `id` = # LIMIT 1", $result[0][0])))
 				{
 					echo 'OK';
 					return;

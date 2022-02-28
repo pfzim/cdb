@@ -33,17 +33,17 @@
 		LEFT JOIN c_computers AS c
 			ON t.`pid` = c.`id`
 		LEFT JOIN c_files_inventory AS fi
-			ON fi.`pid` = c.`id` AND fi.`flags` & 0x0020 = 0
+			ON fi.`pid` = c.`id` AND fi.`flags` & {%FIF_DELETED} = 0
 		LEFT JOIN c_files AS f
 			ON fi.`fid` = f.`id`
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & (0x0001 | 0x0080000)) = 0x0080000     -- Task status is Opened
-			AND (f.`flags` & 0x0010) = 0                           -- Not exist in IT Invent
+			t.`tid` = {%TID_COMPUTERS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}     -- Task status is Opened
+			AND (f.`flags` & {%FF_ALLOWED}) = 0                                    -- Not exist in IT Invent
 		GROUP BY t.`id`
 		HAVING
 			`files_count` = 0
-			OR c.`flags` & (0x0001 | 0x0002 | 0x0004)
+			OR c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 	")))
 	{
 		foreach($result as &$row)
@@ -63,7 +63,7 @@
 				if($xml !== FALSE)
 				{
 					echo $row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -76,7 +76,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (0x0001 | 0x080000)) = 0x080000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -91,19 +91,19 @@
 		LEFT JOIN @files_inventory AS fi
 			ON
 				fi.`pid` = c.`id`
-				AND (fi.`flags` & 0x0020) = 0                     -- File not Deleted
+				AND (fi.`flags` & {%FIF_DELETED}) = 0                     -- File not Deleted
 		LEFT JOIN @files AS f
 			ON fi.`fid` = f.`id`
 		WHERE
-			(f.`flags` & 0x0010) = 0                              -- Not exist in IT Invent
-			AND c.`flags` & (0x0001 | 0x0002 | 0x0004) = 0        -- Not Disabled, Not Deleted, Not Hide
+			(f.`flags` & {%FF_ALLOWED}) = 0                              -- Not exist in IT Invent
+			AND c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED}) = 0        -- Not Disabled, Not Deleted, Not Hide
 			AND c.`id` NOT IN (
 				SELECT
 					DISTINCT t.`id`
 				FROM @tasks AS t
 				WHERE
-					t.`tid` = 1
-					AND (t.flags & (0x0001 | 0x080000)) = 0x080000
+					t.`tid` = {%TID_COMPUTERS}
+					AND (t.flags & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}
 			)
 		GROUP BY c.`id`
 		ORDER BY files_count
@@ -134,7 +134,7 @@
 				.'&Message='.urlencode(
 					'На компьютере обнаружено ПО не зарегистрированное в IT Invent'
 					."\n\nИмя ПК: ".$row['name']
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & 0x00F0, $g_comp_flags, ', ')
+					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 					."\nСписок обнаруженного ПО доступен по ссылке: ".CDB_URL.'/cdb.php?action=get-computer-info&id='.$row['id']
 					."\n\nКод работ: INV06"
 					."\n\nСледует зарегистрировать ПО в ИТ Инвент или удалить с ПК пользователя. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
@@ -153,7 +153,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (1, #, 0x080000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_INV_SOFT}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

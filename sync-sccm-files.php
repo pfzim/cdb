@@ -55,7 +55,7 @@
 	}
 
 	// Mark as Deleted all files before load
-	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE ((`flags` & 0x0002) = 0)"));
+	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | {%FIF_DELETED}) WHERE ((`flags` & {%FIF_DELETED}) = 0)"));
 
 	// Load files inventory data
 	
@@ -100,7 +100,7 @@
 
 			if(!$db->select_ex($res, rpv("SELECT c.`id` FROM @computers AS c WHERE c.`name` = ! LIMIT 1", $row['DeviceName'])))
 			{
-				if($db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, 0x0080)",
+				if($db->put(rpv("INSERT INTO @computers (`name`, `flags`) VALUES (!, {%CF_EXIST_SCCM})",
 					$row['DeviceName']
 				)))
 				{
@@ -150,8 +150,8 @@
 						VALUES (#, #, {s2}, 0x0000)
 					ON DUPLICATE KEY
 						UPDATE
-							`scan_date` = IF(`scan_date` < {s2}, {s2}, `scan_date`),          -- Update `scan_date` if newer
-							`flags` = IF(`scan_date` < {s2}, (`flags` & ~0x0002), `flags`)    -- Remove flag Deleted if `scan_date` newer
+							`scan_date` = IF(`scan_date` < {s2}, {s2}, `scan_date`),                  -- Update `scan_date` if newer
+							`flags` = IF(`scan_date` < {s2}, (`flags` & ~{%FIF_DELETED}), `flags`)    -- Remove flag Deleted if `scan_date` newer
 				",
 				$device_id,
 				$file_id,
@@ -162,7 +162,7 @@
 	}
 
 	// Mark as Deleted all files scanned more 30 days ago
-	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | 0x0002) WHERE `scan_date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+	$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | {%FIF_DELETED}) WHERE `scan_date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 	
 	echo 'Count: '.$i."\r\n";
 

@@ -58,7 +58,7 @@ EOT;
 	WHERE `loc_no` IN 
 		(SELECT DISTINCT `loc_no`
 		FROM @mac
-		WHERE (`flags` & 0x0400) > 0 AND (`flags` & 0x0040) > 0 AND `loc_no` <> 0)
+		WHERE (`flags` & {%MF_INV_BCCDEV}) > 0 AND (`flags` & {%MF_INV_ACTIVE}) > 0 AND `loc_no` <> 0)
 	AND PORT LIKE 'self'
 	ORDER BY `name`
 	")))

@@ -59,7 +59,7 @@
 	}
 
 	// before sync remove marks: 0x0010 - Exist in IT Invent
-	$db->put(rpv("UPDATE @files SET `flags` = (`flags` & ~0x0010) WHERE `flags` & 0x0010"));
+	$db->put(rpv("UPDATE @files SET `flags` = (`flags` & ~{%FF_ALLOWED}) WHERE `flags` & {%FF_ALLOWED}"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
@@ -150,7 +150,7 @@
 								{
 									//echo 'Pattern  : '.$path."\n".'Match    : '.$row['path']."\n".'  Pattern: '.$file."\n".'  Match  : '.$row['filename']."\n";
 										
-									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | 0x0010) WHERE `id` = # LIMIT 1", $row['id']));
+									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | {%FF_ALLOWED}) WHERE `id` = # LIMIT 1", $row['id']));
 									
 									break;
 									

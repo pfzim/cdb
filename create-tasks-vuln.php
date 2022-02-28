@@ -31,12 +31,12 @@
 		LEFT JOIN @devices AS d
 			ON d.`id` = vs.`pid`
 		WHERE
-			t.`tid` = 5
-			AND (t.`flags` & (0x0001 | 0x010000)) = 0x010000
+			t.`tid` = {%TID_VULN_SCANS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}
 			AND (
-				d.`flags` & 0x0004                              -- Manual hide
-				OR vs.`flags` & 0x0002                          -- Marked as Fixed
-				OR v.`flags` & 0x0004                           -- Manual hide
+				d.`flags` & {%DF_HIDED}                              -- Manual hide
+				OR vs.`flags` & {%VSF_FIXED}                         -- Marked as Fixed
+				OR v.`flags` & {%VF_HIDED}                           -- Manual hide
 			)
 	")))
 	{
@@ -58,7 +58,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -72,7 +72,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x010000)) = 0x010000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -88,21 +88,21 @@
 		FROM @vuln_scans AS vs
 		LEFT JOIN @tasks AS t
 			ON
-			t.`tid` = 5
+			t.`tid` = {%TID_VULN_SCANS}
 			AND t.`pid` = vs.`id`
-			AND (t.`flags` & (0x0001 | 0x010000)) = 0x010000
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}
 		LEFT JOIN @vulnerabilities AS v
 			ON v.`plugin_id` = vs.`plugin_id`
 		LEFT JOIN @devices AS d
 			ON d.`id` = vs.`pid`
 		WHERE
-			(d.`flags` & 0x0004) = 0                                                                           -- Device not excluded (Manual hide)
-			AND (vs.`flags` & (0x0002 | 0x0004)) = 0                                                           -- Not marked as Fixed OR Manual hide
+			(d.`flags` & {%DF_HIDED}) = 0                                                                      -- Device not excluded (Manual hide)
+			AND (vs.`flags` & ({%VSF_FIXED} | {%VSF_HIDED})) = 0                                               -- Not marked as Fixed OR Manual hide
 			AND v.`severity` >= 3                                                                              -- Severity >= 3
-			AND (v.`flags` & 0x0004) = 0                                                                       -- Vulnerability not excluded (Manual hide)
+			AND (v.`flags` & {%VF_HIDED}) = 0                                                                  -- Vulnerability not excluded (Manual hide)
 			AND (SELECT COUNT(*) FROM @vuln_scans AS ivs WHERE ivs.`plugin_id` = vs.`plugin_id`) < 100         -- Not mass vulnerability (affected < 100)
 		GROUP BY vs.`id`
-		HAVING (BIT_OR(t.`flags`) & 0x010000) = 0
+		HAVING (BIT_OR(t.`flags`) & {%TF_VULN_FIX}) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -135,7 +135,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (5, #, 0x010000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULN_SCANS}, #, {%TF_VULN_FIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

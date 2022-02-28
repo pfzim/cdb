@@ -46,25 +46,22 @@ EOT;
 				j_ver.`value` AS `ver`
 			FROM @computers AS c
 			LEFT JOIN @properties_int AS j_up
-				ON j_up.`tid` = 1
+				ON j_up.`tid` = {%TID_COMPUTERS}
 				AND j_up.`pid` = c.`id`
-				AND j_up.`oid` = #
+				AND j_up.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
 			LEFT JOIN @properties_str AS j_os
-				ON j_os.`tid` = 1
+				ON j_os.`tid` = {%TID_COMPUTERS}
 				AND j_os.`pid` = c.`id`
-				AND j_os.`oid` = #
+				AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 			LEFT JOIN @properties_str AS j_ver
-				ON j_ver.`tid` = 1
+				ON j_ver.`tid` = {%TID_COMPUTERS}
 				AND j_ver.`pid` = c.`id`
-				AND j_ver.`oid` = #
+				AND j_ver.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION}
 			WHERE
-				(c.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND j_up.`value` <> 1
-				AND c.`name` NOT REGEXP {s3}
+				AND c.`name` NOT REGEXP {s0}
 		",
-		CDB_PROP_BASELINE_COMPLIANCE_HOTFIX,
-		CDB_PROP_OPERATINGSYSTEM,
-		CDB_PROP_OPERATINGSYSTEMVERSION,
 		CDB_REGEXP_SERVERS
 	)))
 	{

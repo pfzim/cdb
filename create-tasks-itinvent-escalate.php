@@ -26,10 +26,10 @@
 			ON m.`id` = t.`pid`
 		WHERE
 			t.`tid` = 3
-			AND (t.`flags` & (0x0001 | 0x0020)) = 0x0020          -- Task status is Opened
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}          -- Task status is Opened
 			AND (
-				m.`flags` & (0x0002 | 0x0004)                   -- Temprary excluded or Premanently excluded
-				OR (m.`flags` & (0x0010 | 0x0040)) = 0x0050     -- Exist AND Active in IT Invent
+				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
+				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent
 			)
 	")))
 	{
@@ -50,7 +50,7 @@
 				if($xml !== FALSE)
 				{
 					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -63,7 +63,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x0020)) = 0x0020")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -85,19 +85,19 @@
 			ON d.`id` = m.`pid`
 		LEFT JOIN c_tasks AS t
 			ON
-				t.`tid` = 3
+				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND (t.flags & (0x0001 | 0x0020)) = 0x0020
+				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}
 		LEFT JOIN c_tasks AS t2
 			ON
-				t2.`tid` = 3
+				t2.`tid` = {%TID_MAC}
 				AND t2.pid = m.id
-				AND (t2.flags & 0x8000)
+				AND (t2.flags & {%TF_INV_ADD})
 		WHERE
-			(m.`flags` & (0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0040)) = 0x0020    -- Not Temprary excluded, Not Premanently excluded, Imported from netdev, Not exist in IT Invent
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, Imported from netdev, Not exist in IT Invent
 		GROUP BY m.`id`
 		HAVING
-			(BIT_OR(t.`flags`) & 0x0020) = 0
+			(BIT_OR(t.`flags`) & {%TF_INV_TASKFIX}) = 0
 			AND `issues` > 1
 	")))
 	{
@@ -124,7 +124,7 @@
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
 					'Необходимо проанализировать заявки по данному сетевому устройству. Принять меры: добавить в ИТ Инвент, удалить из базы Снежинки или добавить в исключение.'
-					."\n\n".((intval($row['flags']) & 0x0080) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+					."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 					."\nIP: ".$row['ip']
 					."\nDNS name: ".$row['name']
 					."\nУстройство подключено к: ".$row['netdev']
@@ -150,7 +150,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (3, #, 0x0020, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_TASKFIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

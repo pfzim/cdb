@@ -21,11 +21,11 @@
 		SELECT t.`id`, t.`operid`, t.`opernum`, d.`name`
 		FROM @tasks AS t
 		LEFT JOIN @devices AS d
-			ON d.`id` = t.`pid` AND t.`tid` = 7 AND d.`type` = 3
+			ON d.`id` = t.`pid` AND t.`tid` = {%TID_DEVICES} AND d.`type` = {%DT_NETDEV}
 		WHERE
-			t.`tid` = 7
-			AND (t.`flags` & (0x0001 | 0x040000)) = 0x040000     -- Task status is Opened
-			AND d.`flags` & (0x0002 | 0x0004)                    -- Deleted, Manual hide
+			t.`tid` = {%TID_DEVICES}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}     -- Task status is Opened
+			AND d.`flags` & ({%DF_DELETED} | {%DF_HIDED})                              -- Deleted, Manual hide
 	")))
 	{
 		foreach($result as &$row)
@@ -45,7 +45,7 @@
 				if($xml !== FALSE)
 				{
 					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -58,7 +58,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x040000)) = 0x040000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -71,15 +71,15 @@
 		FROM @devices AS d
 		LEFT JOIN @tasks AS t
 			ON
-				t.`tid` = 7
+				t.`tid` = {%TID_DEVICES}
 				AND t.pid = d.id
-				AND (t.flags & (0x0001 | 0x040000)) = 0x040000
+				AND (t.flags & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}
 		LEFT JOIN @net_errors AS e ON
 			e.`pid` = d.`id`
 		WHERE
-			d.`type` = 3
-			AND (d.`flags` & (0x0002 | 0x0004)) = 0    -- Not deleted, not hide
-			AND (e.`flags` & 0x0002) = 0
+			d.`type` = {%DT_NETDEV}
+			AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
+			AND (e.`flags` & {%NEF_FIXED}) = 0
 			AND e.`port` <> 'FastEthernet4'
 			AND (
 			  -- e.`scf` > 10
@@ -89,7 +89,7 @@
 			)
 		GROUP BY d.`id`
 		HAVING
-			(BIT_OR(t.`flags`) & 0x040000) = 0
+			(BIT_OR(t.`flags`) & {%TF_NET_ERRORS}) = 0
 			AND COUNT(e.`id`) > 0
 	")))
 	{
@@ -112,7 +112,7 @@
 					FROM @net_errors AS e
 					WHERE
 						e.`pid` = #
-						AND (e.`flags` & 0x0002) = 0
+						AND (e.`flags` & {%NEF_FIXED}) = 0
 				",
 				$row['id']
 			)))
@@ -162,7 +162,7 @@
 				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (7, #, 0x040000, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_DEVICES}, #, {%TF_NET_ERRORS}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 

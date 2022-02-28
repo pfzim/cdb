@@ -66,9 +66,9 @@ EOT;
 		FROM c_properties_date AS ll
 		LEFT JOIN c_persons AS p ON p.`id` = ll.`pid`
 		WHERE
-		  ll.`tid` = 2
+		  ll.`tid` = {%TID_PERSONS}
 		  AND ll.`oid` = {d0}
-		  AND (p.`flags` & (0x0001 | 0x0002 | 0x0004)) = 0
+		  AND (p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED})) = 0
 		  AND ll.`value` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
 		ORDER BY ll.`value`, p.`login`
 		LIMIT 100

@@ -26,9 +26,9 @@
 		LEFT JOIN @vulnerabilities AS v
 			ON v.`plugin_id` = t.`pid`
 		WHERE
-			t.`tid` = 6
-			AND (t.`flags` & (0x0001 | 0x020000)) = 0x020000
-			AND v.`flags` & 0x0004                              -- Manual hide
+			t.`tid` = {%TID_VULNS}
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}
+			AND v.`flags` & {%VF_HIDED}                              -- Manual hide
 	")))
 	{
 		foreach($result as &$row)
@@ -49,7 +49,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['plugin_name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | 0x0001) WHERE `id` = # LIMIT 1", $row['id']));
+					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 					$i++;
 				}
 			}
@@ -63,7 +63,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & (0x0001 | 0x020000)) = 0x020000")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -78,20 +78,20 @@
 		FROM @vulnerabilities AS v
 		LEFT JOIN @tasks AS t
 			ON
-				t.`tid` = 6
+				t.`tid` = {%TID_VULNS}
 				AND t.`pid` = v.`plugin_id`
-				AND (t.`flags` & (0x0001 | 0x020000)) = 0x020000
+				AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}
 		LEFT JOIN @vuln_scans AS vs
 			ON
 				vs.`plugin_id` = v.`plugin_id`
-				AND (vs.`flags` & 0x0002) = 0x0000                         -- Not fixed
+				AND (vs.`flags` & {%VSF_FIXED}) = 0x0000                         -- Not fixed
 		WHERE
-			(v.`flags` & 0x0004) = 0                                       -- Not excluded (Manual hide)
-			AND v.`severity` >= 3                                          -- Severity >= 3
+			(v.`flags` & {%VF_HIDED}) = 0                                        -- Not excluded (Manual hide)
+			AND v.`severity` >= 3                                                -- Severity >= 3
 		GROUP BY v.`plugin_id`		
 		HAVING
-			(BIT_OR(t.`flags`) & 0x020000) = 0                             -- Not yet task created
-			AND v_count >= 100                                             -- Affected devices >= 100
+			(BIT_OR(t.`flags`) & {%TF_VULN_FIX_MASS}) = 0                        -- Not yet task created
+			AND v_count >= 100                                                   -- Affected devices >= 100
 		ORDER BY
 			severity DESC,
 			v_count DESC
@@ -126,7 +126,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['plugin_name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES (6, #, 0x020000, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULNS}, #, {%TF_VULN_FIX_MASS}, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
