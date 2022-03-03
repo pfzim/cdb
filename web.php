@@ -52,6 +52,14 @@ require_once(ROOTDIR.'inc.config.php');
 	require_once(ROOTDIR.'inc.utils.php');
 	require_once(ROOTDIR.'inc.flags.php');
 
+function sql_like_escape($value)
+{
+    $escapers = array('\\', '%', '_');
+    $replacements = array('\\\\', '\\%', '\\_');
+    $result = str_replace($escapers, $replacements, $value);
+    return $result;
+}
+
 	$action = '';
 	if(isset($_GET['action']))
 	{
@@ -251,7 +259,7 @@ require_once(ROOTDIR.'inc.config.php');
 				$offset = $_GET['offset'];
 			}			
 
-			$search = sql_escape(trim($_GET['search']));
+			$search = sql_escape(sql_like_escape(trim($_GET['search'])));
 			
 			if($db->select_ex($result, rpv("
 				SELECT
@@ -306,7 +314,7 @@ require_once(ROOTDIR.'inc.config.php');
 
 			$path = '';
 			$filename = '';
-			$search = sql_escape(trim($_GET['searchpc']));
+			$search = sql_escape(sql_like_escape(trim($_GET['searchpc'])));
 			
 			if($db->select_ex($result, rpv("
 				SELECT
