@@ -61,6 +61,8 @@
 	// before sync remove marks: 0x0010 - Exist in IT Invent
 	$db->put(rpv("UPDATE @files SET `flags` = (`flags` & ~{%FF_ALLOWED}) WHERE `flags` & {%FF_ALLOWED}"));
 
+	$db->select_ex($res, rpv("SELECT f.`id`, f.`filename`, f.`path` FROM @files AS f"));
+	
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
 			m.[MODEL_NO]
@@ -104,7 +106,7 @@
 				OR m10.[FIELD_VALUE] IS NOT NULL
 			)
 	");
-
+	
 	if($invent_result !== FALSE)
 	{
 		sqlsrv_free_stmt($invent_result);
@@ -112,48 +114,48 @@
 		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
 
 		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		while($row_patterns = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
-			//echo 'NAME: '.$row['sw_name'].' VERSION: '.$row['sw_ver']."\r\n";
+			//echo 'NAME: '.$row_patterns['sw_name'].' VERSION: '.$row_patterns['sw_ver']."\r\n";
 
-			$files = array();
-			if(!empty($row['exe1'])) $files = array_merge($files, explode("\r\n", $row['exe1']));
-			if(!empty($row['exe2'])) $files = array_merge($files, explode("\r\n", $row['exe2']));
-			if(!empty($row['exe3'])) $files = array_merge($files, explode("\r\n", $row['exe3']));
-			if(!empty($row['exe4'])) $files = array_merge($files, explode("\r\n", $row['exe4']));
-			if(!empty($row['exe5'])) $files = array_merge($files, explode("\r\n", $row['exe5']));
+			$file_patterns = array();
+			if(!empty($row_patterns['exe1'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe1']));
+			if(!empty($row_patterns['exe2'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe2']));
+			if(!empty($row_patterns['exe3'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe3']));
+			if(!empty($row_patterns['exe4'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe4']));
+			if(!empty($row_patterns['exe5'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe5']));
 
-			$paths = array();
-			if(!empty($row['path1'])) $paths = array_merge($paths, explode("\r\n", $row['path1']));
-			if(!empty($row['path2'])) $paths = array_merge($paths, explode("\r\n", $row['path2']));
-			if(!empty($row['path3'])) $paths = array_merge($paths, explode("\r\n", $row['path3']));
-			if(!empty($row['path4'])) $paths = array_merge($paths, explode("\r\n", $row['path4']));
-			if(!empty($row['path5'])) $paths = array_merge($paths, explode("\r\n", $row['path5']));
+			$path_patterns = array();
+			if(!empty($row_patterns['path1'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path1']));
+			if(!empty($row_patterns['path2'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path2']));
+			if(!empty($row_patterns['path3'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path3']));
+			if(!empty($row_patterns['path4'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path4']));
+			if(!empty($row_patterns['path5'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path5']));
 			
-			print_r($files);
-			print_r($paths);
-			if($db->select_assoc_ex($res, rpv("SELECT f.`id`, f.`filename`, f.`path` FROM @files AS f")))
+			//print_r($file_patterns);
+			//print_r($path_patterns);
+			if($res)
 			{
 				foreach($res as &$row)
 				{
-					foreach($paths as &$path)
+					foreach($path_patterns as &$path_pattern)
 					{
 						$i++;
-						if(fnmatch($path, $row['path'], FNM_NOESCAPE | FNM_CASEFOLD))
+						if(fnmatch($path_pattern, $row[2], FNM_NOESCAPE | FNM_CASEFOLD))
 						{
-							//echo 'Pattern: '.$path."\n".'Match  : '.$row['path']."\n";
+							//echo 'Pattern: '.$path_pattern."\n".'Match  : '.$row[2]."\n";
 								 
-							foreach($files as &$file)
+							foreach($file_patterns as &$file_pattern)
 							{
 								$i++;
-								if(fnmatch($file, $row['filename'], FNM_NOESCAPE | FNM_CASEFOLD))
+								if(($file_pattern === '*') || fnmatch($file_pattern, $row[1], FNM_NOESCAPE | FNM_CASEFOLD))
 								{
-									//echo 'Pattern  : '.$path."\n".'Match    : '.$row['path']."\n".'  Pattern: '.$file."\n".'  Match  : '.$row['filename']."\n";
+									//echo 'Pattern  : '.$path_pattern."\n".'Match    : '.$row[2]."\n".'  Pattern: '.$file_pattern."\n".'  Match  : '.$row[1]."\n";
+									//log_file('Pattern: '.$path_pattern.'; Match: '.$row[2].'; Pattern: '.$file_pattern.'; Match: '.$row[1]);
 										
-									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | {%FF_ALLOWED}) WHERE `id` = # LIMIT 1", $row['id']));
+									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | {%FF_ALLOWED}) WHERE `id` = # LIMIT 1", $row[0]));
 									
 									break;
-									
 								}
 							}
 							break;
