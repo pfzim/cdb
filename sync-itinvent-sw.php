@@ -62,7 +62,7 @@
 	$db->put(rpv("UPDATE @files SET `flags` = (`flags` & ~{%FF_ALLOWED}) WHERE `flags` & {%FF_ALLOWED}"));
 
 	$db->select_ex($res, rpv("SELECT f.`id`, f.`filename`, f.`path` FROM @files AS f"));
-	
+
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
 			m.[MODEL_NO]
@@ -114,9 +114,10 @@
 		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
 
 		$i = 0;
+		//$update_count = 0;
 		while($row_patterns = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
-			//echo 'NAME: '.$row_patterns['sw_name'].' VERSION: '.$row_patterns['sw_ver']."\r\n";
+			echo 'NAME: '.$row_patterns['sw_name'].' VERSION: '.$row_patterns['sw_ver']."\r\n";
 
 			$file_patterns = array();
 			if(!empty($row_patterns['exe1'])) $file_patterns = array_merge($file_patterns, explode("\r\n", $row_patterns['exe1']));
@@ -132,33 +133,48 @@
 			if(!empty($row_patterns['path4'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path4']));
 			if(!empty($row_patterns['path5'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path5']));
 			
-			//print_r($file_patterns);
-			//print_r($path_patterns);
+			print_r($path_patterns);
+			print_r($file_patterns);
+			
+			/*
+			if($update_count <= 0)
+			{
+				$update_count = 200000;
+				unset($res);
+				$db->select_ex($res, rpv("SELECT f.`id`, f.`filename`, f.`path` FROM @files AS f WHERE NOT(`flags` & {%FF_ALLOWED})"));
+			}
+			*/
+
 			if($res)
 			{
 				foreach($res as &$row)
 				{
-					foreach($path_patterns as &$path_pattern)
+					if($row)
 					{
-						$i++;
-						if(fnmatch($path_pattern, $row[2], FNM_NOESCAPE | FNM_CASEFOLD))
+						foreach($path_patterns as &$path_pattern)
 						{
-							//echo 'Pattern: '.$path_pattern."\n".'Match  : '.$row[2]."\n";
-								 
-							foreach($file_patterns as &$file_pattern)
+							$i++;
+							if(fnmatch($path_pattern, $row[2], FNM_NOESCAPE | FNM_CASEFOLD))
 							{
-								$i++;
-								if(($file_pattern === '*') || fnmatch($file_pattern, $row[1], FNM_NOESCAPE | FNM_CASEFOLD))
+								//echo 'Pattern: '.$path_pattern."\n".'Match  : '.$row[2]."\n";
+									 
+								foreach($file_patterns as &$file_pattern)
 								{
-									//echo 'Pattern  : '.$path_pattern."\n".'Match    : '.$row[2]."\n".'  Pattern: '.$file_pattern."\n".'  Match  : '.$row[1]."\n";
-									//log_file('Pattern: '.$path_pattern.'; Match: '.$row[2].'; Pattern: '.$file_pattern.'; Match: '.$row[1]);
+									$i++;
+									if(($file_pattern === '*') || fnmatch($file_pattern, $row[1], FNM_NOESCAPE | FNM_CASEFOLD))
+									{
+										//echo 'ID: '.$row[0].' Pattern  : '.$path_pattern."\n".'Match    : '.$row[2]."\n".'  Pattern: '.$file_pattern."\n".'  Match  : '.$row[1]."\n";
+										//log_file('Pattern: '.$path_pattern.'; Match: '.$row[2].'; Pattern: '.$file_pattern.'; Match: '.$row[1]);
+											
+										$db->put(rpv("UPDATE @files SET `flags` = (`flags` | {%FF_ALLOWED}) WHERE `id` = # LIMIT 1", $row[0]));
+										//$update_count--;
+										$row = NULL;
 										
-									$db->put(rpv("UPDATE @files SET `flags` = (`flags` | {%FF_ALLOWED}) WHERE `id` = # LIMIT 1", $row[0]));
-									
-									break;
+										break;
+									}
 								}
+								break;
 							}
-							break;
 						}
 					}
 				}

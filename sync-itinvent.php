@@ -172,7 +172,7 @@
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
 				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? MF_INV_MOBILEDEV : 0x0000);
-				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
+				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['CI_TYPE']) == 1 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
 				// Load SN
