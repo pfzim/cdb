@@ -101,7 +101,7 @@ EOT;
 
 	echo 'Opened: '.$i."\r\n";
 
-	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Detected vulnerabilities - Workstations', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_VULNS_MAIL_TO, CDB_TITLE.': Detected vulnerabilities - Workstations', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

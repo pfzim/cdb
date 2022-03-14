@@ -70,6 +70,7 @@
 
 	define('MF_TEMP_EXCLUDED',      0x0002);
 	define('MF_PERM_EXCLUDED',      0x0004);
+	define('MF_EXIST_IN_ZABBIX',    0x0008);
 	define('MF_EXIST_IN_ITINV',     0x0010);
 	define('MF_FROM_NETDEV',        0x0020);
 	define('MF_INV_ACTIVE',         0x0040);
@@ -77,6 +78,12 @@
 	define('MF_INV_MOBILEDEV',      0x0100);
 	define('MF_DUPLICATE',          0x0200);
 	define('MF_INV_BCCDEV',         0x0400);
+
+	// `flags` from `zabbix_hosts` table
+
+	define('ZHF_EXIST_IN_ZABBIX',       0x0008);
+	define('ZHF_MUST_BE_MONITORED',     0x0010);
+	//define('ZHF_NEED_UPDATE_IN_ZABBIX', 0x0020);
 
 	// `type` from `devices` table
 
@@ -232,7 +239,7 @@ $g_files_flags = array(
 	'',
 	'',
 	'',
-	'Exist in IT Invent'
+	'Allowed (exist in IT Invent)'
 );
 
 $g_files_short_flags = array(

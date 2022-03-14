@@ -155,6 +155,14 @@ function cidr_match($ip, $cidr)
     return false;
 }
 
+function log_file($message)
+{
+	if(defined('LOG_FILE'))
+	{
+		error_log(date('c').'  '.$message."\n", 3, LOG_FILE);
+	}
+}
+
 function cdb_log($message)
 {
 	error_log(date('c').'  '.$message."\n", 3, '/var/log/cdb/cdb.log');
@@ -186,6 +194,7 @@ function walk_route($route, $action)
 			{
 				cdb_log('INFO: Call file: '.$module_name);
 				include($module_name);
+				cdb_log('INFO: End file: '.$module_name);
 			}
 			else
 			{

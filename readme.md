@@ -125,7 +125,7 @@ UPDATE c_tasks SET `flags` = ((`flags` & ~0xFF000000) | ((`flags` & 0xFF000000) 
 | 0x0001 |                     |                                                |
 | 0x0002 | MF_TEMP_EXCLUDED    | Temporary excluded                             |
 | 0x0004 | MF_PERM_EXCLUDED    | Permanently excluded (Manual exclude)          |
-| 0x0008 |                     |                                                |
+| 0x0008 | MF_EXIST_IN_ZABBIX  | Exist in Zabbix                                |
 | 0x0010 | MF_EXIST_IN_ITINV   | Exist in IT Invent                             |
 | 0x0020 | MF_FROM_NETDEV      | Imported from netdev                           |
 | 0x0040 | MF_INV_ACTIVE       | Active in IT Invent                            |
@@ -133,6 +133,7 @@ UPDATE c_tasks SET `flags` = ((`flags` & ~0xFF000000) | ((`flags` & 0xFF000000) 
 | 0x0100 | MF_INV_MOBILEDEV    | This is mobile device (do not check location)  |
 | 0x0200 | MF_DUPLICATE        | Duplicate detected                             |
 | 0x0400 | MF_INV_BCCDEV       | Backup communication channel device            |
+| 0x0800 | MF_TEMP_SYNC_FLAG   | Temporary flag used for sync                   |
 
 SQL example:
 ```
@@ -145,7 +146,8 @@ SELECT m.`id`, m.`mac`, m.`ip`, m.`name`, m.`inv_no`, d.`name` AS `netdev`, m.`p
 		IF(m.`flags` & 0x0040, 'ActiveInv;', ''),
 		IF(m.`flags` & 0x0080, 'SN;', ''),
 		IF(m.`flags` & 0x0100, 'Mobile;', ''),
-		IF(m.`flags` & 0x0200, 'Duplicate detected;', '')
+		IF(m.`flags` & 0x0200, 'Duplicate detected;', ''),
+		IF(m.`flags` & 0x0400, 'BCCD;', '')
 	) AS `flags_to_string`
 FROM c_mac AS m
 LEFT JOIN c_devices AS d ON d.`id` = m.`pid` AND d.`type` = 3

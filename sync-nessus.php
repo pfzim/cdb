@@ -104,7 +104,7 @@
 						$device_id = $db->last_id();
 					}
 				}
-				
+
 				if($device_id)
 				{
 					$ch = curl_init(NESSUS_URL.'/scans/'.$scan['id'].'/hosts/'.$host_id);

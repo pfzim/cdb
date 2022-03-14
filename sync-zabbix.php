@@ -4,162 +4,287 @@
 	/**
 		\file
 		\brief Получение информации из Zabbix о хостах мониторинга
+		
+		1. Скрипт формирует список устройств, которые требуется поставить на 
+		   мониторинг в Zabbix, в таблицу zabbix_hosts.
+		
+		2. Получает с сервера Zabbix список хостов, которые уже поставлены
+		   на мониторинг.
+
+		3. В соответствии со значениями из таблицы zabbix_hosts добавляет, 
+		   удаляет или обновляет параметры хостов в Zabbix.
+		
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
 
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.zabbix.php');
+
 	echo "\nsync-zabbix:\n";
-	
-	//CtulhuDB connection string
-	$params = array(
-		'Database' =>				CTULHU_DB_NAME,
-		'UID' =>					CTULHU_DB_USER,
-		'PWD' =>					CTULHU_DB_PASSWD,
-		'ReturnDatesAsStrings' =>	true
-	);
+
+	function cb_template_cmp($el, $payload)
+	{
+		return ($el['templateid'] === $payload);
+	}
+
+	function cb_group_cmp($el, $payload)
+	{
+		return ($el['groupid'] === $payload);
+	}
+
+	function array_find($arr, $func, $payload)
+	{
+		foreach($arr as &$el)
+		{
+			if(call_user_func($func, $el, $payload))
+			{
+				return TRUE;
+			}
+		}
+		
+		return FALSE;
+	}
+
+	// Формируем список устройств, которые должны мониторится в Zabbix
+
+	$i = 0;
+
+	if($db->select_assoc_ex($result, rpv("
+		SELECT 
+			m.`id`,
+			m.`name`,
+			m.`mac`,
+			m.`ip`,
+			m.`inv_no`,
+			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`
+		FROM @mac AS m
+		WHERE
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_ACTIVE})) = ({%MF_INV_ACTIVE})
+			AND m.`port` = 'self'
+			AND (
+				m.`loc_no` IN (
+					SELECT DISTINCT m2.`loc_no`
+					FROM @mac AS m2
+					WHERE
+						(m2.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})
+						AND m2.`loc_no` <> 0
+				)
+			)
+		ORDER BY m.`name`
+	")))
+	{
+		$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_MUST_BE_MONITORED}) WHERE (`flags` & {%ZHF_MUST_BE_MONITORED})"));
+
+		foreach($result as &$row)
+		{
+			$db->put(rpv("INSERT INTO @zabbix_hosts (`pid`, `host_id`, `flags`) VALUES (#, 0, {%ZHF_MUST_BE_MONITORED}) ON DUPLICATE KEY UPDATE `flags` = (`flags` | {%ZHF_MUST_BE_MONITORED})", $row['id']));
+		}
+	}
+
+	// Получаем список устройств, которые уже присутствуют в Zabbix, и помечаем их в таблице
 
 	// start authentification
-	$retval = call_json_zabbix('user.login', null, array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
-	if(!is_null ($retval)) {
-		$auth_key = $retval;
+	$zabbix_result = zabbix_api_request('user.login', null, array('user' => ZABBIX_LOGIN, 'password' => ZABBIX_PASS));
+	if($zabbix_result)
+	{
+		$auth_key = $zabbix_result;
 
 		// get BCC list
-		$retval = call_json_zabbix('host.get', $auth_key, 
-			array('output' => ['hostid','host','status','proxy_hostid']
-				, 'selectInterfaces' => ['interfaceid','ip']
-				, 'selectGroups' => 'extend'
-				, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
-				)
-			);
-		// echo "BCC list:\r\n"; var_dump($retval);
-		
-		//connect to CtulhuDB
-		$conn_ctulhu = sqlsrv_connect(CTULHU_DB_HOST, $params);
-		if($conn_ctulhu === false) {
-			print_r(sqlsrv_errors());
-			exit(1);
-		}
+		$zabbix_result = zabbix_api_request(
+			'host.get',
+			$auth_key, 
+			array(
+				'output' => ['hostid', 'host', 'status', 'proxy_hostid'],
+				'selectInterfaces' => ['interfaceid', 'ip'],
+				'selectGroups' => 'extend',
+				'selectTriggers' => ['templateid', 'triggerid', 'description', 'status', 'priority']
+			)
+		);
 
-		// Remove hosts from Zabbix using previous Sync state result
-		$i = 0;
-		echo "\r\n\r\nRemoving hosts from Zabbix:\r\n";
-		$removed_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Zabbix_ToRemove]('".(ZABBIX_Host_Groups['Default'])."');");
-		while($removed_row = sqlsrv_fetch_array($removed_ret, SQLSRV_FETCH_ASSOC)) {
-			// var_dump($removed_row);
-			$zbx_hostname = strtoupper($removed_row['hostname']);
-			echo "Host {$zbx_hostname} with ip {$removed_row['ip']}\r\n";
-			$i++;
-			$retval = call_json_zabbix('host.delete', $auth_key,
-				array($removed_row['hostid'])
-			);
-			var_dump($retval); break;
-			if( is_null($retval) ) {
-				echo "Error removing host {$zbx_hostname}\r\n";
-			}
-		}
-		echo "Removed {$i} hosts\r\n\r\n";
+		$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_EXIST_IN_ZABBIX}) WHERE (`flags` & {%ZHF_EXIST_IN_ZABBIX})"));
 
-		// if some hosts was removed, refresh list from zabbix
-		if($i > 0) {
-			$retval = call_json_zabbix('host.get', $auth_key, 
-				array('output' => ['hostid','host','status','proxy_hostid']
-					, 'selectInterfaces' => ['interfaceid','ip']
-					, 'selectGroups' => 'extend'
-					, 'selectTriggers' => ['templateid','triggerid','description','status','priority']
-					)
-				);
-		}
-
-		// checking hosts 1 by 1
-		$i = 0;
-		foreach($retval as &$host) {
-			$sGroups = null; $i++;
-
-			$jsonTriggers = json_encode(array_values(array_filter($host['triggers'] ,"zabbix_trigger_id")), JSON_UNESCAPED_UNICODE);
-			if(isset($host['groups'])) {
-				foreach($host['groups'] as &$group) {
-					if(isset($group['groupid'])){
-						$sGroups .= $group['groupid'].';';
-			}}}
-			if( !is_null($sGroups) ) { $sGroups = ';'.$sGroups; }
-			$host_fixed = preg_replace('/^('.ZABBIX_Host_Prefix.')/i','',$host['host']);
-			// each IP = unique record in DB
-			foreach($host['interfaces'] as &$sIP) {
-				$bState = ($host['status']==0?'True':'False');
-				//echo  $sIP['ip'].'=> hostname:'.$host_fixed .' id:'.$host['hostid'].' proxy:'.$host['proxy_hostid'].' status:'.$bState.' groups '.$sGroups."\r\n";
-				//echo 'Triggers: '.$jsonTriggers;
-				$proc_params = array(
-					array(&$sIP['ip'], SQLSRV_PARAM_IN)
-					,array(&$host_fixed, SQLSRV_PARAM_IN)
-					,array(&$host['hostid'], SQLSRV_PARAM_IN)
-					,array(&$host['proxy_hostid'], SQLSRV_PARAM_IN)
-					,array(&$bState, SQLSRV_PARAM_IN)
-					,array(&$sGroups, SQLSRV_PARAM_IN)
-					,array(&$jsonTriggers, SQLSRV_PARAM_IN)
-				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid = ?, @proxyid = ?, @statzabbix = ?, @groups = ?, @triggers = ?;";
-				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
-				if (!sqlsrv_execute($proc_exec)) {
-					echo "Procedure spZabbix_update_bcc fail!\r\n";
-					print_r(sqlsrv_errors());
-					//die;
+		foreach($zabbix_result as &$host)
+		{
+			foreach($host['interfaces'] as &$interface)
+			{
+				if($db->select_assoc_ex($result, rpv("
+						SELECT
+							zh.`pid`
+						FROM @zabbix_hosts AS zh
+						LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
+						WHERE m.`ip` = {s0}				
+					",
+					$interface['ip']
+				)))
+				{
+					foreach($result as &$row)
+					{
+						$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = #", $host['hostid'], $row['pid']));
+					}
 				}
-				//echo "\r\n---------------------------\r\n";
 			}
 		}
-		echo "Synced from ITinvent {$i} hosts.\r\n";
+	}
 
-		//Add new hosts to Zabbix
-		$i = 0; $tru = 'True';
-		echo "\r\n\r\nCreating new hosts in Zabbix:\r\n";
-		$itinv_ret = sqlsrv_query($conn_ctulhu, "SELECT * FROM [dbo].[fList_Bcc_Itinvent] ();");
-		while($itinv_row = sqlsrv_fetch_array($itinv_ret, SQLSRV_FETCH_ASSOC)) {
-			$zbx_hostname = strtoupper($itinv_row['hostname']);
-			echo "Host {$zbx_hostname} with ip {$itinv_row['ip']}\r\n";
-			
-			$retval = call_json_zabbix('host.create', $auth_key,
-				array('host' => ZABBIX_Host_Prefix.$zbx_hostname
-					, 'groups' => array('groupid'=> ZABBIX_Host_Groups['Default']) // TODO: add group logic
-					, 'templates' => array('templateid'=> ZABBIX_Host_Template)
-					, 'proxy_hostid' => ZABBIX_Host_Proxy
-					, 'interfaces' => [
-						array('type' => '2'
-							, 'main' => '1'
-							, 'useip' => '1'
-							, 'dns' => ''
-							, 'port' => '161'
-							, 'ip' => $itinv_row['ip']
-							, 'details' => 
-							array('version' => '3'
-								, 'bulk' => '1'
-								, 'securityname' => ZABBIX_Host_SecName
-								, 'securitylevel' => '2'
-								, 'authpassphrase' => ZABBIX_Host_SecAuth
-								, 'privpassphrase' => ZABBIX_Host_SecPass
+	// Удаляем из таблицы хосты, которые не должны мониторится и уже отсутствуют в Zabbix
+
+	$db->put(rpv("DELETE FROM @zabbix_hosts WHERE (`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX})) = 0"));
+
+	echo "Starting export to Zabbix...\n";
+	
+	// Добавляем, обновляем и удаляем с мониторинга в Zabbix хосты
+
+	if($db->select_assoc_ex($result, rpv("
+		SELECT 
+			m.`id`,
+			m.`name`,
+			m.`mac`,
+			m.`ip`,
+			m.`inv_no`,
+			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+			zh.`host_id`,
+			zh.`flags`
+		FROM @zabbix_hosts AS zh
+		LEFT JOIN @mac AS m
+			ON m.`id` = zh.`pid`
+		WHERE
+			(zh.`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX}))
+	")))
+	{
+		foreach($result as &$row)
+		{
+			switch(intval($row['flags']) & (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX))
+			{
+				case (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX):  // update at Zabbix
+				{
+					echo 'Check before update at Zabbix: '.$row['name']."\n";
+
+					$zabbix_result = zabbix_api_request(
+						'host.get',
+						$auth_key, 
+						array(
+							'hostids'                   => $row['host_id'],
+							'output'                    => ['hostid', 'host', 'status', 'proxy_hostid'],
+							'selectGroups'              => ['groupid'],
+							'selectParentTemplates'     => ['templateid'],
+							//'selectInterfaces' => ['interfaceid', 'ip', 'main' => 1, 'type' => 2],
+							//'selectTriggers'   => ['templateid', 'triggerid', 'description', 'status', 'priority']
+						)
+					);
+
+					foreach($zabbix_result as &$host)
+					{
+						/*
+						Нет смысла проверять IP, т.к. он является ключём для связки Snezhinka - Zabbix
+						
+						$zabbix_result = zabbix_api_request(
+							'hostinterface.get',
+							$auth_key,
+							array(
+								'hostids'       => $row['host_id'],
+								'output'        => ['interfaceid', 'ip'],
+								'filter'        => ['main' => 1, 'type' => 2]
+							)
+						);
+						
+						if($zabbix_result && $zabbix_result['ip'] !== $row['ip'])
+						{
+							zabbix_api_request(
+								'hostinterface.update',
+								$auth_key,
+								array(
+									'interfaceid'   => $zabbix_result['interfaceid'],
+									'ip'            => $row['ip']
+								)
+							);
+						}
+						*/
+						
+						$template_id = ZABBIX_Host_Template;
+						$group_id = ZABBIX_Host_Groups['Default'];
+
+						if($host['proxy_hostid'] !== ZABBIX_Host_Proxy
+							|| !array_find($host['parentTemplates'], 'cb_template_cmp', $template_id)
+							|| !array_find($host['groups'], 'cb_group_cmp', $group_id)
+						)
+						{
+							$templates_to_clear = array_filter(
+								$host['parentTemplates'],
+								function($value) use($template_id) {
+									return !cb_template_cmp($value, $template_id);
+								}
+							);
+							
+							echo 'update at Zabbix: '.$row['name']."\n";
+							//echo json_encode($templates_to_clear, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+							zabbix_api_request(
+								'host.update',
+								$auth_key,
+								array(
+									'hostid'          => $row['host_id'],
+									'host'            => strtoupper(ZABBIX_Host_Prefix.$row['name']),
+									'groups'          => array('groupid'      => $group_id),
+									'templates'       => array('templateid'   => $template_id),
+									'templates_clear' => &$templates_to_clear,
+									'proxy_hostid'    => ZABBIX_Host_Proxy
+								)
+							);
+						}
+					}
+				}
+				break;
+
+				case ZHF_MUST_BE_MONITORED:                          // add to Zabbix
+				{
+					echo 'add to Zabbix: '.$row['name']."\n";
+
+					$zabbix_result = zabbix_api_request(
+						'host.create',
+						$auth_key,
+						array(
+							'host'         => strtoupper(ZABBIX_Host_Prefix.$row['name']),
+							'groups'       => array('groupid'      => ZABBIX_Host_Groups['Default']), // TODO: add group logic
+							'templates'    => array('templateid'   => ZABBIX_Host_Template),
+							'proxy_hostid' => ZABBIX_Host_Proxy,
+							'interfaces'   => array(
+								array(
+									'type'    => '2',
+									'main'    => '1',
+									'useip'   => '1',
+									'dns'     => '',
+									'port'    => '161',
+									'ip'      => $row['ip'],
+									'details' => array(
+										'version'        => '3',
+										'bulk'           => '1',
+										'securityname'   => ZABBIX_Host_SecName,
+										'securitylevel'  => '2',
+										'authpassphrase' => ZABBIX_Host_SecAuth,
+										'privpassphrase' => ZABBIX_Host_SecPass
+									)
+								)
 							)
 						)
-					]
-				)
-			);
-			//var_dump($retval); break;
-			if(! is_null($retval) and !is_null($retval['hostids'][0])) {
-				$i++;
-				$proc_params = array(
-					array(&$itinv_row['ip'], SQLSRV_PARAM_IN)
-					, array(&$zbx_hostname, SQLSRV_PARAM_IN)
-					, array(&$retval['hostids'][0], SQLSRV_PARAM_IN)
-					, array(&$tru, SQLSRV_PARAM_IN)
-				);
-				$sql = "EXEC [dbo].[spZabbix_update_bcc] @ipstring = ?, @hostname = ?, @hostid =? , @statzabbix = ?;";
-				$proc_exec = sqlsrv_prepare($conn_ctulhu, $sql, $proc_params);
-			}
-			//break;
-		}
-		echo "Added {$i} hosts\r\n";
+					);
+					
+					$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}) WHERE `host_id` = # LIMIT 1", $zabbix_result['hostids'][0]));
+				}
+				break;
+				
+				default:                                             // remove from Zabbix
+				{
+					echo 'remove from Zabbix: '.$row['name']."\n";
 
-		// CLOSE CONNECTION
-		sqlsrv_close($conn_ctulhu);
-	} else {
-		echo "Authentification error.\r\n";
+					$zabbix_result = zabbix_api_request(
+						'host.delete',
+						$auth_key,
+						array($row['host_id'])
+					);
+				}
+			}
+		}
 	}
+	
+	$zabbix_result = zabbix_api_request('user.logout', $auth_key, []);
 
