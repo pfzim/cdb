@@ -1,0 +1,2 @@
+0 3 * * * root /var/cdb/scripts/cdb-cron-daily.sh
+12 0 * * 6 root /var/cdb/scripts/cdb-cron-weekly.sh
