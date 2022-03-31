@@ -133,6 +133,16 @@
 			if(!empty($row_patterns['path4'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path4']));
 			if(!empty($row_patterns['path5'])) $path_patterns = array_merge($path_patterns, explode("\r\n", $row_patterns['path5']));
 			
+			foreach($path_patterns as &$path_pattern)
+			{
+				$path_pattern = trim($path_pattern);
+			}
+
+			foreach($file_patterns as &$file_pattern)
+			{
+				$file_pattern = trim($file_pattern);
+			}
+
 			print_r($path_patterns);
 			print_r($file_patterns);
 			
