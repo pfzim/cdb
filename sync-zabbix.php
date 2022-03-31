@@ -7,11 +7,19 @@
 		
 		1. Скрипт формирует список устройств, которые требуется поставить на 
 		   мониторинг в Zabbix, в таблицу zabbix_hosts.
+		   Устройства выбирабтся по "типу" указанному в ИТ Инвент.
+		   Далее по физическому расположению определяется маршрутизатор
+		   к которому подключено это устройство.
 		
 		2. Получает с сервера Zabbix список хостов, которые уже поставлены
 		   на мониторинг.
+		   Обновляем статус в таблице zabbix_hosts в соответствии с IP адресом.
 
-		3. В соответствии со значениями из таблицы zabbix_hosts добавляет, 
+		4. Получат с сервера Zabbix список групп начинающихся с TT и формирует
+		   массив для дальнейшей привязки хостов к регионам по номеру региона
+		   из названия.
+
+		4. В соответствии со значениями из таблицы zabbix_hosts добавляет, 
 		   удаляет или обновляет параметры хостов в Zabbix.
 		
 	*/
@@ -105,6 +113,8 @@
 
 		foreach($zabbix_result as &$host)
 		{
+			$founded = FALSE;
+
 			foreach($host['interfaces'] as &$interface)
 			{
 				if($db->select_assoc_ex($result, rpv("
@@ -112,16 +122,22 @@
 							zh.`pid`
 						FROM @zabbix_hosts AS zh
 						LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
-						WHERE m.`ip` = {s0}				
+						WHERE m.`ip` = {s0}
 					",
 					$interface['ip']
 				)))
 				{
+					$founded = TRUE;
 					foreach($result as &$row)
 					{
 						$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = #", $host['hostid'], $row['pid']));
 					}
 				}
+			}
+
+			if(!$founded)
+			{
+				echo 'Host exist at Zabbix, but not founded in monitoring list: '.$host['host']."\n";
 			}
 		}
 	}
@@ -132,7 +148,38 @@
 
 	echo "Starting export to Zabbix...\n";
 	
+	// Получаем список доступных групп регионов
+	
+	$zabbix_result = zabbix_api_request(
+		'hostgroup.get',
+		$auth_key, 
+		array(
+			'startSearch'               => TRUE,
+			'search'                    => array(
+				'name' => 				ZABBIX_REGION_GROUP_PREFIX
+			),
+			'output'                    => ['groupid', 'name']
+		)
+	);
+	
+	$zabbix_groups = array();
+
+	foreach($zabbix_result as &$group)
+	{
+		if($group['name'] === ZABBIX_REGION_GROUP_PREFIX)
+		{
+			$zabbix_groups[0] = $group['groupid'];
+		}
+		else if(preg_match('/^'.ZABBIX_REGION_GROUP_PREFIX.'(\d+)$/i', $group['name'], $matches))
+		{
+			$zabbix_groups[intval($matches[1])] = $group['groupid'];
+		}
+	}
+
 	// Добавляем, обновляем и удаляем с мониторинга в Zabbix хосты
+	
+	$added_and_updated = 0;
+	$removed = 0;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT 
@@ -153,11 +200,24 @@
 	{
 		foreach($result as &$row)
 		{
+			$host_name = strtoupper($row['name']);
+						
+			$region_num = 0;
+			if(preg_match('/^\w+-(\d+)-/', $host_name, $matches))
+			{
+				$region_num = intval($matches[1]);
+			}
+
+			$template_id = ZABBIX_Host_Template;
+			$group_id = isset($zabbix_groups[$region_num]) ? $zabbix_groups[$region_num] : 0;
+
 			switch(intval($row['flags']) & (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX))
 			{
 				case (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX):  // update at Zabbix
 				{
 					echo 'Check before update at Zabbix: '.$row['name']."\n";
+					
+					$added_and_updated++;
 
 					$zabbix_result = zabbix_api_request(
 						'host.get',
@@ -199,13 +259,11 @@
 							);
 						}
 						*/
-						
-						$template_id = ZABBIX_Host_Template;
-						$group_id = ZABBIX_Host_Groups['Default'];
 
 						if($host['proxy_hostid'] !== ZABBIX_Host_Proxy
 							|| !array_find($host['parentTemplates'], 'cb_template_cmp', $template_id)
-							|| !array_find($host['groups'], 'cb_group_cmp', $group_id)
+							|| ($group_id && !array_find($host['groups'], 'cb_group_cmp', $group_id))
+							|| $host['host'] !== $host_name
 						)
 						{
 							$templates_to_clear = array_filter(
@@ -215,7 +273,7 @@
 								}
 							);
 							
-							echo 'update at Zabbix: '.$row['name']."\n";
+							echo 'Update at Zabbix: '.$row['name']."\n";
 							//echo json_encode($templates_to_clear, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 							zabbix_api_request(
@@ -223,7 +281,7 @@
 								$auth_key,
 								array(
 									'hostid'          => $row['host_id'],
-									'host'            => strtoupper(ZABBIX_Host_Prefix.$row['name']),
+									'host'            => $host_name,
 									'groups'          => array('groupid'      => $group_id),
 									'templates'       => array('templateid'   => $template_id),
 									'templates_clear' => &$templates_to_clear,
@@ -237,15 +295,17 @@
 
 				case ZHF_MUST_BE_MONITORED:                          // add to Zabbix
 				{
-					echo 'add to Zabbix: '.$row['name']."\n";
+					echo 'Add to Zabbix: '.$row['name']."\n";
+
+					$added_and_updated++;
 
 					$zabbix_result = zabbix_api_request(
 						'host.create',
 						$auth_key,
 						array(
-							'host'         => strtoupper(ZABBIX_Host_Prefix.$row['name']),
-							'groups'       => array('groupid'      => ZABBIX_Host_Groups['Default']), // TODO: add group logic
-							'templates'    => array('templateid'   => ZABBIX_Host_Template),
+							'host'         => $host_name,
+							'groups'       => array('groupid'      => $group_id),
+							'templates'    => array('templateid'   => $template_id),
 							'proxy_hostid' => ZABBIX_Host_Proxy,
 							'interfaces'   => array(
 								array(
@@ -274,7 +334,9 @@
 				
 				default:                                             // remove from Zabbix
 				{
-					echo 'remove from Zabbix: '.$row['name']."\n";
+					echo 'Remove from Zabbix: '.$row['name']."\n";
+
+					$removed++;
 
 					$zabbix_result = zabbix_api_request(
 						'host.delete',
@@ -288,3 +350,5 @@
 	
 	$zabbix_result = zabbix_api_request('user.logout', $auth_key, []);
 
+	echo 'Added and updated: '.$added_and_updated."\n";
+	echo 'Deleted: '.$removed."\n";
