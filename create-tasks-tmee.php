@@ -38,7 +38,7 @@
 	$i = 0;
 	//if($db->select_assoc_ex($result, rpv("SELECT * FROM @computers WHERE (`flags` & {%TF_TMEE}) AND `name` regexp '^[[:digit:]]{4}-[nN][[:digit:]]+' AND ((`ee_encryptionstatus` = 2 AND `ee_lastsync` >= DATE_SUB(NOW(), INTERVAL 2 WEEK)) OR (`flags` & (0x0001 | 0x0004)))")))
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, t.`name`
+		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
