@@ -229,11 +229,11 @@ function walk_route($route, $action)
 			'sync-tmao',
 			'sync-tmee',
 			'sync-sccm',
+			'mark-after-sync',
 			'sync-itinvent',
 			'sync-itinvent-sw',
 			'sync-zabbix',
-			'sync-nessus',
-			'mark-after-sync'
+			'sync-nessus'
 		),
 		'cron-daily' => array(
 			'sync-all',
@@ -264,8 +264,8 @@ function walk_route($route, $action)
 			'report-vuln-top',
 			'report-vuln-top-netdev',
 			'report-users-lastlogon',
-			'report-itinvent-files-top',
-			'report-itinvent-bcc'
+			'report-itinvent-bcc',
+			'report-itinvent-files-top'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
