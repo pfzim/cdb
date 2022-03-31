@@ -85,6 +85,14 @@
 			{
 				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
 
+				if($mac === MAC_FAKE_ADDRESS)
+				{
+					error_log(date('c').'  Warning: Ignored fake MAC ('.$line_no.'): '.$line."\n", 3, $path_log);
+
+					$line = strtok("\n");
+					continue;
+				}
+
 				if($db->select_ex($result, rpv("SELECT ms.`sn` FROM @mac_sn AS ms WHERE ms.`mac` = ! LIMIT 1", $mac)))
 				{
 					$is_sn = true;
