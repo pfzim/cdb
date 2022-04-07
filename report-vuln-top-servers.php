@@ -51,13 +51,15 @@ EOT;
 			v.`severity`,
 			COUNT(vs.`id`) AS cnt
 		FROM @vulnerabilities AS v
-		LEFT JOIN @vuln_scans AS vs ON vs.`plugin_id` = v.`plugin_id`
-		WHERE vs.`folder_id` = #
-		AND v.`severity` > 2
+		LEFT JOIN @vuln_scans AS vs
+			ON vs.`plugin_id` = v.`plugin_id`
+			AND vs.`folder_id` = {%NESSUS_SERVERS_FOLDER_ID}
+			AND (vs.`flags` & ({%VSF_FIXED} | {%VSF_HIDED})) = 0
+		WHERE v.`severity` > 2
 		GROUP BY v.`plugin_id`
 		ORDER BY cnt DESC, v.`severity` DESC
 		-- LIMIT 100
-	", NESSUS_SERVERS_FOLDER_ID)))
+	")))
 	{
 
 		foreach($result as &$row)

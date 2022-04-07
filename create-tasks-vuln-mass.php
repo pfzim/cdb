@@ -84,7 +84,7 @@
 		LEFT JOIN @vuln_scans AS vs
 			ON
 				vs.`plugin_id` = v.`plugin_id`
-				AND (vs.`flags` & {%VSF_FIXED}) = 0x0000                         -- Not fixed
+				AND (vs.`flags` & ({%VSF_FIXED} | {%VSF_HIDED})) = 0x0000        -- Not fixed
 		WHERE
 			(v.`flags` & {%VF_HIDED}) = 0                                        -- Not excluded (Manual hide)
 			AND v.`severity` >= 3                                                -- Severity >= 3

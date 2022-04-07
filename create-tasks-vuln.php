@@ -35,7 +35,7 @@
 			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}
 			AND (
 				d.`flags` & {%DF_HIDED}                              -- Manual hide
-				OR vs.`flags` & {%VSF_FIXED}                         -- Marked as Fixed
+				OR vs.`flags` & ({%VSF_FIXED} | {%VSF_HIDED})        -- Marked as Fixed or Hided
 				OR v.`flags` & {%VF_HIDED}                           -- Manual hide
 			)
 	")))
