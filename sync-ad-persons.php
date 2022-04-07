@@ -50,7 +50,7 @@
 		return $sid;
 	}
 
-	$i = 0;
+	$entries_count = 0;
 
 	$ldap = ldap_connect(LDAP_URI);
 	if($ldap)
@@ -62,99 +62,137 @@
 			$cookie = '';
 			do
 			{
-				ldap_control_paged_result($ldap, 200, true, $cookie);
+				$sr = ldap_search(
+					$ldap,
+					LDAP_BASE_DN,
+					'(&(objectCategory=person)(objectClass=user))',
+					explode(',', 'samaccountname,cn,useraccountcontrol,givenname,sn,initials,pwdlastset,lastlogontimestamp,objectsid'),
+					0,
+					0,
+					0,
+					LDAP_DEREF_NEVER,
+					[['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => 200, 'cookie' => $cookie]]]
+				);
 
-				$sr = ldap_search($ldap, LDAP_BASE_DN, '(&(objectCategory=person)(objectClass=user))', explode(',', 'samaccountname,cn,useraccountcontrol,givenname,sn,initials,pwdlastset,lastlogontimestamp,objectsid'));
-				if($sr)
+				if($sr === FALSE)
 				{
-					$records = ldap_get_entries($ldap, $sr);
-					foreach($records as $account)
-					{
-						if(!empty($account['samaccountname'][0]))
-						{
-							//echo $account['cn'][0]."\r\n";
-							//echo bin_to_str_sid($account['objectsid'][0])."\r\n";
-							//print_r($account); break;
-
-							$db->start_transaction();
-
-							$row_id = 0;
-							if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @persons AS m WHERE m.`login` = ! LIMIT 1", $account['samaccountname'][0])))
-							{
-								if($db->put(rpv("INSERT INTO @persons (`login`, `dn`, `fname`, `mname`, `lname`, `flags`) VALUES (!, !, !, !, !, #)",
-									$account['samaccountname'][0],
-									$account['dn'],
-									@$account['givenname'][0],
-									@$account['initials'][0],
-									@$account['sn'][0],
-									(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD
-								)))
-								{
-									$row_id = $db->last_id();
-								}
-							}
-							else
-							{
-								// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
-								$row_id = $result[0][0];
-								$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_TEMP_MARK})) | #) WHERE `id` = # LIMIT 1",
-									$account['dn'],
-									@$account['givenname'][0],
-									@$account['initials'][0],
-									@$account['sn'][0],
-									(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD,
-									$row_id
-								));
-							}
-
-							if($row_id)
-							{
-								$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, #) ON DUPLICATE KEY UPDATE `value` = #",
-									$row_id,
-									CDB_PROP_USERACCOUNTCONTROL,
-									$account['useraccountcontrol'][0],
-									$account['useraccountcontrol'][0]
-								));
-
-								$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
-									$row_id,
-									CDB_PROP_SID,
-									bin_to_str_sid($account['objectsid'][0])
-								));
-
-								if(!empty($account['lastlogontimestamp'][0]))
-								{
-									$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
-										$row_id,
-										CDB_PROP_LASTLOGONTIMESTAMP,
-										date("Y-m-d H:i:s", $account['lastlogontimestamp'][0]/10000000-11644473600)
-									));
-								}
-
-								if(!empty($account['pwdlastset'][0]))
-								{
-									$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
-										$row_id,
-										CDB_PROP_PWDLASTSET,
-										date("Y-m-d H:i:s", $account['pwdlastset'][0]/10000000-11644473600)
-									));
-								}
-							}
-
-							$db->commit();
-
-							$i++;
-						}
-					}
-					ldap_control_paged_result_response($ldap, $sr, $cookie);
-					ldap_free_result($sr);
+					throw new Exception('ldap_search return error: '.ldap_error($core->LDAP->get_link()));
+				}
+				
+				$matcheddn = NULL;
+				$referrals = NULL;
+				$errcode = NULL;
+				$errmsg = NULL;
+				
+				if(!ldap_parse_result($ldap, $sr, $errcode , $matcheddn , $errmsg , $referrals, $controls))
+				{
+					throw new Exception('ldap_parse_result return error code: '.$errcode.', message: '.$errmsg.', ldap_error: '.ldap_error($ldap));
 				}
 
+				$entries = ldap_get_entries($ldap, $sr);
+				if($entries === FALSE)
+				{
+					throw new Exception('ldap_get_entries return error: '.ldap_error($ldap));
+				}
+
+				$i = $entries['count'];
+
+				while($i > 0)
+				{
+					$i--;
+					$account = &$entries[$i];
+					
+					if(!empty($account['samaccountname'][0]))
+					{
+						//echo $account['cn'][0]."\r\n";
+						//echo bin_to_str_sid($account['objectsid'][0])."\r\n";
+						//print_r($account); break;
+
+						$db->start_transaction();
+
+						$row_id = 0;
+						if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @persons AS m WHERE m.`login` = ! LIMIT 1", $account['samaccountname'][0])))
+						{
+							if($db->put(rpv("INSERT INTO @persons (`login`, `dn`, `fname`, `mname`, `lname`, `flags`) VALUES (!, !, !, !, !, #)",
+								$account['samaccountname'][0],
+								$account['dn'],
+								@$account['givenname'][0],
+								@$account['initials'][0],
+								@$account['sn'][0],
+								(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD
+							)))
+							{
+								$row_id = $db->last_id();
+							}
+						}
+						else
+						{
+							// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
+							$row_id = $result[0][0];
+							$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_TEMP_MARK})) | #) WHERE `id` = # LIMIT 1",
+								$account['dn'],
+								@$account['givenname'][0],
+								@$account['initials'][0],
+								@$account['sn'][0],
+								(($account['useraccountcontrol'][0] & 0x02)?PF_AD_DISABLED:0) | PF_EXIST_AD,
+								$row_id
+							));
+						}
+
+						if($row_id)
+						{
+							$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, #) ON DUPLICATE KEY UPDATE `value` = #",
+								$row_id,
+								CDB_PROP_USERACCOUNTCONTROL,
+								$account['useraccountcontrol'][0],
+								$account['useraccountcontrol'][0]
+							));
+
+							$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
+								$row_id,
+								CDB_PROP_SID,
+								bin_to_str_sid($account['objectsid'][0])
+							));
+
+							if(!empty($account['lastlogontimestamp'][0]))
+							{
+								$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
+									$row_id,
+									CDB_PROP_LASTLOGONTIMESTAMP,
+									date("Y-m-d H:i:s", $account['lastlogontimestamp'][0]/10000000-11644473600)
+								));
+							}
+
+							if(!empty($account['pwdlastset'][0]))
+							{
+								$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
+									$row_id,
+									CDB_PROP_PWDLASTSET,
+									date("Y-m-d H:i:s", $account['pwdlastset'][0]/10000000-11644473600)
+								));
+							}
+						}
+
+						$db->commit();
+
+						$entries_count++;
+					}
+				}
+
+				if(isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie']))
+				{
+					$cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+				}
+				else
+				{
+					$cookie = '';
+				}
+					ldap_free_result($sr);
 			}
-			while($cookie !== null && $cookie != '');
+			while(!empty($cookie));
 
 			ldap_unbind($ldap);
 		}
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$entries_count."\r\n";
