@@ -167,31 +167,43 @@
 				if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
 					$excluded = MF_TEMP_EXCLUDED;
 					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
-				} else {
-					foreach(MAC_EXCLUDE_ARRAY as &$excl) {
-						if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
-						&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-						&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
-						) {
-							$excluded = MF_TEMP_EXCLUDED;
-							error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
-							break;
+				}
+				else
+				{
+					if(defined('MAC_EXCLUDE_ARRAY') && MAC_EXCLUDE_ARRAY !== NULL)
+					{
+						foreach(MAC_EXCLUDE_ARRAY as &$excl)
+						{
+							if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
+							&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
+							&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
+							)
+							{
+								$excluded = MF_TEMP_EXCLUDED;
+								error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
+								break;
+							}
 						}
 					}
 			
 					// Исключение по IP адресу
-					if(!empty($row[2]) && ($excluded & MF_TEMP_EXCLUDED) == 0) {
-						$masks = explode(';', IP_MASK_EXCLUDE_LIST);
-						foreach($masks as &$mask)
+					if(defined('IP_MASK_EXCLUDE_LIST') && IP_MASK_EXCLUDE_LIST !== NULL)
+					{
+						if(!empty($row[2]) && ($excluded & MF_TEMP_EXCLUDED) == 0)
 						{
-							if(cidr_match($row[2], $mask))
+							$masks = explode(';', IP_MASK_EXCLUDE_LIST);
+							foreach($masks as &$mask)
 							{
-								$excluded = MF_TEMP_EXCLUDED;
-								error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
-								break;
+								if(cidr_match($row[2], $mask))
+								{
+									$excluded = MF_TEMP_EXCLUDED;
+									error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
+									break;
+								}
 							}
 						}
-				}}
+					}
+				}
 			}
 			
 			$row_id = 0;
