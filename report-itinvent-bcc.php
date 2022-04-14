@@ -32,42 +32,58 @@
 	<h1>Отчёт по Дублирующим Каналам Связи (Backup Communication Channels)</h1>
 EOT;
 
+	$bcc_count = 0;
+	if($db->select_ex($result, rpv("
+		SELECT
+			COUNT(DISTINCT m.`inv_no`) AS bcc_count
+		FROM c_mac AS m
+		WHERE
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+	")))
+	{
+		$bcc_count = intval($result[0][0]);
+	}
+	
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>SN</th><th>IP</th><th>Inv.NO</th><th>Updated</th><th>Exist at Zabbix</th></tr>';
+	$table .= '<tr><th>Филиал ID</th><th>Местоположение ID</th><th>Инв. № ДКС</th><th>Маршрутизатор</th><th>SN</th><th>IP</th><th>Inv.NO</th><th>Updated</th><th>Exist at Zabbix</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT 
-			m.`id`,
-			m.`name`,
-			m.`mac`,
-			m.`ip`,
-			m.`inv_no`,
-			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
-			BIT_OR(zh.`flags`) AS zh_flags
+		SELECT
+			m.`branch_no`,
+			m.`loc_no`,
+			m.`inv_no` AS m_inv_no,
+			dm.`id`,
+			dm.`name`,
+			dm.`mac`,
+			dm.`ip`,
+			dm.`inv_no` AS dm_inv_no,
+			DATE_FORMAT(dm.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+			zh.`flags` AS zh_flags
 		FROM @mac AS m
-		LEFT JOIN @zabbix_hosts AS zh
-			ON zh.`pid` = m.`id`
+		LEFT JOIN @mac AS dm
+			ON (dm.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+			AND dm.`port` = 'self'
+			AND dm.`branch_no` = m.`branch_no`
+			AND dm.`loc_no` = m.`loc_no`
+		LEFT JOIN c_zabbix_hosts AS zh
+			ON zh.`pid` = dm.`id`
 		WHERE
-			m.`loc_no` IN (
-				SELECT DISTINCT m2.`loc_no`
-				FROM @mac AS m2
-				WHERE
-					(m2.`flags` & ({%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})
-					AND m2.`loc_no` <> 0
-			)
-			AND m.`port` = 'self'
-		GROUP BY m.`id`
-		ORDER BY m.`name`
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+		GROUP BY m.`branch_no`, m.`loc_no`, m.`inv_no`
+		ORDER BY m.`branch_no`, m.`loc_no`, m.`inv_no`
 	")))
 	{
 		foreach($result as &$row)
 		{
 			$table .= '<tr>';
+			$table .= '<td>'.$row['branch_no'].'</td>';
+			$table .= '<td>'.$row['loc_no'].'</td>';
+			$table .= '<td>'.$row['m_inv_no'].'</td>';
 			$table .= '<td>'.$row['name'].'</td>';
 			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id'].'">'.$row['mac'].'</a></td>';
 			$table .= '<td>'.$row['ip'].'</td>';
-			$table .= '<td>'.$row['inv_no'].'</td>';
+			$table .= '<td>'.$row['dm_inv_no'].'</td>';
 			$table .= '<td>'.$row['last_update'].'</td>';
 			$table .= (intval($row['zh_flags']) & ZHF_EXIST_IN_ZABBIX) ? '<td class="pass">TRUE</td>' : '<td class="error">FALSE</td>';
 			$table .= '</tr>';
@@ -78,12 +94,15 @@ EOT;
 
 	$table .= '</table>';
 
-	$html .= '<p>Всего активных ДКС: '.$i.'</p><p />';
+	$html .= '<p>';
+	$html .= 'Всего ДКС по данным из ИТ Инвент: '.$bcc_count.'<br />';
+	$html .= 'Выборка в таблице по местоположению и инвентарным номерам: '.$i;
+	$html .= '<p />';
 	$html .= $table;
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-itinvent-bcc">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(array(MAIL_TO_ADMIN, MAIL_TO_NET), CDB_TITLE.': List BCCs', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_ITINVENT_BCC_MAIL_TO, CDB_TITLE.': List BCCs', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}
