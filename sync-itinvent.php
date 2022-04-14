@@ -7,10 +7,11 @@
 		Загрузка информации о MAC адресах и серийных номера.
 		
 		Добавлена загрузка информации о местоположении оборудования.
-		Местоположение состоит из двух значенией: Филиал и Местоположение.
-		Местоположение может содержать как номер кабинете или этажа, так и
-		адреса магазинов. Если поле LOC_NO_BUH равно NULL, то Местоположение
-		не загружается.
+		Местоположение состоит из двух значенией: Филиал (BRANCH_NO) и
+		Местоположение (LOC_NO). Местоположение может содержать как номер
+		кабинете или этажа, так и адреса магазинов. Если поле LOC_NO_BUH
+		равно NULL, то Местоположение (LOC_NO) не загружается - это кабинет,
+		а загружается только Филиал (BRANCH_NO).
 		
 		Активным считается оборудование имеющее статус Работает или
 		Выдан пользователю для удаленной работы.
@@ -20,7 +21,7 @@
 		Оборудование помечается Мобильным если имеет тип Ноутбук. В последующем
 		такое оборудование исключается из проверок на местоположение.
 		
-		Добавлено "удаление" устройств, которые не появлялись в сети более 30 дней
+		Добавлено "удаление" устройств, которые не появлялись в сети более 60 дней
 	*/
 
 	/*
@@ -104,7 +105,7 @@
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
-	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 60 DAY)"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
