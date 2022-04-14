@@ -34,6 +34,10 @@
 		149			1			MAC Адрес 3
 		163			1			Усилитель 3G: mac-адрес 2
 		210			1			MAC Адрес 4
+		222			1			Вторая сетевая карта: MAC 1
+		223			1			Вторая сетевая карта: MAC 2
+		224			1			Вторая сетевая карта: MAC 3
+		225			1			Вторая сетевая карта: MAC 4
 		
 		TYPE_NO	CI_TYPE	TYPE_NAME
 		2       1       Ноутбук
@@ -148,6 +152,10 @@
 			,m6.[FIELD_VALUE] AS mac6
 			,m7.[FIELD_VALUE] AS mac7
 			,m8.[FIELD_VALUE] AS mac8
+			,m9.[FIELD_VALUE] AS mac9
+			,m10.[FIELD_VALUE] AS mac10
+			,m11.[FIELD_VALUE] AS mac11
+			,m12.[FIELD_VALUE] AS mac12
 		INTO #tmptable
 		FROM [ITEMS] AS item WITH (NOLOCK)
 		LEFT JOIN [FIELDS_VALUES] AS m1 WITH (NOLOCK) ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
@@ -158,6 +166,10 @@
 		LEFT JOIN [FIELDS_VALUES] AS m6 WITH (NOLOCK) ON m6.[ITEM_ID] = item.[ID] AND m6.[FIELD_NO] = 94 AND m6.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m7 WITH (NOLOCK) ON m7.[ITEM_ID] = item.[ID] AND m7.[FIELD_NO] = 163 AND m7.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m8 WITH (NOLOCK) ON m8.[ITEM_ID] = item.[ID] AND m8.[FIELD_NO] = 210 AND m8.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m9 WITH (NOLOCK) ON m9.[ITEM_ID] = item.[ID] AND m9.[FIELD_NO] = 222 AND m9.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m10 WITH (NOLOCK) ON m10.[ITEM_ID] = item.[ID] AND m10.[FIELD_NO] = 223 AND m10.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m11 WITH (NOLOCK) ON m11.[ITEM_ID] = item.[ID] AND m11.[FIELD_NO] = 224 AND m11.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m12 WITH (NOLOCK) ON m12.[ITEM_ID] = item.[ID] AND m12.[FIELD_NO] = 225 AND m12.[ITEM_NO] = 1
 		-- LEFT JOIN [BRANCHES] AS brn WITH (NOLOCK) ON brn.[BRANCH_NO] = item.[BRANCH_NO]
 		LEFT JOIN [LOCATIONS] AS loc WITH (NOLOCK) ON loc.[LOC_NO] = item.[LOC_NO]
 		WHERE
@@ -172,6 +184,10 @@
 				OR m6.[FIELD_VALUE] IS NOT NULL
 				OR m7.[FIELD_VALUE] IS NOT NULL
 				OR m8.[FIELD_VALUE] IS NOT NULL
+				OR m9.[FIELD_VALUE] IS NOT NULL
+				OR m10.[FIELD_VALUE] IS NOT NULL
+				OR m11.[FIELD_VALUE] IS NOT NULL
+				OR m12.[FIELD_VALUE] IS NOT NULL
 			)
 	");
 
@@ -234,7 +250,7 @@
 				}
 
 				// Load MACs
-				for($k = 1; $k <= 8; $k++)    // mac* fields count
+				for($k = 1; $k <= 12; $k++)    // mac* fields count
 				{
 					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 					if(!empty($mac) && strlen($mac) == 12)
