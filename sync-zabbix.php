@@ -7,8 +7,8 @@
 		
 		1. Скрипт формирует список устройств, которые требуется поставить на 
 		   мониторинг в Zabbix, в таблицу zabbix_hosts.
-		   Устройства выбирабтся по "типу" указанному в ИТ Инвент.
-		   Далее по физическому расположению определяется маршрутизатор
+		   Устройства ДКС выбираются по "типу" указанному в ИТ Инвент.
+		   Далее по физическому местоположению определяется маршрутизатор,
 		   к которому подключено это устройство.
 		
 		2. Получает с сервера Zabbix список хостов, которые уже поставлены
@@ -58,27 +58,18 @@
 	$i = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT 
-			m.`id`,
-			m.`name`,
-			m.`mac`,
-			m.`ip`,
-			m.`inv_no`,
-			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`
-		FROM @mac AS m
+		SELECT
+			DISTINCT dm.`id`
+		FROM c_mac AS m
+		LEFT JOIN c_mac AS dm
+			ON (dm.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+			AND dm.`port` = 'self'
+			AND dm.`branch_no` = m.`branch_no`
+			AND dm.`loc_no` = m.`loc_no`
 		WHERE
-			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_ACTIVE})) = ({%MF_INV_ACTIVE})
-			AND m.`port` = 'self'
-			AND (
-				m.`loc_no` IN (
-					SELECT DISTINCT m2.`loc_no`
-					FROM @mac AS m2
-					WHERE
-						(m2.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_INV_ACTIVE})
-						AND m2.`loc_no` <> 0
-				)
-			)
-		ORDER BY m.`name`
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+		GROUP BY m.`branch_no`, m.`loc_no`, m.`inv_no`
+		HAVING dm.`id` IS NOT NULL
 	")))
 	{
 		$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_MUST_BE_MONITORED}) WHERE (`flags` & {%ZHF_MUST_BE_MONITORED})"));
