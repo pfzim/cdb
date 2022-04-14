@@ -439,6 +439,9 @@ function walk_route($route, $action)
 		'import-sn' => array(
 			'@import-sn.php'
 		),
+		'import-sn2' => array(
+			'@import-sn2.php'
+		),
 		'import-errors' => array(
 			'@import-errors.php'
 		),
