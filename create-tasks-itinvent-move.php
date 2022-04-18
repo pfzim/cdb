@@ -152,7 +152,7 @@
 			curl_setopt($ch, CURLOPT_POSTFIELDS,
 				'Source=cdb'
 				.'&Action=new'
-				.'&Type=itinvent'
+				.'&Type=itinvmove'
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
 				.'&Message='.urlencode(
@@ -166,7 +166,7 @@
 					."\n\nИнвентарный номер коммутатора/маршрутизатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no'])
 					."\nDNS имя: ".$row['netdev']
 					."\nСерийный номер: ".$row['d_mac']
-					."\n\nКод работ: IIV09"
+					."\n\nКод работ: IIV10"
 					."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Местоположение-оборудования-отличается-от-местоположения-коммутатора-в-которыи-оно-подключено.ashx'
 				)
 			);
