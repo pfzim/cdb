@@ -216,7 +216,8 @@ $g_mac_short_flags = array(
 	'A',
 	'S',
 	'M',
-	'D'
+	'D',
+	'B'
 );
 
 $g_ac_flags = array(
@@ -232,6 +233,30 @@ $g_files_inventory_flags = array(
 $g_files_inventory_short_flags = array(
 	'',
 	'D'
+);
+
+$g_vulns_flags = array(
+	'',
+	'',
+	'Hided'
+);
+
+$g_vulns_short_flags = array(
+	'',
+	'',
+	'H'
+);
+
+$g_vuln_scans_flags = array(
+	'',
+	'Fixed',
+	'Hided'
+);
+
+$g_vuln_scans_short_flags = array(
+	'',
+	'F',
+	'H'
 );
 
 $g_files_flags = array(
