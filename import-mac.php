@@ -16,6 +16,13 @@
 		  
 		Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию
 		серийного номера вместо MAC адреса.
+		
+		Исключения настраиваются:
+		  - по VLAN ID
+		  - по подсети (формат 0.0.0.0/0)
+		  - по MAC адресу и имени маршрутизатора и имени порта (все значения
+			являются регулярными выражениями, если значение NULL, то оно
+			игнорируется)
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -35,6 +42,59 @@
 	$code = 0;
 	$error_msg = '';
 	$path_log = '/var/log/cdb/import-mac.log';
+	
+	// load config parameters from DB if it is not defined in inc.config.php
+	
+	if($db->select_ex($cfg, rpv('
+		SELECT
+			m.`name`,
+			m.`value`
+		FROM @config AS m
+		WHERE
+			m.`uid` = 0
+			AND m.`name` IN (\'mac_exclude_vlan_regex\', \'mac_exclude_json\', \'mac_exclude_by_ip_list\')
+	')))
+	{
+		$config = array();
+
+		foreach($cfg as &$row)
+		{
+			$config[$row[0]] = $row[1];
+		}
+	}
+
+	$mac_exclude_vlan_regex = '';
+
+	if(defined('MAC_EXCLUDE_VLAN'))
+	{
+		$mac_exclude_vlan_regex = MAC_EXCLUDE_VLAN;
+	}
+	else if(isset($config['mac_exclude_vlan_regex']))
+	{
+		$mac_exclude_vlan_regex = $config['mac_exclude_vlan_regex'];
+	}	
+
+	$mac_exclude_json = NULL;
+
+	if(defined('MAC_EXCLUDE_ARRAY'))
+	{
+		$mac_exclude_json = MAC_EXCLUDE_ARRAY;
+	}
+	else if(isset($config['mac_exclude_json']))
+	{
+		$mac_exclude_json = json_decode($config['mac_exclude_json'], TRUE);
+	}	
+
+	$mac_exclude_by_ip_list = NULL;
+
+	if(defined('IP_MASK_EXCLUDE_LIST'))
+	{
+		$mac_exclude_by_ip_list = IP_MASK_EXCLUDE_LIST;
+	}
+	else if(isset($config['mac_exclude_by_ip_list']))
+	{
+		$mac_exclude_by_ip_list = $config['mac_exclude_by_ip_list'];
+	}	
 
 	$pid = 0;
 	$last_sw_name = '';
@@ -156,7 +216,7 @@
 			}
 			
 			$excluded = 0x0000;
-			$vlan = (intval($row[5]) == 0) ? "NULL" : intval($row[5]);
+			$vlan = (intval($row[5]) == 0) ? 'NULL' : intval($row[5]);
 			
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 			
@@ -164,15 +224,15 @@
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 			
-				if( !($vlan === "NULL") && preg_match('/'.MAC_EXCLUDE_VLAN.'/i', $vlan) ) {
+				if( $vlan !== 'NULL' && preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan) ) {
 					$excluded = MF_TEMP_EXCLUDED;
 					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
 				}
 				else
 				{
-					if(defined('MAC_EXCLUDE_ARRAY') && MAC_EXCLUDE_ARRAY !== NULL)
+					if($mac_exclude_json !== NULL)
 					{
-						foreach(MAC_EXCLUDE_ARRAY as &$excl)
+						foreach($mac_exclude_json as &$excl)
 						{
 							if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
 							&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
@@ -187,11 +247,11 @@
 					}
 			
 					// Исключение по IP адресу
-					if(defined('IP_MASK_EXCLUDE_LIST') && IP_MASK_EXCLUDE_LIST !== NULL)
+					if(!empty($mac_exclude_by_ip_list))
 					{
 						if(!empty($row[2]) && ($excluded & MF_TEMP_EXCLUDED) == 0)
 						{
-							$masks = explode(';', IP_MASK_EXCLUDE_LIST);
+							$masks = explode(';', $mac_exclude_by_ip_list);
 							foreach($masks as &$mask)
 							{
 								if(cidr_match($row[2], $mask))
@@ -209,12 +269,16 @@
 			$row_id = 0;
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $mac, $is_sn ? MF_SERIAL_NUM : 0x0000 )))
 			{
-				if($db->put(rpv("INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `first`, `date`, `flags`, `vlan`) VALUES (#, !, !, !, !, NOW(), NOW(), #, ".$vlan.")",
+				if($db->put(rpv("
+						INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `vlan`, `first`, `date`, `flags`)
+						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {r5}, NOW(), NOW(), {d6})
+					",
 					$pid,
 					$row[1],  // name
 					$mac,
 					$row[2],  // ip
 					$row[4],  // port
+					$vlan,
 					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
 				)))
 				{
@@ -224,11 +288,24 @@
 			else
 			{
 				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @mac SET `pid` = #,`name` = !, `ip` = !, `port` = !, `vlan` = ".$vlan.", `first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | #) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("
+						UPDATE @mac
+						SET
+							`pid` = {d0},
+							`name` = {s1},
+							`ip` = {s2},
+							`port` = {s3},
+							`vlan` = {r4},
+							`first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d5})
+						WHERE
+							`id` = {d6}
+						LIMIT 1
+					",
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
 					$row[4],  // port
+					$vlan,
 					MF_FROM_NETDEV | $excluded,
 					$row_id
 				));
