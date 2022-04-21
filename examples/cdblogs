@@ -1,0 +1,9 @@
+/var/log/cdb/*.log
+{
+    missingok
+    daily
+    rotate 30
+    notifempty
+    compress
+	delaycompress
+}
