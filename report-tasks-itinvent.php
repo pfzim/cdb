@@ -78,7 +78,7 @@ EOT;
 			$table .= '<td>'.$row['port'].'</td>';
 			$table .= '<td>'.$row['vlan'].'</td>';
 			$table .= '<td>'.$row['m_name'].'</td>';
-			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id'].'">'.$row['mac'].'</a></td>';
+			$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=mac_info/'.$row['id'].'">'.$row['mac'].'</a></td>';
 			$table .= '<td>'.$row['ip'].'</td>';
 			$table .= '<td>'.$row['last_seen'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
@@ -109,7 +109,7 @@ EOT;
 						dm.`name` = d.`name`
 						AND (dm.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})                    -- Only exist and active in IT Invent
 				WHERE
-					(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
+					(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, Exist in IT Invent, Active in IT Invent, Not Mobile device
 					AND (
 						dm.`branch_no` IS NULL
 						OR dm.`loc_no` IS NULL
