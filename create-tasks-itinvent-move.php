@@ -42,7 +42,7 @@
 			t.`tid` = {%TID_MAC}
 			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}                                         -- Task status is Opened
 			AND (
-				(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) <> ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})   -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
+				(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) <> ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})   -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
 				OR (
 					dm.`branch_no` IS NOT NULL
 					AND dm.`loc_no` IS NOT NULL
@@ -121,7 +121,7 @@
 				AND t.pid = m.id
 				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}
 		WHERE
-			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_TEMP_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
 			AND (
 				dm.`branch_no` IS NULL
 				OR dm.`loc_no` IS NULL

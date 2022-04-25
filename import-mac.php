@@ -224,7 +224,8 @@
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 			
-				if( $vlan !== 'NULL' && preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan) ) {
+				if($vlan !== 'NULL' && preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan))
+				{
 					$excluded = MF_TEMP_EXCLUDED;
 					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
 				}
@@ -234,9 +235,9 @@
 					{
 						foreach($mac_exclude_json as &$excl)
 						{
-							if(   (($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
-							&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-							&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
+							if((($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
+								&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
+								&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
 							)
 							{
 								$excluded = MF_TEMP_EXCLUDED;
