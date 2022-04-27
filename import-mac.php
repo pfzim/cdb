@@ -94,7 +94,7 @@
 	else if(isset($config['mac_exclude_by_ip_list']))
 	{
 		$mac_exclude_by_ip_list = $config['mac_exclude_by_ip_list'];
-	}	
+	}
 
 	$pid = 0;
 	$last_sw_name = '';
@@ -114,7 +114,7 @@
 	}
 
 	$line_no = 0;
-	
+
 	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, $path_log);
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
@@ -216,15 +216,15 @@
 			}
 			
 			$excluded = 0x0000;
-			$vlan = (intval($row[5]) == 0) ? 'NULL' : intval($row[5]);
+			$vlan = intval($row[5]);
 			
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 			
-			if(!$is_sn)
+			if(!$is_sn && ($row[4] != 'self'))
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 			
-				if($vlan !== 'NULL' && preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan))
+				if(preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan))
 				{
 					$excluded = MF_TEMP_EXCLUDED;
 					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
@@ -272,7 +272,7 @@
 			{
 				if($db->put(rpv("
 						INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `vlan`, `first`, `date`, `flags`)
-						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {r5}, NOW(), NOW(), {d6})
+						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {d5}, NOW(), NOW(), {d6})
 					",
 					$pid,
 					$row[1],  // name
@@ -296,7 +296,7 @@
 							`name` = {s1},
 							`ip` = {s2},
 							`port` = {s3},
-							`vlan` = {r4},
+							`vlan` = {d4},
 							`first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d5})
 						WHERE
 							`id` = {d6}
