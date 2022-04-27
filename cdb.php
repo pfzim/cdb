@@ -49,7 +49,8 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.utils.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.db.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.flags.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.ctulhumon.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.cdb.php');
+	//require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.ctulhumon.php');
 
 /**
 	Отправка почтового сообщения

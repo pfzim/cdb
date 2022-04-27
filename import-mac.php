@@ -3,7 +3,7 @@
 	/**
 		\file
 		\brief API для загрузки MAC адресов с сетевых устройств.
-		
+
 		Входящие параметры:
 		- netdev - имя сетевого устройства передающего данные
 		- list   - список данных, описание колонок:
@@ -52,7 +52,7 @@
 		FROM @config AS m
 		WHERE
 			m.`uid` = 0
-			AND m.`name` IN (\'mac_exclude_vlan_regex\', \'mac_exclude_json\', \'mac_exclude_by_ip_list\')
+			AND m.`name` IN (\'mac_exclude_json\', \'mac_exclude_by_ip_list\')
 	')))
 	{
 		$config = array();
@@ -62,17 +62,6 @@
 			$config[$row[0]] = $row[1];
 		}
 	}
-
-	$mac_exclude_vlan_regex = '';
-
-	if(defined('MAC_EXCLUDE_VLAN'))
-	{
-		$mac_exclude_vlan_regex = MAC_EXCLUDE_VLAN;
-	}
-	else if(isset($config['mac_exclude_vlan_regex']))
-	{
-		$mac_exclude_vlan_regex = $config['mac_exclude_vlan_regex'];
-	}	
 
 	$mac_exclude_json = NULL;
 
@@ -214,56 +203,19 @@
 					}
 				}
 			}
-			
+
 			$excluded = 0x0000;
 			$vlan = intval($row[5]);
-			
+
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
-			
+
 			if(!$is_sn && ($row[4] != 'self'))
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
-			
-				if(preg_match('/'.$mac_exclude_vlan_regex.'/i', $vlan))
+				
+				if(is_excluded($mac, $last_sw_name, $row[4], $row[2], $vlan, $mac_exclude_json, $mac_exclude_by_ip_list, $path_log))
 				{
 					$excluded = MF_TEMP_EXCLUDED;
-					error_log(date('c').'  MAC excluded: '.$mac.' by VLAN ID: '.$vlan."\n", 3, $path_log);
-				}
-				else
-				{
-					if($mac_exclude_json !== NULL)
-					{
-						foreach($mac_exclude_json as &$excl)
-						{
-							if((($excl['mac_regex'] === NULL) || preg_match('/'.$excl['mac_regex'].'/i', $mac))
-								&& (($excl['name_regex'] === NULL) || preg_match('/'.$excl['name_regex'].'/i', $last_sw_name))
-								&& (($excl['port_regex'] === NULL) || preg_match('#'.$excl['port_regex'].'#i', $row[4]))
-							)
-							{
-								$excluded = MF_TEMP_EXCLUDED;
-								error_log(date('c').'  MAC excluded: '.$mac."\n", 3, $path_log);
-								break;
-							}
-						}
-					}
-			
-					// Исключение по IP адресу
-					if(!empty($mac_exclude_by_ip_list))
-					{
-						if(!empty($row[2]) && ($excluded & MF_TEMP_EXCLUDED) == 0)
-						{
-							$masks = explode(';', $mac_exclude_by_ip_list);
-							foreach($masks as &$mask)
-							{
-								if(cidr_match($row[2], $mask))
-								{
-									$excluded = MF_TEMP_EXCLUDED;
-									error_log(date('c').'  MAC excluded: '.$mac.' by IP: '.$row[2].' CIDR: '.$mask."\n", 3, $path_log);
-									break;
-								}
-							}
-						}
-					}
 				}
 			}
 			
