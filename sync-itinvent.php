@@ -27,6 +27,21 @@
 	*/
 
 	/*
+		Зависимости: CI_TYPE <- TYPE_NO <- MODEL_NO
+		
+		CI_TYPE - Встроенные типы учётных единиц
+		1  - Оборудование
+		2  - ПО
+		3  - Комплектующие
+		4  - Расходники
+		5  - Инвентарь
+		6  - Работы
+		10 - Документы
+		13 - Задачи
+
+		TYPE_NO	CI_TYPE	TYPE_NAME
+		2       1       Ноутбук
+		85      1       Дублирующий канал связи
 
 		FIELD_NO	ITEM_NO		FIELD_NAME
 		94			1			Усилитель 3G: mac-адрес
@@ -41,10 +56,6 @@
 		224			1			Вторая сетевая карта: MAC 3
 		225			1			Вторая сетевая карта: MAC 4
 		
-		TYPE_NO	CI_TYPE	TYPE_NAME
-		2       1       Ноутбук
-		85      1       Дублирующий канал связи
-
 		List all fields:
 
 		SELECT [FIELD_NO]
@@ -97,7 +108,7 @@
 			  ,[PRINTER]
 			  ,[VENDOR_NO]
 		  FROM [ITINVENT].[dbo].[CI_TYPES]
-		  ORDER BY [TYPE_NO], [CI_TYPE]  
+		  ORDER BY [TYPE_NO], [CI_TYPE]
   */
 	
 	if(!defined('Z_PROTECTED')) exit;
@@ -133,8 +144,9 @@
 		SELECT
 			[ID]
 			,[INV_NO]
-			,[TYPE_NO]
 			,[CI_TYPE]
+			,[TYPE_NO]
+			,[MODEL_NO]
 			,item.[BRANCH_NO]
 			,[LOC_NO] = 
 				CASE
@@ -206,8 +218,8 @@
 			{
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
-				$mobile = ((intval($row['TYPE_NO']) == 2 && intval($row['CI_TYPE']) == 1) ? MF_INV_MOBILEDEV : 0x0000);
-				$bcc = ((intval($row['TYPE_NO']) == 85 && intval($row['CI_TYPE']) == 1 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
+				$mobile = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 2) ? MF_INV_MOBILEDEV : 0x0000);
+				$bcc = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
 				// Load SN
@@ -217,9 +229,11 @@
 					$row_id = 0;
 					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $mac)))
 					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
+						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
 							$mac,
 							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
@@ -239,8 +253,10 @@
 							echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
-						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
@@ -260,9 +276,11 @@
 						$row_id = 0;
 						if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
 						{
-							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #)",
+							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
 								$mac,
 								$row['INV_NO'],
+								$row['TYPE_NO'],
+								$row['MODEL_NO'],
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],
@@ -282,8 +300,10 @@
 								echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 							}
 
-							$db->put(rpv("UPDATE @mac SET `inv_no` = !, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+							$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 								$row['INV_NO'],
+								$row['TYPE_NO'],
+								$row['MODEL_NO'],
 								$row['STATUS_NO'],
 								$row['BRANCH_NO'],
 								$row['LOC_NO'],

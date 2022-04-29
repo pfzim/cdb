@@ -19,7 +19,7 @@ function cidr_list_match($cidr_list, $ip, $path_log)
 			return TRUE;
 		}
 	}
-	
+
 	return FALSE;
 }
 
