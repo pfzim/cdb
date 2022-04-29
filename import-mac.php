@@ -52,7 +52,7 @@
 		FROM @config AS m
 		WHERE
 			m.`uid` = 0
-			AND m.`name` IN (\'mac_exclude_json\', \'mac_exclude_by_ip_list\')
+			AND m.`name` IN (\'mac_exclude_json\', \'mac_fake_address\')
 	')))
 	{
 		$config = array();
@@ -72,17 +72,17 @@
 	else if(isset($config['mac_exclude_json']))
 	{
 		$mac_exclude_json = json_decode($config['mac_exclude_json'], TRUE);
-	}	
-
-	$mac_exclude_by_ip_list = NULL;
-
-	if(defined('IP_MASK_EXCLUDE_LIST'))
-	{
-		$mac_exclude_by_ip_list = IP_MASK_EXCLUDE_LIST;
 	}
-	else if(isset($config['mac_exclude_by_ip_list']))
+
+	$mac_fake_address = NULL;
+
+	if(defined('MAC_FAKE_ADDRESS'))
 	{
-		$mac_exclude_by_ip_list = $config['mac_exclude_by_ip_list'];
+		$mac_fake_address = MAC_FAKE_ADDRESS;
+	}
+	else if(isset($config['mac_fake_address']))
+	{
+		$mac_fake_address = $config['mac_fake_address'];
 	}
 
 	$pid = 0;
@@ -134,7 +134,7 @@
 			{
 				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row[0]));
 
-				if($mac === MAC_FAKE_ADDRESS)
+				if($mac === $mac_fake_address)
 				{
 					error_log(date('c').'  Warning: Ignored fake MAC ('.$line_no.'): '.$line."\n", 3, $path_log);
 
@@ -213,7 +213,7 @@
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 				
-				if(is_excluded($mac, $last_sw_name, $row[4], $row[2], $vlan, $mac_exclude_json, $mac_exclude_by_ip_list, $path_log))
+				if(is_excluded($mac, $last_sw_name, $row[4], $row[2], $vlan, $mac_exclude_json, $path_log))
 				{
 					$excluded = MF_TEMP_EXCLUDED;
 				}

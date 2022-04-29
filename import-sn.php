@@ -87,6 +87,17 @@
 		exit;
 	}
 
+	$mac_fake_address = NULL;
+
+	if(defined('MAC_FAKE_ADDRESS'))
+	{
+		$mac_fake_address = MAC_FAKE_ADDRESS;
+	}
+	else if(isset($config['mac_fake_address']))
+	{
+		$mac_fake_address = $config['mac_fake_address'];
+	}
+
 	$code = 0;
 	$error_msg = '';
 
@@ -141,7 +152,7 @@
 			}
 
 			// Игнорируем фиктивный MAC адрес, который присутствует на большинстве устройств
-			if($mac === MAC_FAKE_ADDRESS)
+			if($mac === $mac_fake_address)
 			{
 				error_log(date('c').'  Warning: Ignored fake MAC: '.$mac."\n", 3, $path_log);
 
