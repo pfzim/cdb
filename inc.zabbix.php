@@ -1,10 +1,10 @@
 <?php
 /**
 	\file
-	\brief Файл с функциями для сервиса CtulhuMon
+	\brief Файл с функциями для работы с Zabbix API
 */
 
-function zabbix_api_request(string $in_method, $in_auth, array $in_params, $id = 1)
+function zabbix_api_request(string $in_method, $in_auth, array $in_params, int $id = 1, bool $throw_exception = TRUE)
 {
 	$post_data = json_encode(array(
 		'jsonrpc' => '2.0',
@@ -30,13 +30,21 @@ function zabbix_api_request(string $in_method, $in_auth, array $in_params, $id =
 		$rdecoded = json_decode($result, TRUE);
 		if(array_key_exists('error', $rdecoded))
 		{
-			throw new Exception('Zabbix: ERROR: '.json_encode($rdecoded['error'], JSON_UNESCAPED_UNICODE));
+			if($throw_exception)
+			{
+				throw new Exception('Zabbix: ERROR: '.json_encode($rdecoded['error'], JSON_UNESCAPED_UNICODE));
+			}
+
 			//echo "ERROR:\r\n";
 			//var_dump($rdecoded['error']);
 		}
 		elseif(!array_key_exists('result',$rdecoded))
 		{
-			throw new Exception('Zabbix: ERROR: RPC result format unexpected');
+			if($throw_exception)
+			{
+				throw new Exception('Zabbix: ERROR: RPC result format unexpected');
+			}
+			
 			//echo "ERROR: RPC result format unexpected\r\n";
 			//var_dump($rdecoded);
 		}

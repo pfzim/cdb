@@ -42,6 +42,7 @@
 		TYPE_NO	CI_TYPE	TYPE_NAME
 		2       1       Ноутбук
 		85      1       Дублирующий канал связи
+		63      1       Маршрутизатор
 
 		FIELD_NO	ITEM_NO		FIELD_NAME
 		94			1			Усилитель 3G: mac-адрес
@@ -56,6 +57,19 @@
 		224			1			Вторая сетевая карта: MAC 3
 		225			1			Вторая сетевая карта: MAC 4
 		
+		MODEL_NO	MODEL_NAME
+		130			Cisco 800
+		131			Cisco 881
+		716			Cisco C1111
+		752			Cisco ISR4331/K9
+		891			Cisco 4451
+		904			Cisco ASR1001-X
+		981			Cisco ISR900 Series
+		983			Cisco C921
+		1034		Cisco C931-4P
+		1048		Cisco C921-4P
+
+
 		List all fields:
 
 		SELECT [FIELD_NO]

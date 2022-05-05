@@ -83,7 +83,7 @@
 
 	define('ZHF_EXIST_IN_ZABBIX',       0x0008);
 	define('ZHF_MUST_BE_MONITORED',     0x0010);
-	//define('ZHF_NEED_UPDATE_IN_ZABBIX', 0x0020);
+	define('ZHF_TEMPLATE_WITH_BCC',     0x0020);
 
 	// `type` from `devices` table
 
