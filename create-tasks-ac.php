@@ -29,7 +29,8 @@
 			ON c.`id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & ({%TF_TMAC} | {%TF_CLOSED})) = {%TF_TMAC}
+			AND t.`type` = {%TT_TMAC}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 	")))
 	{
@@ -66,7 +67,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_TMAC})) = {%TF_TMAC}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE t.`type` = {%TT_TMAC} AND (t.`flags` & {%TF_CLOSED}) = 0")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -104,7 +105,8 @@
 			LEFT JOIN @tasks AS t ON
 				t.`tid` = {%TID_COMPUTERS}
 				AND t.`pid` = c.`id`
-				AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMAC})) = {%TF_TMAC}
+				AND t.`type` = {%TT_TMAC}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 			LEFT JOIN @ac_log AS al ON
 				al.`pid` = c.`id`
 			WHERE
@@ -113,8 +115,9 @@
 				AND c.`name` REGEXP {s0}
 			GROUP BY c.`id`
 			HAVING 
-				(BIT_OR(t.`flags`) & {%TF_TMAC}) = 0
+				-- (BIT_OR(t.`flags`) & {%TF_TMAC}) = 0
 				-- AND (BIT_AND(al.`flags`) & {%ALF_FIXED}) = 0
+				COUNT(t.`id`) = 0
 				AND COUNT(al.`id`) > 0
 		",
 		CDB_REGEXP_OFFICES
@@ -191,7 +194,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_TMAC}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAC}, {%TF_TMAC}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 

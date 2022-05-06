@@ -44,7 +44,8 @@
 			ON c.`id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMEE})) = {%TF_TMEE}
+			AND t.`type` = {%TT_TMEE}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED}) OR c.`ee_encryptionstatus` = 2)
 	")))
 	{
@@ -86,13 +87,15 @@
 				ON
 					t.`tid` = {%TID_COMPUTERS}
 					AND t.pid = c.id
-					AND (t.flags & ({%TF_CLOSED} | {%TF_TMEE})) = {%TF_TMEE}
+					AND t.`type` = {%TT_TMEE}
+					AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND c.`ee_encryptionstatus` <> 2
 				AND c.`name` regexp {s0}
 			GROUP BY c.`id`
-			HAVING (BIT_OR(t.`flags`) & {%TF_TMEE}) = 0
+			HAVING
+				COUNT(t.`id`) = 0
 		",
 		CDB_REGEXP_NOTEBOOK_NAME
 	)))
@@ -124,7 +127,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_TMEE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMEE}, {%TF_TMEE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

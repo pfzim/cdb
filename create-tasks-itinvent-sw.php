@@ -38,7 +38,8 @@
 			ON fi.`fid` = f.`id`
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}     -- Task status is Opened
+			AND t.`type` = {%TT_INV_SOFT}
+			AND (t.`flags` & {%TF_CLOSED}) = 0     -- Task status is Opened
 			AND (f.`flags` & {%FF_ALLOWED}) = 0                                    -- Not exist in IT Invent
 		GROUP BY t.`id`
 		HAVING
@@ -76,7 +77,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_SOFT}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -103,7 +104,8 @@
 				FROM @tasks AS t
 				WHERE
 					t.`tid` = {%TID_COMPUTERS}
-					AND (t.flags & ({%TF_CLOSED} | {%TF_INV_SOFT})) = {%TF_INV_SOFT}
+					AND t.`type` = {%TT_INV_SOFT}
+					AND (t.flags & {%TF_CLOSED}) = 0
 			)
 		GROUP BY c.`id`
 		ORDER BY files_count
@@ -153,7 +155,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_INV_SOFT}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_INV_SOFT}, {%TF_INV_SOFT}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

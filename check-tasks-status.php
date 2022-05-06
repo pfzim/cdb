@@ -86,7 +86,7 @@ function get_status_name($strings, $code)
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT `id`, `tid`, `pid`, `operid`, `opernum`, `flags` FROM @tasks WHERE (`flags` & {%TF_CLOSED}) = 0")))
+	if($db->select_assoc_ex($result, rpv("SELECT t.`id`, t.`tid`, t.`pid`, t.`operid`, t.`opernum`, t.`type`, t.`flags` FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0")))
 	{
 		foreach($result as &$row)
 		{
@@ -109,31 +109,31 @@ function get_status_name($strings, $code)
 						$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 
 						// Application Contol problem mark as Solved
-						if(intval($row['flags']) & TF_TMAC)
+						if(intval($row['type']) == TT_TMAC)
 						{
 							$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | {%ALF_FIXED}) WHERE (`flags` & {%ALF_FIXED}) = 0 AND `pid` = #", $row['pid']));
 						}
 
 						// Vulnerability mark as Solved
-						if(intval($row['flags']) & TF_VULN_FIX)
+						if(intval($row['type']) == TT_VULN_FIX)
 						{
 							$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | {%VSF_FIXED}), `scan_date` = NOW() WHERE `id` = # LIMIT 1", $row['pid']));
 						}
 
 						// Vulnerability (mass) mark all as Solved
-						if(intval($row['flags']) & TF_VULN_FIX_MASS)
+						if(intval($row['type']) == TT_VULN_FIX_MASS)
 						{
 							$db->put(rpv("UPDATE @vuln_scans SET `flags` = (`flags` | {%VSF_FIXED}), `scan_date` = NOW() WHERE `plugin_id` = #", $row['pid']));
 						}
 
 						// Net errors mark all as Solved
-						if(intval($row['flags']) & TF_NET_ERRORS)
+						if(intval($row['type']) == TT_NET_ERRORS)
 						{
 							$db->put(rpv("UPDATE @net_errors SET `flags` = (`flags` | {%NEF_FIXED}) WHERE `pid` = #", $row['pid']));
 						}
 
 						// IT Invent software mark all as Solved
-						if(intval($row['flags']) & TF_INV_SOFT)
+						if(intval($row['type']) == TT_INV_SOFT)
 						{
 							$db->put(rpv("UPDATE @files_inventory SET `flags` = (`flags` | {%FIF_DELETED}) WHERE `pid` = #", $row['pid']));
 						}

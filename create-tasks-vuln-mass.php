@@ -27,7 +27,8 @@
 			ON v.`plugin_id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_VULNS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}
+			AND t.`type` = {%TT_VULN_FIX_MASS}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND v.`flags` & {%VF_HIDED}                              -- Manual hide
 	")))
 	{
@@ -63,7 +64,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_VULN_FIX_MASS}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -80,7 +81,8 @@
 			ON
 				t.`tid` = {%TID_VULNS}
 				AND t.`pid` = v.`plugin_id`
-				AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX_MASS})) = {%TF_VULN_FIX_MASS}
+				AND t.`type` = {%TT_VULN_FIX_MASS}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 		LEFT JOIN @vuln_scans AS vs
 			ON
 				vs.`plugin_id` = v.`plugin_id`
@@ -90,7 +92,7 @@
 			AND v.`severity` >= 3                                                -- Severity >= 3
 		GROUP BY v.`plugin_id`		
 		HAVING
-			(BIT_OR(t.`flags`) & {%TF_VULN_FIX_MASS}) = 0                        -- Not yet task created
+			COUNT(t.`id`) = 0                                                    -- Not yet task created
 			AND v_count >= 100                                                   -- Affected devices >= 100
 		ORDER BY
 			severity DESC,
@@ -126,7 +128,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['plugin_name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULNS}, #, {%TF_VULN_FIX_MASS}, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULNS}, #, {%TT_VULN_FIX_MASS}, {%TF_VULN_FIX_MASS}, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

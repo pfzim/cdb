@@ -26,7 +26,8 @@
 			AND j_quota.`oid` = {%CDB_PROP_MAILBOX_QUOTA}
 		WHERE
 			t.`tid` = {%TID_PERSONS}
-			AND(t.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}
+			AND t.`type` = {%TT_MBOX_UNLIM}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED}) OR (j_quota.`value` <> 0))
 	")))
 	{
@@ -62,7 +63,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_MBOX_UNLIM}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -73,7 +74,8 @@
 		LEFT JOIN @tasks AS t
 			ON t.`tid` = {%TID_PERSONS}
 			AND t.`pid` = p.`id`
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_MBOX_UNLIM})) = {%TF_MBOX_UNLIM}
+			AND t.`type` = {%TT_MBOX_UNLIM}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 		LEFT JOIN @properties_int AS j_quota
 			ON j_quota.`tid` = {%TID_PERSONS}
 			AND j_quota.`pid` = p.`id`
@@ -82,7 +84,8 @@
 			(p.`flags` & ({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_HIDED})) = 0
 			AND j_quota.`value` = 0
 		GROUP BY p.`id`
-		HAVING (BIT_OR(t.`flags`) & {%TF_MBOX_UNLIM}) = 0
+		HAVING
+			COUNT(t.`id`) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -114,7 +117,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TF_MBOX_UNLIM}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TT_MBOX_UNLIM}, {%TF_MBOX_UNLIM}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

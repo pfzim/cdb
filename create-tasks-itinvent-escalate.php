@@ -26,7 +26,8 @@
 			ON m.`id` = t.`pid`
 		WHERE
 			t.`tid` = 3
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}          -- Task status is Opened
+			AND t.`type` = {%TT_INV_TASKFIX}
+			AND (t.`flags` & {%TF_CLOSED}) = 0          -- Task status is Opened
 			AND (
 				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
 				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent
@@ -63,7 +64,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_TASKFIX}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -87,17 +88,19 @@
 			ON
 				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_TASKFIX})) = {%TF_INV_TASKFIX}
+				AND t.`type` = {%TT_INV_TASKFIX}
+				AND (t.flags & {%TF_CLOSED}) = 0
 		LEFT JOIN c_tasks AS t2
 			ON
 				t2.`tid` = {%TID_MAC}
 				AND t2.pid = m.id
-				AND (t2.flags & {%TF_INV_ADD})
+				AND t2.`type` = {%TT_INV_ADD}
+				-- AND (t2.flags & {%TF_INV_ADD})
 		WHERE
-			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, Imported from netdev, Not exist in IT Invent
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, Imported from netdev, Not exist in IT Invent
 		GROUP BY m.`id`
 		HAVING
-			(BIT_OR(t.`flags`) & {%TF_INV_TASKFIX}) = 0
+			COUNT(t.`id`) = 0
 			AND `issues` > 1
 	")))
 	{
@@ -150,7 +153,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_TASKFIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_TASKFIX}, {%TF_INV_TASKFIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

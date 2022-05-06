@@ -24,7 +24,8 @@
 			ON d.`id` = t.`pid` AND t.`tid` = {%TID_DEVICES} AND d.`type` = {%DT_NETDEV}
 		WHERE
 			t.`tid` = {%TID_DEVICES}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}     -- Task status is Opened
+			AND t.`type` = {%TT_NET_ERRORS}
+			AND (t.`flags` & {%TF_CLOSED}) = 0     -- Task status is Opened
 			AND d.`flags` & ({%DF_DELETED} | {%DF_HIDED})                              -- Deleted, Manual hide
 	")))
 	{
@@ -58,7 +59,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_NET_ERRORS}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -73,7 +74,8 @@
 			ON
 				t.`tid` = {%TID_DEVICES}
 				AND t.pid = d.id
-				AND (t.flags & ({%TF_CLOSED} | {%TF_NET_ERRORS})) = {%TF_NET_ERRORS}
+				AND t.`type` = {%TT_NET_ERRORS}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 		LEFT JOIN @net_errors AS e ON
 			e.`pid` = d.`id`
 		WHERE
@@ -89,7 +91,7 @@
 			)
 		GROUP BY d.`id`
 		HAVING
-			(BIT_OR(t.`flags`) & {%TF_NET_ERRORS}) = 0
+			COUNT(t.`id`) = 0
 			AND COUNT(e.`id`) > 0
 	")))
 	{
@@ -162,7 +164,7 @@
 				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_DEVICES}, #, {%TF_NET_ERRORS}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_DEVICES}, #, {%TT_NET_ERRORS}, {%TF_NET_ERRORS}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 

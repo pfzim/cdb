@@ -34,7 +34,8 @@
 			AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}
+			AND t.`type` = {%TT_OS_REINSTALL}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (
 				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
 				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
@@ -73,7 +74,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_OS_REINSTALL}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -90,7 +91,8 @@
 				ON
 				t.`tid` = {%TID_COMPUTERS}
 				AND t.`pid` = c.`id`
-				AND (t.`flags` & ({%TF_CLOSED} | {%TF_OS_REINSTALL})) = {%TF_OS_REINSTALL}
+				AND t.`type` = {%TT_OS_REINSTALL}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 			LEFT JOIN @properties_str AS j_os
 				ON j_os.`tid` = {%TID_COMPUTERS}
 				AND j_os.`pid` = c.`id`
@@ -100,7 +102,8 @@
 				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
-			HAVING (BIT_OR(t.`flags`) & {%TF_OS_REINSTALL}) = 0
+			HAVING
+				COUNT(t.`id`) = 0
 		",
 		CDB_REGEXP_SERVERS
 	)))
@@ -135,7 +138,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_OS_REINSTALL}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_OS_REINSTALL}, {%TF_OS_REINSTALL}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

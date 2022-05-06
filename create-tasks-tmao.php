@@ -28,8 +28,12 @@
 			ON c.`id` = t.`pid`
 		WHERE
 			t.`tid` = 1
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}
-			AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED}) OR c.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG."))
+			AND t.`type` = {%TT_TMAO}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (
+				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
+				OR c.`ao_script_ptn` >= ((SELECT MAX(`ao_script_ptn`) FROM @computers) - ".TMAO_PATTERN_VERSION_LAG.")
+			)
 	")))
 	{
 		foreach($result as &$row)
@@ -78,7 +82,8 @@
 		LEFT JOIN @computers AS c ON c.id = t.pid
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}
+			AND t.`type` = {%TT_TMAO}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND c.`dn` LIKE '%".LDAP_OU_SHOPS."'
 	")))
 	{
@@ -90,8 +95,9 @@
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c ON c.id = t.pid
 		WHERE
-			t.`tid` = 1
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}
+			t.`tid` = {%TID_COMPUTERS}
+			AND t.`type` = {%TT_TMAO}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND c.`dn` NOT LIKE '%".LDAP_OU_SHOPS."'
 	")))
 	{
@@ -106,13 +112,15 @@
 				ON
 					t.`tid` = {%TID_COMPUTERS}
 					AND t.pid = c.id
-					AND (t.flags & ({%TF_CLOSED} | {%TF_TMAO})) = {%TF_TMAO}
+					AND t.`type` = {%TT_TMAO}
+					AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND c.`ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
-			HAVING (BIT_OR(t.`flags`) & {%TF_TMAO}) = 0
+			HAVING
+				COUNT(t.`id`) = 0
 		",
 		CDB_REGEXP_SERVERS
 	)))
@@ -160,7 +168,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_TMAO}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAO}, {%TF_TMAO}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					if(substr($row['dn'], -strlen(LDAP_OU_SHOPS)) === LDAP_OU_SHOPS)
 					{
 						$count_gup++;

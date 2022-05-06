@@ -62,6 +62,26 @@
 	define('TF_NET_ERRORS',         0x040000);
 	define('TF_INV_SOFT',           0x080000);
 
+	// `type` from `tasks` table
+	
+	define('TT_MBOX_UNLIM',         1);
+	define('TT_INV_MOVE',           2);
+	define('TT_INV_TASKFIX',        3);
+	define('TT_WIN_UPDATE',         4);
+	define('TT_TMAC',               5);
+	define('TT_TMEE',               6);
+	define('TT_TMAO',               7);
+	define('TT_PC_RENAME',          8);
+	define('TT_LAPS',               9);
+	define('TT_SCCM',               10);
+	define('TT_PASSWD',             11);
+	define('TT_OS_REINSTALL',       12);
+	define('TT_INV_ADD',            13);
+	define('TT_VULN_FIX',           14);
+	define('TT_VULN_FIX_MASS',      15);
+	define('TT_NET_ERRORS',         16);
+	define('TT_INV_SOFT',           17);
+
 	// `flags` from `ac_log` table
 
 	define('ALF_FIXED',              0x0002);
@@ -149,6 +169,24 @@ function tmee_status($code)
 	}
 	return 'Unknown';
 }
+
+$g_tasks_types = array(
+	'Unknown',
+	'Не установлена квота на ПЯ',
+	'Неправильное местоположение в IT Invent',
+	'Выяснить причиную повторения заявок IT Invent',
+	'Несоответствие baseline установка обновлений',
+	'Блокировка ПО TMAC',
+	'Не установлен или не работает TMEE',
+	'Не установлен или не работает TMAO',
+	'Имя не соответствует шаблону',
+	'Не установлен или не работает LAPS',
+	'Не установлен или не работает агент SCCM',
+	'Возможна установка пустого пароля',
+	'Устаревшая ОС',
+	'Отсутствует в IT Invent',
+	'Обнаружена уязвимость'
+);
 
 $g_tasks_flags = array(
 	'Заявка закрыта',

@@ -18,19 +18,23 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`operid`, m.`opernum`, j1.`name`
-		FROM @tasks AS m
-		LEFT JOIN @computers AS j1
-			ON j1.`id` = m.`pid`
-		LEFT JOIN @properties_int AS j2
+		SELECT t.`id`, t.`operid`, t.`opernum`, c.`name`
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c
+			ON c.`id` = t.`pid`
+		LEFT JOIN @properties_int AS uac
 			ON
-				j2.`tid` = {%TID_COMPUTERS}
-				AND j2.`pid` = m.`pid`
-				AND j2.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
+				uac.`tid` = {%TID_COMPUTERS}
+				AND uac.`pid` = t.`pid`
+				AND uac.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
 		WHERE
-			m.`tid` = {%TID_COMPUTERS}
-			AND (m.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}
-			AND (j1.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED}) OR (j2.`value` & 0x020) = 0)
+			t.`tid` = {%TID_COMPUTERS}
+			AND t.`type` = {%TT_PASSWD}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (
+				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
+				OR (uac.`value` & 0x020) = 0
+			)
 	")))
 	{
 		foreach($result as &$row)
@@ -65,27 +69,29 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_PASSWD}")))
 	{
 		$i = intval($result[0][0]);
 	}
 	
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`flags`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1
-			ON j1.`tid` = {%TID_COMPUTERS}
-			AND j1.`pid` = m.`id`
-			AND (j1.`flags` & ({%TF_CLOSED} | {%TF_PASSWD})) = {%TF_PASSWD}
-		LEFT JOIN @properties_int AS j2
-			ON j2.`tid` = {%TID_COMPUTERS}
-			AND j2.`pid` = m.`id`
-			AND j2.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
+		SELECT c.`id`, c.`name`, c.`dn`, c.`flags`
+		FROM @computers AS c
+		LEFT JOIN @tasks AS t
+			ON t.`tid` = {%TID_COMPUTERS}
+			AND t.`pid` = c.`id`
+			AND t.`type` = {%TT_PASSWD}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
+		LEFT JOIN @properties_int AS uac
+			ON uac.`tid` = {%TID_COMPUTERS}
+			AND uac.`pid` = c.`id`
+			AND uac.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
 		WHERE
-			(m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
-			AND j2.`value` & 0x020
-		GROUP BY m.`id`
-		HAVING (BIT_OR(j1.`flags`) & {%TF_PASSWD}) = 0
+			(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+			AND uac.`value` & 0x020
+		GROUP BY c.`id`
+		HAVING
+			COUNT(t.`id`) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -117,7 +123,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TF_PASSWD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_PASSWD}, {%TF_PASSWD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}

@@ -40,7 +40,8 @@
 				AND (dm.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})       -- Valid devices is only that exist and active in IT Invent and have SN
 		WHERE
 			t.`tid` = {%TID_MAC}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}                                         -- Task status is Opened
+			AND t.`type` = {%TT_INV_MOVE}
+			AND (t.`flags` & {%TF_CLOSED}) = 0                                         -- Task status is Opened
 			AND (
 				(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) <> ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})   -- Temprary excluded or Premanently excluded, Not Exist OR Inactive in IT Invent, Not Mobile device
 				OR (
@@ -82,7 +83,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & (%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_MOVE}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -118,8 +119,9 @@
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = {%TID_MAC}
-				AND t.pid = m.id
-				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}
+				AND t.`pid` = m.`id`
+				AND t.`type` = {%TT_INV_MOVE}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV})) = ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})    -- Not Temprary excluded, Not Premanently excluded, From netdev, Exist in IT Invent, Active in IT Invent, Not Mobile
 			AND (
@@ -131,7 +133,8 @@
 				)
 			)
 		GROUP BY m.`id`, dm.`id`
-		HAVING (BIT_OR(t.`flags`) & {%TF_INV_MOVE}) = 0
+		HAVING
+			COUNT(t.`id`) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -183,7 +186,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['m_name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_MOVE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_MOVE}, {%TF_INV_MOVE}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

@@ -32,7 +32,8 @@
 			ON d.`id` = vs.`pid`
 		WHERE
 			t.`tid` = {%TID_VULN_SCANS}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}
+			AND t.`type` = {%TT_VULN_FIX}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (
 				d.`flags` & {%DF_HIDED}                              -- Manual hide
 				OR vs.`flags` & ({%VSF_FIXED} | {%VSF_HIDED})        -- Marked as Fixed or Hided
@@ -72,7 +73,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_VULN_FIX}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -90,7 +91,8 @@
 			ON
 			t.`tid` = {%TID_VULN_SCANS}
 			AND t.`pid` = vs.`id`
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_VULN_FIX})) = {%TF_VULN_FIX}
+			AND t.`type` = {%TT_VULN_FIX}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 		LEFT JOIN @vulnerabilities AS v
 			ON v.`plugin_id` = vs.`plugin_id`
 		LEFT JOIN @devices AS d
@@ -102,7 +104,8 @@
 			AND (v.`flags` & {%VF_HIDED}) = 0                                                                  -- Vulnerability not excluded (Manual hide)
 			AND (SELECT COUNT(*) FROM @vuln_scans AS ivs WHERE ivs.`plugin_id` = vs.`plugin_id`) < 100         -- Not mass vulnerability (affected < 100)
 		GROUP BY vs.`id`
-		HAVING (BIT_OR(t.`flags`) & {%TF_VULN_FIX}) = 0
+		HAVING
+			COUNT(t.`id`) = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -135,7 +138,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULN_SCANS}, #, {%TF_VULN_FIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULN_SCANS}, #, {%TT_VULN_FIX}, {%TF_VULN_FIX}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					$i++;
 				}
 			}
