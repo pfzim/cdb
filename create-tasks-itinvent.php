@@ -39,11 +39,12 @@
 			ON m.`id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_MAC}
-			AND (t.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}              -- Task status is Opened
+			AND t.`type` = {%TT_INV_ADD}
+			AND (t.`flags` & {%TF_CLOSED}) = 0              -- Task status is Opened
 			AND (
 				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
-				-- OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent      -- Temporary do not check status
-				OR (m.`flags` & {%MF_EXIST_IN_ITINV})     					              -- Exist in IT Invent
+				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent
+				-- OR (m.`flags` & {%MF_EXIST_IN_ITINV})     					              -- Exist in IT Invent        -- Temporary do not check status
 			)
 	")))
 	{
@@ -91,7 +92,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD}")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -105,6 +106,8 @@
 			m.`ip`,
 			m.`port`,
 			m.`vlan`,
+			m.`inv_no`,
+			m.`status`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
 			m.`flags`
 		FROM @mac AS m
@@ -114,12 +117,18 @@
 			ON
 				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND (t.flags & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}
+				AND t.type = {%TT_INV_ADD}
+				AND (t.flags & {%TF_CLOSED}) = 0
 		WHERE
-			-- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV} | {%MF_INV_ACTIVE})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active    -- Temporary do not check status
-			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}
+			AND (
+				(m.`flags` & {%MF_EXIST_IN_ITINV}) = 0
+				OR m.`status` = 7
+			)
+			-- AND (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) <> ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+			-- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		GROUP BY m.`id`
-		HAVING (BIT_OR(t.`flags`) & {%TF_INV_ADD}) = 0
+		HAVING COUNT(t.`id`) = 0
 		ORDER BY RAND()
 	")))
 	{
@@ -138,26 +147,54 @@
 			curl_setopt($ch, CURLOPT_POST, true);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-			curl_setopt($ch, CURLOPT_POSTFIELDS,
-				'Source=cdb'
-				.'&Action=new'
-				.'&Type=itinvent'
-				.'&To=bynetdev'
-				.'&Host='.urlencode($row['netdev'])
-				.'&Message='.urlencode(
-					'Обнаружено сетевое устройство '.((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
-					."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
-					."\nDNS name: ".$row['name']
-					."\nIP: ".$row['ip']
-					."\n\nУстройство подключено к: ".$row['netdev']
-					."\nПорт: ".$row['port']
-					."\nVLAN ID: ".$row['vlan']
-					."\nВремя регистрации: ".$row['regtime']
-					."\n\nКод работ: IIV09"
-					."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
-					."\nВ решении укажите Инвентарный номер оборудования!"
-				)
-			);
+			// Если оборудование находится в статусе Списано, то создаётся отдельный тип заявки
+			if(intval($row['status']) == 7)
+			{
+				curl_setopt($ch, CURLOPT_POSTFIELDS,
+					'Source=cdb'
+					.'&Action=new'
+					.'&Type=itinvstatus'
+					.'&To=itinvent'
+					.'&Host='.urlencode($row['netdev'])
+					.'&Message='.urlencode(
+						'Списанное оборудование появилось в сети'
+						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+						."\nИнвентарный номер оборудования: ".$row['inv_no']
+						."\nDNS name: ".$row['name']
+						."\nIP: ".$row['ip']
+						."\n\nУстройство подключено к: ".$row['netdev']
+						."\nПорт: ".$row['port']
+						."\nVLAN ID: ".$row['vlan']
+						."\nВремя регистрации: ".$row['regtime']
+						."\n\nКод работ: IIV11"
+						."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.FAQ-Зафиксировано-списанное-оборудование-в-сети.ashx'
+						."\nВ решении укажите Инвентарный номер оборудования!"
+					)
+				);
+			}
+			else
+			{
+				curl_setopt($ch, CURLOPT_POSTFIELDS,
+					'Source=cdb'
+					.'&Action=new'
+					.'&Type=itinvent'
+					.'&To=bynetdev'
+					.'&Host='.urlencode($row['netdev'])
+					.'&Message='.urlencode(
+						'Обнаружено сетевое устройство '.((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
+						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
+						."\nDNS name: ".$row['name']
+						."\nIP: ".$row['ip']
+						."\n\nУстройство подключено к: ".$row['netdev']
+						."\nПорт: ".$row['port']
+						."\nVLAN ID: ".$row['vlan']
+						."\nВремя регистрации: ".$row['regtime']
+						."\n\nКод работ: IIV09"
+						."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
+						."\nВ решении укажите Инвентарный номер оборудования!"
+					)
+				);
+			}
 
 			$answer = curl_exec($ch);
 
@@ -171,7 +208,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TF_INV_ADD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_ADD}, {%TF_INV_ADD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 
