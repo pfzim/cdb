@@ -53,7 +53,8 @@
 				,[PTNFILE]
 				,[SCRIPT_PTN]
 				,[AS_PSTIME]
-			FROM [".$params['Database']."].[dbo].[TBL_CLIENT_INFO] WHERE [CLIENTTYPE] = 0
+				,[DLP_STATUS]
+			FROM [dbo].[TBL_CLIENT_INFO] WHERE [CLIENTTYPE] = 0
 			ORDER BY [SCRIPT_PTN], [PTNFILE]
 		");
 
@@ -112,6 +113,16 @@
 					$row_id
 				));
 			}
+
+			if($row_id)
+			{
+				$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+					$row_id,
+					CDB_PROP_TMAO_DLP_STATUS,
+					$row['DLP_STATUS']
+				));
+			}
+
 			$i++;
 		}
 
