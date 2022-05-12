@@ -64,13 +64,16 @@ EOT;
 	$opened = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-			SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
-			FROM @computers AS m
-			LEFT JOIN @tasks AS j1 ON j1.`pid` = m.`id` AND (j1.`flags` & {%TF_CLOSED}) = 0 AND (j1.`flags` & {%TF_PC_RENAME})
+			SELECT c.`id`, c.`name`, c.`dn`, c.`laps_exp`, t.`type`, t.`flags`, t.`operid`, t.`opernum`
+			FROM @computers AS c
+			LEFT JOIN @tasks AS t
+				ON t.`pid` = c.`id`
+				AND t.`type` = {%TT_PC_RENAME}
+				AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
-				(m.`flags` & ({%CF_DELETED} | {%CF_HIDED})) = 0
-				AND m.`name` NOT REGEXP {s0}
-			ORDER BY m.`name`
+				(c.`flags` & ({%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`name` NOT REGEXP {s0}
+			ORDER BY c.`name`
 		",
 		CDB_REGEXP_VALID_NAMES
 	)))
@@ -78,7 +81,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & TF_PC_RENAME)
+			if(intval($row['type']) == TT_PC_RENAME)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 				$opened++;

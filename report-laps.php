@@ -39,20 +39,23 @@ EOT;
 
 	//		AND m.`dn` LIKE '%".LDAP_OU_COMPANY."'
 	if($db->select_assoc_ex($result, rpv("
-		SELECT m.`id`, m.`name`, m.`dn`, m.`laps_exp`, j1.`flags`, j1.`operid`, j1.`opernum`
-		FROM @computers AS m
-		LEFT JOIN @tasks AS j1 ON j1.pid = m.id AND (j1.flags & ({%TF_CLOSED} | {%TF_LAPS})) = {%TF_LAPS}
+		SELECT c.`id`, c.`name`, c.`dn`, c.`laps_exp`, t.`type`, t.`flags`, t.`operid`, t.`opernum`
+		FROM @computers AS c
+		LEFT JOIN @tasks AS t
+			ON t.`pid` = c.`id`
+			AND t.`type` = {%TT_LAPS}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
 		WHERE
-			(m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
-			AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL # DAY)
-		GROUP BY m.`id`
-		ORDER BY m.`name`
-	", LAPS_EXPIRE_DAYS)))
+			(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+			AND c.`laps_exp` < DATE_SUB(NOW(), INTERVAL {%LAPS_EXPIRE_DAYS} DAY)
+		GROUP BY c.`id`
+		ORDER BY c.`name`
+	")))
 	{
 		foreach($result as &$row)
 		{
 			$table .= '<tr><td>'.$row['name'].'</td><td>';
-			if(intval($row['flags']) & TF_LAPS)
+			if(intval($row['type']) == TT_LAPS)
 			{
 				$table .= '<a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a>';
 				$opened++;

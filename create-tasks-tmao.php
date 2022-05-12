@@ -27,7 +27,7 @@
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
 		WHERE
-			t.`tid` = 1
+			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_TMAO}
 			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (
@@ -168,7 +168,7 @@
 				{
 					//echo $answer."\r\n";
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAO}, {%TF_TMAO}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAO}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 					if(substr($row['dn'], -strlen(LDAP_OU_SHOPS)) === LDAP_OU_SHOPS)
 					{
 						$count_gup++;

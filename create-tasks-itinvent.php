@@ -39,7 +39,10 @@
 			ON m.`id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_MAC}
-			AND t.`type` = {%TT_INV_ADD}
+			AND (
+				t.`type` = {%TT_INV_ADD}
+				OR t.`type` = {%TT_INV_ADD_DECOMIS}
+			)
 			AND (t.`flags` & {%TF_CLOSED}) = 0              -- Task status is Opened
 			AND (
 				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
@@ -92,7 +95,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND (t.`type` = {%TT_INV_ADD} OR t.`type` = {%TT_INV_ADD_DECOMIS})")))
 	{
 		$i = intval($result[0][0]);
 	}
@@ -117,13 +120,16 @@
 			ON
 				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
-				AND t.type = {%TT_INV_ADD}
+				AND (
+					t.`type` = {%TT_INV_ADD}
+					OR t.`type` = {%TT_INV_ADD_DECOMIS}
+				)
 				AND (t.flags & {%TF_CLOSED}) = 0
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}
 			AND (
 				(m.`flags` & {%MF_EXIST_IN_ITINV}) = 0
-				OR m.`status` = 7
+				OR m.`status` = 7                          -- Decommissioned
 			)
 			-- AND (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) <> ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
 			-- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
@@ -146,10 +152,14 @@
 
 			curl_setopt($ch, CURLOPT_POST, true);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			
+			$task_type = TT_INV_ADD;
 
 			// Если оборудование находится в статусе Списано, то создаётся отдельный тип заявки
-			if(intval($row['status']) == 7)
+			if((intval($row['flags']) & MF_EXIST_IN_ITINV) && (intval($row['status']) == 7))
 			{
+				$task_type = TT_INV_ADD_DECOMIS;
+
 				curl_setopt($ch, CURLOPT_POSTFIELDS,
 					'Source=cdb'
 					.'&Action=new'
@@ -208,7 +218,7 @@
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_ADD}, {%TF_INV_ADD}, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, #, 0, NOW(), !, !)", $row['id'], $task_type, $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
 

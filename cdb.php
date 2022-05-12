@@ -241,6 +241,7 @@ function walk_route($route, $action)
 			'report-tmao-servers',
 			'check-tasks-status',
 			'create-tasks-tmao',
+			//'create-tasks-tmao-dlp',
 			'create-tasks-tmee',
 			'create-tasks-ac',
 			'create-tasks-laps',

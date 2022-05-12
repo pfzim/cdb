@@ -4,7 +4,7 @@
 	\brief Файл с описанием флагов и функцийй для работы с ними
 */
 
-	// Идентификаторы свойств объектов
+	// Идентификаторы свойств объектов в таблицах `properties_*`
 
 	define('CDB_PROP_USERACCOUNTCONTROL',			101);
 	define('CDB_PROP_OPERATINGSYSTEM',				102);
@@ -14,6 +14,10 @@
 	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);
 	define('CDB_PROP_PWDLASTSET',					107);
 	define('CDB_PROP_SID',							108);
+	define('CDB_PROP_TMAO_DLP_STATUS',				109);
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',	110);
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',	111);
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',	112);
 
 	// `flags` from `persons` table
 
@@ -43,25 +47,8 @@
 
 	// `flags` from `tasks` table
 
-	define('TF_CLOSED',             0x000001);
-	define('TF_MBOX_UNLIM',         0x000008);
-	define('TF_INV_MOVE',           0x000010);
-	define('TF_INV_TASKFIX',        0x000020);
-	define('TF_WIN_UPDATE',         0x000040);
-	define('TF_TMAC',               0x000080);
-	define('TF_TMEE',               0x000100);
-	define('TF_TMAO',               0x000200);
-	define('TF_PC_RENAME',          0x000400);
-	define('TF_LAPS',               0x000800);
-	define('TF_SCCM',               0x001000);
-	define('TF_PASSWD',             0x002000);
-	define('TF_OS_REINSTALL',       0x004000);
-	define('TF_INV_ADD',            0x008000);
-	define('TF_VULN_FIX',           0x010000);
-	define('TF_VULN_FIX_MASS',      0x020000);
-	define('TF_NET_ERRORS',         0x040000);
-	define('TF_INV_SOFT',           0x080000);
-
+	define('TF_CLOSED',             0x0001);
+	
 	// `type` from `tasks` table
 	
 	define('TT_MBOX_UNLIM',         1);
@@ -81,6 +68,31 @@
 	define('TT_VULN_FIX_MASS',      15);
 	define('TT_NET_ERRORS',         16);
 	define('TT_INV_SOFT',           17);
+	define('TT_TMAO_DLP',           18);
+	define('TT_INV_ADD_DECOMIS',   19);
+
+$g_tasks_types = array(
+	'Something went wrong',
+	'Не установлена квота на ПЯ',
+	'Неправильное местоположение в IT Invent',
+	'Выяснить причиную повторения заявок IT Invent',
+	'Несоответствие baseline установка обновлений',
+	'Блокировка ПО TMAC',
+	'Не установлен или не работает TMEE',
+	'Не установлен или не работает TMAO',
+	'Имя не соответствует шаблону',
+	'Не установлен или не работает LAPS',
+	'Не установлен или не работает агент SCCM',
+	'Возможна установка пустого пароля',
+	'Устаревшая ОС',
+	'Отсутствует в IT Invent',
+	'Обнаружена уязвимость',
+	'Обнаружена массовая уязвимость',
+	'Обнаружены ошибки на сетевом оборудование',
+	'Инвентаризация ПО',
+	'Не работает модуль DLP антивируса',
+	'Списанное оборудование обнаружено в сети'
+);
 
 	// `flags` from `ac_log` table
 
@@ -170,22 +182,12 @@ function tmee_status($code)
 	return 'Unknown';
 }
 
-$g_tasks_types = array(
-	'Unknown',
-	'Не установлена квота на ПЯ',
-	'Неправильное местоположение в IT Invent',
-	'Выяснить причиную повторения заявок IT Invent',
-	'Несоответствие baseline установка обновлений',
-	'Блокировка ПО TMAC',
-	'Не установлен или не работает TMEE',
-	'Не установлен или не работает TMAO',
-	'Имя не соответствует шаблону',
-	'Не установлен или не работает LAPS',
-	'Не установлен или не работает агент SCCM',
-	'Возможна установка пустого пароля',
-	'Устаревшая ОС',
-	'Отсутствует в IT Invent',
-	'Обнаружена уязвимость'
+$g_dlp_statuses = array(
+	'Not installed',
+	'Running',
+	'Stopped',
+	'Cannot install (Data Loss Prevention already exists)',
+	'Requires restart'
 );
 
 $g_tasks_flags = array(

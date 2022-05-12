@@ -10,6 +10,7 @@
 	if(!defined('Z_PROTECTED')) exit;
 
 	global $g_mac_short_flags;
+	global $g_tasks_types;
 
 	echo "\nreport-tasks-itinvent:\n";
 
@@ -52,6 +53,7 @@ EOT;
 			t.`operid`,
 			DATE_FORMAT(t.`date`, '%d.%m.%Y') AS `t_date`,
 			t.`flags` AS `t_flags`,
+			t.`type`,
 			m.`flags` AS `m_flags`,
 			(
 				SELECT COUNT(*)
@@ -83,7 +85,7 @@ EOT;
 			$table .= '<td>'.$row['last_seen'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
 			$table .= '<td>'.$row['t_date'].'</td>';
-			$table .= '<td>'.tasks_flags_to_string(intval($row['t_flags'])).'</td>';
+			$table .= '<td>'.code_to_string($g_tasks_types, intval($row['type'])).'</td>';
 			$table .= '<td>'.flags_to_string(intval($row['m_flags']), $g_mac_short_flags, '', '-').'</td>';
 			$table .= '<td'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
@@ -97,8 +99,12 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `inv_problems`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_INV_ADD})) = {%TF_INV_ADD}) AS `inv_opened`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD}) AS `o_inv_add`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD_DECOMIS}) AS `o_inv_add_decomis`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_MOVE}) AS `o_iimv`,
+
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `p_inv_add`,
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV}) AND m.`status` = 7) AS `p_inv_add_decomis`,
 			(
 				SELECT COUNT(*)
 				FROM @mac AS m
@@ -118,14 +124,14 @@ EOT;
 							AND m.`loc_no` <> dm.`loc_no`
 						)
 					)
-			) AS `p_iimv`,
-			(SELECT COUNT(*) FROM @tasks WHERE (`flags` & ({%TF_CLOSED} | {%TF_INV_MOVE})) = {%TF_INV_MOVE}) AS `o_iimv`
+			) AS `p_iimv`
 	")))
 	{
 		$html .= '<table>';
-		$html .= '<tr><th>Описание</th><th>Несоответствий</th><th>Открыто заявок</th><th>Лимит заявок</th></tr>';
-		$html .= '<tr><td>Оборудование не внесено в IT Invent</td><td>'.$result[0]['inv_problems'].'</td><td>'.$result[0]['inv_opened'].'</td><td>'.TASKS_LIMIT_ITINVENT.'</td></tr>';
-		$html .= '<tr><td>Указано неверное местоположение в ИТ Инвент</td><td>'.$result[0]['p_iimv'].'</td><td>'.$result[0]['o_iimv'].'</td><td>'.TASKS_LIMIT_ITINVENT_MOVE.'</td></tr>';
+		$html .= '<tr><th>Описание</th>                                                   <th>Несоответствий</th>                       <th>Открыто заявок</th>                        <th>Лимит заявок</th></tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD).'</td>             <td>'.$result[0]['p_inv_add'].'</td>          <td>'.$result[0]['o_inv_add'].'</td>           <td rowspan="2">'.TASKS_LIMIT_ITINVENT.'</td></tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD_DECOMIS).'</td>    <td>'.$result[0]['p_inv_add_decomis'].'</td> <td>'.$result[0]['o_inv_add_decomis'].'</td>  </tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_MOVE).'</td>            <td>'.$result[0]['p_iimv'].'</td>             <td>'.$result[0]['o_iimv'].'</td>              <td>'.TASKS_LIMIT_ITINVENT_MOVE.'</td></tr>';
 		$html .= '</table>';
 	}
 	

@@ -54,12 +54,13 @@ EOT;
 	$i = 0;
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT j1.`id`, j1.`name`, j1.`dn`, j1.`laps_exp`, m.`flags`, m.`operid`, m.`opernum`
-		FROM @tasks AS m
-		LEFT JOIN @computers AS j1 ON j1.`id` = m.`pid`
+		SELECT c.`id`, c.`name`, c.`dn`, c.`laps_exp`, t.`flags`, t.`operid`, t.`opernum`
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c ON c.`id` = t.`pid`
 		WHERE
-			(m.`flags` & ({%TF_CLOSED} | {%TF_PC_RENAME})) = {%TF_PC_RENAME}
-		ORDER BY j1.`name`
+			t.`type` = {%TT_PC_RENAME}
+			AND (t.`flags` & {%TF_CLOSED}) = 0
+		ORDER BY c.`name`
 	")))
 	{
 		foreach($result as &$row)
