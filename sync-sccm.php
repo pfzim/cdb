@@ -58,14 +58,29 @@
 			j1.LastHealthEvaluation,
 			j1.LastStatusMessage,
 			j1.LastHW,
-			j2.ComplianceState
+			ihf.ComplianceState AS ihf_value,
+			rmsi.ComplianceState AS rmsi_value,
+			rmss.ComplianceState AS rmss_value,
+			rmsv.ComplianceState AS rmsv_value
 		FROM [dbo].[System_DISC] AS m
 		LEFT JOIN [dbo].[CH_ClientSummary] AS j1
 			ON m.ItemKey = j1.MachineID
-		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS j2
-			ON m.ItemKey = j2.ItemKey
-			AND CI_ID = '".SCCM_CI_ID."'
-			AND CIVersion = ".SCCM_CI_VERSION."
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS ihf
+			ON m.ItemKey = ihf.ItemKey
+			AND ihf.CI_ID = '".SCCM_IHF_CI_ID."'
+			AND ihf.CIVersion = ".SCCM_IHF_CI_VERSION."
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsi
+			ON m.ItemKey = rmsi.ItemKey
+			AND rmsi.CI_ID = '".SCCM_RMSI_CI_ID."'
+			AND rmsi.CIVersion = ".SCCM_RMSI_CI_VERSION."
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmss
+			ON m.ItemKey = rmss.ItemKey
+			AND rmss.CI_ID = '".SCCM_RMSS_CI_ID."'
+			AND rmss.CIVersion = ".SCCM_RMSS_CI_VERSION."
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsv
+			ON m.ItemKey = rmsv.ItemKey
+			AND rmsv.CI_ID = '".SCCM_RMSV_CI_ID."'
+			AND rmsv.CIVersion = ".SCCM_RMSV_CI_VERSION."
 		WHERE ISNULL(m.Obsolete0, 0) <> 1 AND ISNULL(m.Decommissioned0, 0) <> 1 AND m.Client0 = 1
 	");
 
@@ -162,20 +177,31 @@
 
 		if($row_id)
 		{
-			$state = 0;
-
-			if(intval($row['ComplianceState']) == 1)
-			{
-				$state = 1;
-			}
-
-			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES (1, #, #, #) ON DUPLICATE KEY UPDATE `value` = #",
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
 				$row_id,
 				CDB_PROP_BASELINE_COMPLIANCE_HOTFIX,
-				$state,
-				$state
+				(intval($row['ihf_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_RMS_I,
+				(intval($row['rmsi_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_RMS_S,
+				(intval($row['rmss_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_RMS_V,
+				(intval($row['rmsv_value']) == 1) ? 1 : 0
 			));
 		}
+
 		$i++;
 	}
 
