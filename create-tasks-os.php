@@ -74,7 +74,7 @@
 
 	$i = 0;
 
-	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS m WHERE (m.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_OS_REINSTALL}")))
+	if($db->select_ex($result, rpv("SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_OS_REINSTALL}")))
 	{
 		$i = intval($result[0][0]);
 	}
