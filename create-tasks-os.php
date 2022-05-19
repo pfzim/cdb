@@ -38,7 +38,12 @@
 			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (
 				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
-				OR j_os.`value` IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
+				OR j_os.`value` IN (
+					'Windows 10 Корпоративная 2016 с долгосрочным обслуживанием',
+					'Windows 10 Корпоративная',
+					'Windows 10 Корпоративная LTSC',
+					'Windows 10 Enterprise'
+				)
 			)
 	")))
 	{
@@ -99,7 +104,12 @@
 				AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
-				AND j_os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
+				AND j_os.`value` NOT IN (
+					'Windows 10 Корпоративная 2016 с долгосрочным обслуживанием',
+					'Windows 10 Корпоративная',
+					'Windows 10 Корпоративная LTSC',
+					'Windows 10 Enterprise'
+				)
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
 			HAVING

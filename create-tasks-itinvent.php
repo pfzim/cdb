@@ -29,6 +29,8 @@
 
 	$limit = TASKS_LIMIT_ITINVENT;
 
+	global $g_mac_flags;
+
 	// Close auto resolved tasks
 
 	$i = 0;
@@ -46,7 +48,7 @@
 			AND (t.`flags` & {%TF_CLOSED}) = 0              -- Task status is Opened
 			AND (
 				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
-				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND Active in IT Invent
+				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_DUPLICATE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
 				-- OR (m.`flags` & {%MF_EXIST_IN_ITINV})     					              -- Exist in IT Invent        -- Temporary do not check status
 			)
 	")))
@@ -170,8 +172,10 @@
 						'Списанное оборудование появилось в сети'
 						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 						."\nИнвентарный номер оборудования: ".$row['inv_no']
+						."\nСтатус ID: ".$row['status']
 						."\nDNS name: ".$row['name']
 						."\nIP: ".$row['ip']
+						."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
 						."\n\nУстройство подключено к: ".$row['netdev']
 						."\nПорт: ".$row['port']
 						."\nVLAN ID: ".$row['vlan']

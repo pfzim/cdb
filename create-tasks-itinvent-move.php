@@ -22,7 +22,7 @@
 
 	$limit = TASKS_LIMIT_ITINVENT_MOVE;
 
-	global $g_comp_flags;
+	global $g_mac_flags;
 
 	// Close auto resolved tasks
 
@@ -104,6 +104,7 @@
 			,d.`name` AS netdev
 			,dm.`inv_no` AS d_inv_no
 			,dm.`mac` AS d_mac
+			,dm.`flags` AS d_flags
 			-- ,dm.`branch_no`
 			-- ,dm.`loc_no`
 			-- ,dm.`date`
@@ -166,9 +167,11 @@
 					."\nПорт: ".$row['port']
 					."\nVLAN ID: ".$row['vlan']
 					."\nВремя регистрации: ".$row['regtime']
+					."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
 					."\n\nИнвентарный номер коммутатора/маршрутизатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no'])
 					."\nDNS имя: ".$row['netdev']
 					."\nСерийный номер: ".$row['d_mac']
+					."\nFlags: ".flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
 					."\n\nКод работ: IIV10"
 					."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Местоположение-оборудования-отличается-от-местоположения-коммутатора-в-которыи-оно-подключено.ashx'
 				)

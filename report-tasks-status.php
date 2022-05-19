@@ -72,7 +72,7 @@ EOT;
 		foreach($result as &$row)
 		{
 			$table .= '<tr>';
-			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-computer-info&id='.$row['id'].'">'.$row['name'].'</a></td>';
+			$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=computer_info/0/'.$row['id'].'">'.$row['name'].'</a></td>';
 			$table .= '<td>'.$row['ao_script_ptn'].'</td><td>'.$row['last_update'].'</td>';
 			$table .= '<td>'.tmee_status(intval($row['ee_encryptionstatus'])).'</td><td>'.$row['last_sync'].'</td>';
 			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
@@ -134,7 +134,12 @@ EOT;
 					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
-					AND os.`value` NOT IN ('Windows 10 Корпоративная 2016 с долгосрочным обслуживанием', 'Windows 10 Корпоративная', 'Windows 10 Корпоративная LTSC')
+					AND os.`value` NOT IN (
+						'Windows 10 Корпоративная 2016 с долгосрочным обслуживанием',
+						'Windows 10 Корпоративная',
+						'Windows 10 Корпоративная LTSC',
+						'Windows 10 Enterprise'
+					)
 					AND c.`name` NOT REGEXP {s0}
 			) AS `p_os`,
 			(
@@ -169,6 +174,45 @@ EOT;
 					AND c.`name` REGEXP {s1}
 			) AS `p_wsus_tt`,
 			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS rmsi_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = rmsi_value.`pid`
+				WHERE
+					rmsi_value.`tid` = {%TID_COMPUTERS}
+					AND rmsi_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_I}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND rmsi_value.`value` <> 1
+					AND c.`name` REGEXP {s4}
+			) AS `p_rmsi`,
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS rmss_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = rmss_value.`pid`
+				WHERE
+					rmss_value.`tid` = {%TID_COMPUTERS}
+					AND rmss_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_S}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND rmss_value.`value` <> 1
+					AND c.`name` REGEXP {s4}
+			) AS `p_rmss`,
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS rmsv_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = rmsv_value.`pid`
+				WHERE
+					rmsv_value.`tid` = {%TID_COMPUTERS}
+					AND rmsv_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_V}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND rmsv_value.`value` <> 1
+					AND c.`name` REGEXP {s4}
+			) AS `p_rmsv`,
+			(
 				SELECT COUNT(*)
 				FROM @persons AS p
 				LEFT JOIN @properties_int AS j_quota
@@ -188,7 +232,8 @@ EOT;
 		CDB_REGEXP_SERVERS,
 		CDB_REGEXP_SHOPS,
 		CDB_REGEXP_VALID_NAMES,
-		CDB_REGEXP_NOTEBOOK_NAME		
+		CDB_REGEXP_NOTEBOOK_NAME,
+		CDB_REGEXP_OFFICES
 	)))
 	{
 		// error
@@ -205,6 +250,9 @@ EOT;
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_WIN_UPDATE).'</td>   <td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td>  <td>'.$result[0]['o_wsus'].'</td>     <td>'.TASKS_LIMIT_WSUS_GUP.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MBOX_UNLIM).'</td>   <td>'.$result[0]['p_mbxq'].'</td>                                    <td>'.$result[0]['o_mbxq'].'</td>     <td>'.TASKS_LIMIT_MBX.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).'</td> <td>'.$result[0]['p_os'].'</td>                                      <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_INST).'</td>     <td>'.$result[0]['p_rmsi'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_SETT).'</td>     <td>'.$result[0]['p_rmss'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).'</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '</table>';
 
 	$html .= '<br /><table>';

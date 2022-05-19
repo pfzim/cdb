@@ -69,7 +69,10 @@
 	define('TT_NET_ERRORS',         16);
 	define('TT_INV_SOFT',           17);
 	define('TT_TMAO_DLP',           18);
-	define('TT_INV_ADD_DECOMIS',   19);
+	define('TT_INV_ADD_DECOMIS',    19);
+	define('TT_RMS_INST',           20);
+	define('TT_RMS_SETT',           21);
+	define('TT_RMS_VERS',           22);
 
 $g_tasks_types = array(
 	'Something went wrong',
@@ -91,7 +94,10 @@ $g_tasks_types = array(
 	'Обнаружены ошибки на сетевом оборудование',
 	'Инвентаризация ПО',
 	'Не работает модуль DLP антивируса',
-	'Списанное оборудование обнаружено в сети'
+	'Списанное оборудование обнаружено в сети',
+	'RMS не установлен',
+	'Настройки RMS некорректные',
+	'Устаревшая версия RMS'
 );
 
 	// `flags` from `ac_log` table
