@@ -3,32 +3,35 @@
 	/**
 		\file
 		\brief Синхронизация БД IT Invent.
-		
+
 		Загрузка информации о MAC адресах и серийных номера.
-		
+
 		Добавлена загрузка информации о местоположении оборудования.
 		Местоположение состоит из двух значенией: Филиал (BRANCH_NO) и
 		Местоположение (LOC_NO). Местоположение может содержать как номер
 		кабинете или этажа, так и адреса магазинов. Если поле LOC_NO_BUH
 		равно NULL, то Местоположение (LOC_NO) не загружается - это кабинет,
 		а загружается только Филиал (BRANCH_NO).
-		
+
 		Активным считается оборудование имеющее статус Работает или
 		Выдан пользователю для удаленной работы.
-		
+
 		Загружается информация только по активному оборудованию.
 
 		Оборудование помечается Мобильным если имеет тип Ноутбук. В последующем
 		такое оборудование исключается из проверок на местоположение.
-		
+
 		Добавлено "удаление" устройств, которые не появлялись в сети более 60 дней
 		
+		Добавлена загрузка наменований тип оборудования и статус для отображения
+		их в веб-интерфейсе и заявках.
+
 		\todo Загружать тип оборудования
 	*/
 
 	/*
 		Зависимости: CI_TYPE <- TYPE_NO <- MODEL_NO
-		
+
 		CI_TYPE - Встроенные типы учётных единиц
 		1  - Оборудование
 		2  - ПО
@@ -56,7 +59,7 @@
 		223			1			Вторая сетевая карта: MAC 2
 		224			1			Вторая сетевая карта: MAC 3
 		225			1			Вторая сетевая карта: MAC 4
-		
+
 		MODEL_NO	MODEL_NAME
 		130			Cisco 800
 		131			Cisco 881
@@ -86,14 +89,14 @@
 		FROM [ITINVENT].[dbo].[FIELDS]
 
 		List all statuses:
-		
+
 		SELECT
 			[STATUS_NO]
 			,[DESCR]
 			,[ADDINFO]
 			,[IMAGE_DATA]
 		FROM [ITINVENT].[dbo].[STATUS]
-		
+
 		STATUS_NO		DESCR										ADDINFO
 		1				Работает									Функционирует на рабочем месте
 		2				На Складе OK								Находится на складе в рабочем состоянии
@@ -124,7 +127,7 @@
 		  FROM [ITINVENT].[dbo].[CI_TYPES]
 		  ORDER BY [TYPE_NO], [CI_TYPE]
   */
-	
+
 	if(!defined('Z_PROTECTED')) exit;
 
 	echo "\nsync-itinvent:\n";
@@ -148,6 +151,84 @@
 		exit;
 	}
 
+	// Загрузка названией статусов
+
+	$invent_result = sqlsrv_query($conn, "
+		SELECT
+			[STATUS_NO]
+			,[DESCR]
+		INTO #tmptable
+		FROM [dbo].[STATUS]
+	");
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+
+		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+		$i = 0;
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		{
+			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_STATUSES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+				$row['STATUS_NO'],
+				$row['DESCR']
+			));
+
+			$i++;
+		}
+
+		echo 'Count: '.$i."\r\n";
+
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	// Загрузка названией типа оборудования
+
+	$invent_result = sqlsrv_query($conn, "
+		SELECT
+			[TYPE_NO]
+			,[CI_TYPE]
+			,[TYPE_NAME]
+		INTO #tmptable
+		FROM [dbo].[CI_TYPES]
+		WHERE [CI_TYPE] = 1
+	");
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+
+		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+		$i = 0;
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		{
+			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_TYPES}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
+				$row['CI_TYPE'],
+				$row['TYPE_NO'],
+				$row['TYPE_NAME']
+			));
+
+			$i++;
+		}
+
+		echo 'Count: '.$i."\r\n";
+
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	// Загрузка оборудования
+
 	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 
@@ -162,7 +243,7 @@
 			,[TYPE_NO]
 			,[MODEL_NO]
 			,item.[BRANCH_NO]
-			,[LOC_NO] = 
+			,[LOC_NO] =
 				CASE
 					WHEN loc.[LOC_NO_BUH] IS NULL THEN 0
 					ELSE item.[LOC_NO]
@@ -243,7 +324,7 @@
 					$row_id = 0;
 					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $mac)))
 					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+						if($db->put(rpv("INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
 							$mac,
 							$row['INV_NO'],
 							$row['TYPE_NO'],
@@ -285,6 +366,8 @@
 				for($k = 1; $k <= 12; $k++)    // mac* fields count
 				{
 					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
+					$duplicate = 0;
+
 					if(!empty($mac) && strlen($mac) == 12)
 					{
 						$row_id = 0;
@@ -335,7 +418,7 @@
 
 		sqlsrv_free_stmt($invent_result);
 	}
-	
+
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
 	if($invent_result !== FALSE)

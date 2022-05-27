@@ -49,6 +49,11 @@
 
 	define('TF_CLOSED',             0x0001);
 	
+	// `type` from `names` table
+	
+	define('NT_STATUSES',           1);
+	define('NT_CI_TYPES',           2);
+
 	// `type` from `tasks` table
 	
 	define('TT_MBOX_UNLIM',         1);

@@ -112,12 +112,23 @@
 			m.`port`,
 			m.`vlan`,
 			m.`inv_no`,
-			m.`status`,
+			status.`name` AS `status_name`,
+			type.`name` AS `type_name`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
 			m.`flags`
 		FROM @mac AS m
 		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid`
+		LEFT JOIN @names AS status
+			ON
+				status.`type` = {%NT_STATUSES}
+				AND status.`pid` = 0
+				AND status.`id` = m.`status`
+		LEFT JOIN @names AS type
+			ON
+				type.`type` = {%NT_CI_TYPES}
+				AND type.`pid` = 1				-- From IT Invent CI_TYPE
+				AND type.`id` = m.`type_no`
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = {%TID_MAC}
@@ -172,7 +183,8 @@
 						'Списанное оборудование появилось в сети'
 						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 						."\nИнвентарный номер оборудования: ".$row['inv_no']
-						."\nСтатус ID: ".$row['status']
+						."\nТип: ".$row['type_name']
+						."\nСтатус: ".$row['status_name']
 						."\nDNS name: ".$row['name']
 						."\nIP: ".$row['ip']
 						."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
