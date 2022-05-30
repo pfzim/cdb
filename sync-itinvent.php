@@ -324,7 +324,7 @@
 					$row_id = 0;
 					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $mac)))
 					{
-						if($db->put(rpv("INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
 							$mac,
 							$row['INV_NO'],
 							$row['TYPE_NO'],
