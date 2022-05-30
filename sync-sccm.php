@@ -47,10 +47,11 @@
 		exit;
 	}
 
-	$result = sqlsrv_query($conn, "
+	$result = sqlsrv_query($conn, rpv("
 		SELECT
 			m.ItemKey AS ResourceID,
 			m.Netbios_Name0 AS DeviceName,
+			m.Creation_Date0 AS CreationDate,
 			j1.LastDDR,
 			j1.LastPolicyRequest,
 			j1.LastOnline,
@@ -61,28 +62,40 @@
 			ihf.ComplianceState AS ihf_value,
 			rmsi.ComplianceState AS rmsi_value,
 			rmss.ComplianceState AS rmss_value,
-			rmsv.ComplianceState AS rmsv_value
+			rmsv.ComplianceState AS rmsv_value,
+			CASE ReportsIgnore.Value
+				WHEN NULL THEN 0
+				WHEN '' THEN 0
+				WHEN '0' THEN 0
+				ELSE 1
+			END AS delay_checks
 		FROM [dbo].[System_DISC] AS m
 		LEFT JOIN [dbo].[CH_ClientSummary] AS j1
 			ON m.ItemKey = j1.MachineID
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS ihf
 			ON m.ItemKey = ihf.ItemKey
-			AND ihf.CI_ID = '".SCCM_IHF_CI_ID."'
-			AND ihf.CIVersion = ".SCCM_IHF_CI_VERSION."
+			AND ihf.CI_ID = {%SCCM_IHF_CI_ID}
+			AND ihf.CIVersion = {%SCCM_IHF_CI_VERSION}
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsi
 			ON m.ItemKey = rmsi.ItemKey
-			AND rmsi.CI_ID = '".SCCM_RMSI_CI_ID."'
-			AND rmsi.CIVersion = ".SCCM_RMSI_CI_VERSION."
+			AND rmsi.CI_ID = {%SCCM_RMSI_CI_ID}
+			AND rmsi.CIVersion = {%SCCM_RMSI_CI_VERSION}
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmss
 			ON m.ItemKey = rmss.ItemKey
-			AND rmss.CI_ID = '".SCCM_RMSS_CI_ID."'
-			AND rmss.CIVersion = ".SCCM_RMSS_CI_VERSION."
+			AND rmss.CI_ID = {%SCCM_RMSS_CI_ID}
+			AND rmss.CIVersion = {%SCCM_RMSS_CI_VERSION}
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsv
 			ON m.ItemKey = rmsv.ItemKey
-			AND rmsv.CI_ID = '".SCCM_RMSV_CI_ID."'
-			AND rmsv.CIVersion = ".SCCM_RMSV_CI_VERSION."
-		WHERE ISNULL(m.Obsolete0, 0) <> 1 AND ISNULL(m.Decommissioned0, 0) <> 1 AND m.Client0 = 1
-	");
+			AND rmsv.CI_ID = {%SCCM_RMSV_CI_ID}
+			AND rmsv.CIVersion = {%SCCM_RMSV_CI_VERSION}
+		LEFT JOIN [dbo].[DeviceExtensionData] AS ReportsIgnore
+			ON ReportsIgnore.ResourceID = m.ItemKey
+			AND ReportsIgnore.PropertyId = {%SCCM_PROP_REPORTS_IGNORE_ID}
+		WHERE
+			ISNULL(m.Obsolete0, 0) <> 1
+			AND ISNULL(m.Decommissioned0, 0) <> 1
+			AND m.Client0 = 1
+	"));
 
 /*
 		SELECT
@@ -155,12 +168,22 @@
 			}
 		}
 
+		$dt = new DateTime($row['CreationDate']);
+
+		if(intval($row['delay_checks']))
+		{
+			$dt->add(new DateInterval('P7D'));
+		}
+
+		$delay_checks = $dt->format('Y-m-d');
+
 		$row_id = 0;
 		if(!$db->select_ex($res, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $row['DeviceName'])))
 		{
-			if($db->put(rpv("INSERT INTO @computers (`name`, `sccm_lastsync`, `flags`) VALUES (!, !, {%CF_EXIST_SCCM})",
+			if($db->put(rpv("INSERT INTO @computers (`name`, `sccm_lastsync`, `delay_checks`, `flags`) VALUES (!, !, !, {%CF_EXIST_SCCM})",
 				$row['DeviceName'],
-				$lastsync
+				$lastsync,
+				$delay_checks,
 			)))
 			{
 				$row_id = $db->last_id();
@@ -169,8 +192,9 @@
 		else
 		{
 			$row_id = $res[0][0];
-			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_SCCM}) WHERE `id` = # LIMIT 1",
+			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `delay_checks` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_SCCM}) WHERE `id` = # LIMIT 1",
 				$lastsync,
+				$delay_checks,
 				$row_id
 			));
 		}
