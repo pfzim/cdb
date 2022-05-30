@@ -143,7 +143,7 @@ EOT;
 	$html .= '<br /><small>Для перезапуска отчёта:<br />1. <a href="'.CDB_URL.'/cdb.php?action=sync-all">Выполнить синхронизацию</a><br />2. <a href="'.CDB_URL.'/cdb.php?action=report-tmao-servers">Сформировать отчёт</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(array(MAIL_TO_ADMIN), CDB_TITLE.': Audit antivirus protection', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_TMAO_SERVERS_MAIL_TO, CDB_TITLE.': Audit antivirus protection', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}
