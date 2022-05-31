@@ -63,10 +63,10 @@
 			rmsi.ComplianceState AS rmsi_value,
 			rmss.ComplianceState AS rmss_value,
 			rmsv.ComplianceState AS rmsv_value,
-			CASE ReportsIgnore.Value
-				WHEN NULL THEN 0
-				WHEN '' THEN 0
-				WHEN '0' THEN 0
+			CASE
+				WHEN ReportsIgnore.Value IS NULL THEN 0
+				WHEN ReportsIgnore.Value = '' THEN 0
+				WHEN ReportsIgnore.Value = '0' THEN 0
 				ELSE 1
 			END AS delay_checks
 		FROM [dbo].[System_DISC] AS m
