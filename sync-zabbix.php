@@ -3,17 +3,19 @@
 
 	/**
 		\file
-		\brief Получение информации из Zabbix о хостах мониторинга
+		\brief Синхронизация с Zabbix
+		
+		Получение информации из Zabbix о хостах мониторинга
 
-		1. Скрипт формирует список устройств, которые требуется поставить на
-		   мониторинг в Zabbix, в таблицу zabbix_hosts.
-		   Устройства ДКС выбираются по "типу" указанному в ИТ Инвент.
-		   Далее по физическому местоположению определяется маршрутизатор,
-		   к которому подключено это устройство.
+		1. Скрипт формирует таблицу zabbix_hosts со списоком устройств, которые
+		   требуется поставить на мониторинг в Zabbix.
+		   Маршрутизаторы и устройства ДКС выбираются по "типу" указанному в
+		   ИТ Инвент. Далее по физическому местоположению определяется
+		   маршрутизатор, к которому подключено это устройство.
 
 		2. Получает с сервера Zabbix список хостов, которые уже поставлены
-		   на мониторинг.
-		   Обновляем статус в таблице zabbix_hosts в соответствии с IP адресом.
+		   на мониторинг. Обновляет статус в таблице zabbix_hosts в
+		   соответствии с именем хоста.
 
 		4. Получат с сервера Zabbix список групп начинающихся с TT и формирует
 		   массив для дальнейшей привязки хостов к регионам по номеру региона
@@ -21,6 +23,12 @@
 
 		4. В соответствии со значениями из таблицы zabbix_hosts добавляет,
 		   удаляет или обновляет параметры хостов в Zabbix.
+		   
+		Добавлено создание у удаление пользователей в соответстии с составом
+		группы AD G_Zabbix_Access. Пользователям назначается роль User role и
+		добавляются в группу LDAP Users. Операция производится только с
+		пользователями входящими в состав группы LDAP Users. Локальные
+		пользователи не удаляются.
 
 	*/
 
@@ -34,8 +42,11 @@
 		131 => 12923
 	);
 
-	define('ZABBIX_TEMPLATE_FALLBACK', 12923);    // Этот шаблон будет подключен, если типу оборудования не найден соответствующий шаблон
-	define('ZABBIX_TEMPLATE_FOR_BCC',  12924);    // Этот шаблон будет добавлен к основному, если к маршрутизатору подключен резервный комплект
+	define('ZABBIX_TEMPLATE_FALLBACK',  12923);    // Этот шаблон будет подключен, если типу оборудования не найден соответствующий шаблон
+	define('ZABBIX_TEMPLATE_FOR_BCC',   12924);    // Этот шаблон будет добавлен к основному, если к маршрутизатору подключен резервный комплект
+	define('ZABBIX_USER_ROLE_ID',       '1');      // Роль присваеваемая пользователю
+	define('ZABBIX_USER_GROUP_ID',      '14');     // Группа, в котору добавляется пользователь
+	define('ZABBIX_ACCESS_AD_GROUP_DN', 'CN=G_Zabbix_Access,OU=Zabbix,OU=AccessGroups,OU=Service Accounts,DC=bristolcapital,DC=ru');     // Группа в AD с пользователями, которым будет предоставлен доступ к Zabbix
 
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.zabbix.php');
 
@@ -49,6 +60,11 @@
 	function cb_group_cmp($el, $payload)
 	{
 		return ($el['groupid'] === $payload);
+	}
+
+	function cb_user_cmp($el, $payload)
+	{
+		return (strcasecmp($el['username'], $payload) == 0);
 	}
 
 	function array_find($arr, $func, $payload)
@@ -142,8 +158,8 @@
 			-- m.`inv_no`,
 			-- m.`status`,
 			COUNT(bc.`id`) AS bcc_count
-		FROM c_mac AS m
-		LEFT JOIN c_mac AS bc
+		FROM @mac AS m
+		LEFT JOIN @mac AS bc
 			ON (bc.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
 			AND bc.`branch_no` = m.`branch_no`
 			AND bc.`loc_no` = m.`loc_no`
@@ -274,7 +290,7 @@
 			{
 				$zabbix_groups[0] = $group['groupid'];
 			}
-			else if(preg_match('/^'.ZABBIX_REGION_GROUP_PREFIX.'(\d+)$/i', $group['name'], $matches))
+			else if(preg_match('/^'.ZABBIX_REGION_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
 			{
 				$zabbix_groups[intval($matches[1])] = $group['groupid'];
 			}
@@ -492,8 +508,135 @@
 			}
 		}
 
-		$zabbix_result = zabbix_api_request('user.logout', $auth_key, []);
-
 		echo 'Added and updated: '.$added_and_updated."\n";
 		echo 'Deleted: '.$removed."\n";
+		
+		# Register new users from AD group
+		
+		$users_in_ad_group = array();
+
+		$entries_count = 0;
+
+		$ldap = ldap_connect(LDAP_URI);
+		if($ldap)
+		{
+			ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+			ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
+			if(ldap_bind($ldap, LDAP_USER, LDAP_PASSWD))
+			{
+				$cookie = '';
+				do
+				{
+					$sr = ldap_search(
+						$ldap,
+						LDAP_BASE_DN,
+						'(&(objectCategory=person)(objectClass=user)(memberof:1.2.840.113556.1.4.1941:='.ZABBIX_ACCESS_AD_GROUP_DN.'))',
+						array('samaccountname'),
+						0,
+						0,
+						0,
+						LDAP_DEREF_NEVER,
+						[['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => 200, 'cookie' => $cookie]]]
+					);
+
+					if($sr === FALSE)
+					{
+						throw new Exception('ldap_search return error: '.ldap_error($ldap));
+					}
+					
+					$matcheddn = NULL;
+					$referrals = NULL;
+					$errcode = NULL;
+					$errmsg = NULL;
+					
+					if(!ldap_parse_result($ldap, $sr, $errcode , $matcheddn , $errmsg , $referrals, $controls))
+					{
+						throw new Exception('ldap_parse_result return error code: '.$errcode.', message: '.$errmsg.', ldap_error: '.ldap_error($ldap));
+					}
+
+					$entries = ldap_get_entries($ldap, $sr);
+					if($entries === FALSE)
+					{
+						throw new Exception('ldap_get_entries return error: '.ldap_error($ldap));
+					}
+
+					$i = $entries['count'];
+
+					while($i > 0)
+					{
+						$i--;
+						$account = &$entries[$i];
+						
+						if(!empty($account['samaccountname'][0]))
+						{
+							array_push($users_in_ad_group, $account['samaccountname'][0]);
+
+							$entries_count++;
+						}
+					}
+
+					if(isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie']))
+					{
+						$cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+					}
+					else
+					{
+						$cookie = '';
+					}
+						ldap_free_result($sr);
+				}
+				while(!empty($cookie));
+
+				ldap_unbind($ldap);
+			}
+		}
+
+		$exist_users = zabbix_api_request(
+			'user.get',
+			$auth_key,
+			array(
+				'usrgrpids' => ZABBIX_USER_GROUP_ID,
+				'output' => array('userid', 'username')
+			)
+		);
+
+		foreach($exist_users as &$user)
+		{
+			if(!in_array($user['username'], $users_in_ad_group))
+			{
+				echo 'Delete user from Zabbix: '.$user['username']."\n";
+				
+				$zabbix_result = zabbix_api_request(
+					'user.delete',
+					$auth_key,
+					array(
+						$user['userid']
+					)
+				);
+			}
+		}
+
+		foreach($users_in_ad_group as &$username)
+		{
+			if(!array_find($exist_users, 'cb_user_cmp', $username))
+			{
+				echo 'Add user to Zabbix: '.$username."\n";
+				
+				$zabbix_result = zabbix_api_request(
+					'user.create',
+					$auth_key,
+					array(
+						'roleid' => ZABBIX_USER_ROLE_ID,
+						'alias' => $username,
+						'usrgrps' => array(
+							array(
+								'usrgrpid' => ZABBIX_USER_GROUP_ID
+							)
+						)
+					)
+				);
+			}
+		}
+
+		$zabbix_result = zabbix_api_request('user.logout', $auth_key, []);
 	}
