@@ -249,7 +249,7 @@
 			-- ,loc.[DESCR]
 			,[STATUS_NO]
 			,[SERIAL_NO]
-			,[MAC_ADDRESS] AS mac0
+			,[MAC_ADDRESS] AS mac0  -- Ignored
 			,m1.[FIELD_VALUE] AS mac1
 			,m2.[FIELD_VALUE] AS mac2
 			,m3.[FIELD_VALUE] AS mac3
@@ -262,6 +262,10 @@
 			,m10.[FIELD_VALUE] AS mac10
 			,m11.[FIELD_VALUE] AS mac11
 			,m12.[FIELD_VALUE] AS mac12
+			,m13.[FIELD_VALUE] AS mac13
+			,m14.[FIELD_VALUE] AS mac14
+			,m15.[FIELD_VALUE] AS mac15
+			,m16.[FIELD_VALUE] AS mac16
 		INTO #tmptable
 		FROM [ITEMS] AS item WITH (NOLOCK)
 		LEFT JOIN [FIELDS_VALUES] AS m1 WITH (NOLOCK) ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
@@ -276,6 +280,10 @@
 		LEFT JOIN [FIELDS_VALUES] AS m10 WITH (NOLOCK) ON m10.[ITEM_ID] = item.[ID] AND m10.[FIELD_NO] = 223 AND m10.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m11 WITH (NOLOCK) ON m11.[ITEM_ID] = item.[ID] AND m11.[FIELD_NO] = 224 AND m11.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m12 WITH (NOLOCK) ON m12.[ITEM_ID] = item.[ID] AND m12.[FIELD_NO] = 225 AND m12.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m13 WITH (NOLOCK) ON m13.[ITEM_ID] = item.[ID] AND m13.[FIELD_NO] = 226 AND m13.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m14 WITH (NOLOCK) ON m14.[ITEM_ID] = item.[ID] AND m14.[FIELD_NO] = 227 AND m14.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m15 WITH (NOLOCK) ON m15.[ITEM_ID] = item.[ID] AND m15.[FIELD_NO] = 228 AND m15.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m16 WITH (NOLOCK) ON m16.[ITEM_ID] = item.[ID] AND m16.[FIELD_NO] = 229 AND m16.[ITEM_NO] = 1
 		-- LEFT JOIN [BRANCHES] AS brn WITH (NOLOCK) ON brn.[BRANCH_NO] = item.[BRANCH_NO]
 		LEFT JOIN [LOCATIONS] AS loc WITH (NOLOCK) ON loc.[LOC_NO] = item.[LOC_NO]
 		WHERE
@@ -294,6 +302,10 @@
 				OR m10.[FIELD_VALUE] IS NOT NULL
 				OR m11.[FIELD_VALUE] IS NOT NULL
 				OR m12.[FIELD_VALUE] IS NOT NULL
+				OR m13.[FIELD_VALUE] IS NOT NULL
+				OR m14.[FIELD_VALUE] IS NOT NULL
+				OR m15.[FIELD_VALUE] IS NOT NULL
+				OR m16.[FIELD_VALUE] IS NOT NULL
 			)
 	");
 
@@ -360,7 +372,7 @@
 				}
 
 				// Load MACs
-				for($k = 1; $k <= 12; $k++)    // mac* fields count
+				for($k = 1; $k <= 16; $k++)    // mac* fields count
 				{
 					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 					$duplicate = 0;
