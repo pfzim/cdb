@@ -36,7 +36,7 @@ EOT;
 	if($db->select_ex($result, rpv("
 		SELECT
 			COUNT(DISTINCT m.`inv_no`) AS bcc_count
-		FROM c_mac AS m
+		FROM @mac AS m
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
 	")))
@@ -66,7 +66,7 @@ EOT;
 			AND dm.`port` = 'self'
 			AND dm.`branch_no` = m.`branch_no`
 			AND dm.`loc_no` = m.`loc_no`
-		LEFT JOIN c_zabbix_hosts AS zh
+		LEFT JOIN @zabbix_hosts AS zh
 			ON zh.`pid` = dm.`id`
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) = ({%MF_INV_BCCDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})

@@ -63,8 +63,8 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT p.`id`, p.`login`, p.`lname`, p.`fname`, p.`mname`, ll.`value`
-		FROM c_properties_date AS ll
-		LEFT JOIN c_persons AS p ON p.`id` = ll.`pid`
+		FROM @properties_date AS ll
+		LEFT JOIN @persons AS p ON p.`id` = ll.`pid`
 		WHERE
 		  ll.`tid` = {%TID_PERSONS}
 		  AND ll.`oid` = {d0}

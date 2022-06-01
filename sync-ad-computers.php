@@ -9,6 +9,8 @@
 	/**
 		\file
 		\brief Синхронизация объектов Computer с Active Directory
+		
+		Из AD загружаются все объекты типа Computer.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;

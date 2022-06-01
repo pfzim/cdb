@@ -5,24 +5,4 @@ Doxyfile
 _doxygen.cmd
 
 old/
-
-temp-cidr.php
-temp-close-all-ac.php
-temp-close-all-itinvent.php
-temp-close-all-os.php
-temp-close-all-tmao.php
-temp-close-all.php
-temp-convert-tasks.php
-temp-exclude-mac.php
-temp-exclude.php
-temp-fix-mac-sn.php
-temp-helpdesk.php
-temp-ldap.php
-temp-mail.php
-temp-nessus.php
-temp-test-resolved.php
-test-form.html
-test.php
-temp-compile-query.php
-temp-convert-tasks-types.php
-test-form2.html
+temp/

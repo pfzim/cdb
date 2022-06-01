@@ -29,12 +29,12 @@
 			t.`opernum`,
 			COUNT(fi.`fid`) AS files_count,
 			c.`flags`
-		FROM c_tasks AS t
-		LEFT JOIN c_computers AS c
+		FROM @tasks AS t
+		LEFT JOIN @computers AS c
 			ON t.`pid` = c.`id`
-		LEFT JOIN c_files_inventory AS fi
+		LEFT JOIN @files_inventory AS fi
 			ON fi.`pid` = c.`id` AND fi.`flags` & {%FIF_DELETED} = 0
-		LEFT JOIN c_files AS f
+		LEFT JOIN @files AS f
 			ON fi.`fid` = f.`id`
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}

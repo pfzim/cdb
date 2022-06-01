@@ -76,7 +76,7 @@
 
 				if($sr === FALSE)
 				{
-					throw new Exception('ldap_search return error: '.ldap_error($core->LDAP->get_link()));
+					throw new Exception('ldap_search return error: '.ldap_error($ldap));
 				}
 				
 				$matcheddn = NULL;

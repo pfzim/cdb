@@ -435,14 +435,8 @@ function walk_route($route, $action)
 		'import-mac' => array(
 			'@import-mac.php'
 		),
-		'import-mac-old' => array(
-			'@import-mac-old.php'
-		), // old mac, no vlan (backup)
 		'import-sn' => array(
 			'@import-sn.php'
-		),
-		'import-sn2' => array(
-			'@import-sn2.php'
 		),
 		'import-errors' => array(
 			'@import-errors.php'
@@ -452,13 +446,16 @@ function walk_route($route, $action)
 		),
 		'mac' => array(
 			'@mac.php'
-		),
+		)
+	/*
+		,
 		'test' => array(
 			'@test.php'
 		),
 		'temp-fix-mac-sn' => array(
 			'@temp-fix-mac-sn.php'
 		)
+	*/
 	);
 
 	header("Content-Type: text/plain; charset=utf-8");

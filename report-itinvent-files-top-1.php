@@ -67,10 +67,10 @@ EOT;
 			
 			if($db->select_assoc_ex($comps, rpv("
 				SELECT DISTINCT c.`name`
-				FROM c_files AS f
-				LEFT JOIN c_files_inventory AS fi
+				FROM @files AS f
+				LEFT JOIN @files_inventory AS fi
 					ON fi.`fid` = f.`id`
-				LEFT JOIN c_computers AS c
+				LEFT JOIN @computers AS c
 					ON c.`id` = fi.`pid`
 				WHERE f.`path` = !
 				-- LIMIT 10
@@ -126,10 +126,10 @@ EOT;
 
 			if($db->select_assoc_ex($comps, rpv("
 				SELECT DISTINCT c.`name`
-				FROM c_files AS f
-				LEFT JOIN c_files_inventory AS fi
+				FROM @files AS f
+				LEFT JOIN @files_inventory AS fi
 					ON fi.`fid` = f.`id`
-				LEFT JOIN c_computers AS c
+				LEFT JOIN @computers AS c
 					ON c.`id` = fi.`pid`
 				WHERE f.`path` = !
 				-- LIMIT 10

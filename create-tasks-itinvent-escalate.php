@@ -81,16 +81,16 @@
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
 			m.`flags`,
 			COUNT(*) AS `issues`
-		FROM c_mac AS m
-		LEFT JOIN c_devices AS d
+		FROM @mac AS m
+		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid`
-		LEFT JOIN c_tasks AS t
+		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = {%TID_MAC}
 				AND t.pid = m.id
 				AND t.`type` = {%TT_INV_TASKFIX}
 				AND (t.flags & {%TF_CLOSED}) = 0
-		LEFT JOIN c_tasks AS t2
+		LEFT JOIN @tasks AS t2
 			ON
 				t2.`tid` = {%TID_MAC}
 				AND t2.pid = m.id
