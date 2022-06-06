@@ -88,6 +88,7 @@
 			AND uac.`oid` = {%CDB_PROP_USERACCOUNTCONTROL}
 		WHERE
 			(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+			AND c.`delay_checks` < CURDATE()
 			AND uac.`value` & 0x020
 		GROUP BY c.`id`
 		HAVING

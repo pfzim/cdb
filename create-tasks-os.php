@@ -104,6 +104,7 @@
 				AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND j_os.`value` NOT IN (
 					'Windows 10 Корпоративная 2016 с долгосрочным обслуживанием',
 					'Windows 10 Корпоративная',

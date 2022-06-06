@@ -84,7 +84,7 @@
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_TMAO}
 			AND (t.`flags` & {%TF_CLOSED}) = 0
-			AND c.`dn` LIKE '%".LDAP_OU_SHOPS."'
+			AND c.`dn` LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{
 		$count_gup = intval($result[0][0]);
@@ -98,7 +98,7 @@
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_TMAO}
 			AND (t.`flags` & {%TF_CLOSED}) = 0
-			AND c.`dn` NOT LIKE '%".LDAP_OU_SHOPS."'
+			AND c.`dn` NOT LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{
 		$count_goo = intval($result[0][0]);
@@ -116,6 +116,7 @@
 					AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND c.`ao_script_ptn` < ((SELECT MAX(`ao_script_ptn`) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`

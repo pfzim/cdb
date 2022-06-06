@@ -211,6 +211,7 @@
 						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
 						."\nDNS name: ".$row['name']
 						."\nIP: ".$row['ip']
+						."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
 						."\n\nУстройство подключено к: ".$row['netdev']
 						."\nПорт: ".$row['port']
 						."\nVLAN ID: ".$row['vlan']

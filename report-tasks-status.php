@@ -99,12 +99,12 @@ EOT;
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_WIN_UPDATE}) AS `o_wsus`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_MBOX_UNLIM}) AS `o_mbxq`,
 
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `name` NOT REGEXP {s0} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `name` REGEXP {s1} AND `ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao_tt`,
-			(SELECT COUNT(*) FROM @computers WHERE `name` regexp {s3} AND (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND `ee_encryptionstatus` <> 2) AS `p_tmee`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`laps_exp` < DATE_SUB(NOW(), INTERVAL {%LAPS_EXPIRE_DAYS} DAY)) AS `p_laps`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND m.`name` NOT REGEXP {s0}) AS `p_sccm`,
-			(SELECT COUNT(*) FROM @computers AS m WHERE (m.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND m.`name` NOT REGEXP {s2}) AS `p_name`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` NOT REGEXP {s0} AND c.`ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` REGEXP {s1} AND c.`ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao_tt`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` regexp {s3} AND c.`ee_encryptionstatus` <> 2) AS `p_tmee`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`laps_exp` < DATE_SUB(NOW(), INTERVAL {%LAPS_EXPIRE_DAYS} DAY)) AS `p_laps`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND c.`name` NOT REGEXP {s0}) AS `p_sccm`,
+			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` NOT REGEXP {s2}) AS `p_name`,
 			(
 				SELECT
 					COUNT(*)
@@ -118,6 +118,7 @@ EOT;
 					dlp_status.`tid` = {%TID_COMPUTERS}
 					AND dlp_status.`oid` = {%CDB_PROP_TMAO_DLP_STATUS}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND dlp_status.`value` <> 1
 					AND c.`name` NOT REGEXP {s0}
 			) AS `p_tmao_dlp`,
@@ -134,6 +135,7 @@ EOT;
 					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND os.`value` NOT IN (
 						'Windows 10 Корпоративная 2016 с долгосрочным обслуживанием',
 						'Windows 10 Корпоративная',
@@ -148,13 +150,14 @@ EOT;
 				FROM @properties_int AS os
 				LEFT JOIN @computers AS c
 					ON
-					os.`tid` = {%TID_COMPUTERS}
-					AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
-					AND os.`pid` = c.`id`
+						os.`tid` = {%TID_COMPUTERS}
+						AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
+						AND os.`pid` = c.`id`
 				WHERE
 					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND os.`value` <> 1
 			) AS `p_wsus`,
 			(
@@ -163,13 +166,14 @@ EOT;
 				FROM @properties_int AS os
 				LEFT JOIN @computers AS c
 					ON
-					os.`tid` = {%TID_COMPUTERS}
-					AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
-					AND os.`pid` = c.`id`
+						os.`tid` = {%TID_COMPUTERS}
+						AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
+						AND os.`pid` = c.`id`
 				WHERE
 					os.`tid` = {%TID_COMPUTERS}
 					AND os.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_HOTFIX}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND os.`value` <> 1
 					AND c.`name` REGEXP {s1}
 			) AS `p_wsus_tt`,
@@ -183,6 +187,7 @@ EOT;
 					rmsi_value.`tid` = {%TID_COMPUTERS}
 					AND rmsi_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_I}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND rmsi_value.`value` <> 1
 					AND c.`name` REGEXP {s4}
 			) AS `p_rmsi`,
@@ -196,6 +201,7 @@ EOT;
 					rmss_value.`tid` = {%TID_COMPUTERS}
 					AND rmss_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_S}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND rmss_value.`value` <> 1
 					AND c.`name` REGEXP {s4}
 			) AS `p_rmss`,
@@ -209,6 +215,7 @@ EOT;
 					rmsv_value.`tid` = {%TID_COMPUTERS}
 					AND rmsv_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_RMS_V}
 					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
 					AND rmsv_value.`value` <> 1
 					AND c.`name` REGEXP {s4}
 			) AS `p_rmsv`,

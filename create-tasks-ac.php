@@ -111,6 +111,7 @@
 				al.`pid` = c.`id`
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND (al.`flags` & {%ALF_FIXED}) = 0
 				AND c.`name` REGEXP {s0}
 			GROUP BY c.`id`

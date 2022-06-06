@@ -4,6 +4,9 @@
 	/**
 		\file
 		\brief Создание заявок на шифрование ноутбука (TMEE).
+		
+		Завки создаются, если ноутбук находится в статусе не зашифрован.
+		Шаблон именования хранится в константе CDB_REGEXP_NOTEBOOK_NAME.
 	*/
 
 	/*
@@ -91,6 +94,7 @@
 					AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND c.`ee_encryptionstatus` <> 2
 				AND c.`name` regexp {s0}
 			GROUP BY c.`id`

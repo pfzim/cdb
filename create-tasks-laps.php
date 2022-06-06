@@ -80,6 +80,7 @@
 				AND (t.flags & {%TF_CLOSED}) = 0
 		WHERE
 			(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+			AND c.`delay_checks` < CURDATE()
 			-- AND c.`dn` LIKE '%{%LDAP_OU_COMPANY}'
 			AND c.`laps_exp` < DATE_SUB(NOW(), INTERVAL {%LAPS_EXPIRE_DAYS} DAY)
 		GROUP BY c.`id`

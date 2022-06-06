@@ -140,6 +140,7 @@
 				AND dlp_status.`oid` = {%CDB_PROP_TMAO_DLP_STATUS}
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND dlp_status.`value` <> 1
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`

@@ -77,6 +77,7 @@
 					AND (t.flags & {%TF_CLOSED}) = 0
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+				AND c.`delay_checks` < CURDATE()
 				AND c.`sccm_lastsync` < DATE_SUB(NOW(), INTERVAL 1 MONTH)
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
