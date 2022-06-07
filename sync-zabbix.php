@@ -150,7 +150,7 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			m.`id`,
-			-- m.`name`,
+			m.`name`,
 			-- m.`mac`,
 			-- m.`ip`,
 			-- m.`port`,
@@ -174,11 +174,12 @@
 		foreach($result as &$row)
 		{
 			$db->put(rpv("
-					INSERT INTO @zabbix_hosts (`pid`, `host_id`, `flags`)
-					VALUES ({d0}, 0, ({%ZHF_MUST_BE_MONITORED} | {d1}))
+					INSERT INTO @zabbix_hosts (`name`, `pid`, `host_id`, `flags`)
+					VALUES ({s0}, {d1}, 0, ({%ZHF_MUST_BE_MONITORED} | {d2}))
 					ON DUPLICATE KEY
-					UPDATE `flags` = (`flags` | {%ZHF_MUST_BE_MONITORED} | {d1})
+					UPDATE `pid` = {d1}, `flags` = (`flags` | {%ZHF_MUST_BE_MONITORED} | {d2})
 				",
+				$row['name'],
 				$row['id'],
 				intval($row['bcc_count']) ? ZHF_TEMPLATE_WITH_BCC : 0
 			));
@@ -216,12 +217,29 @@
 		{
 			$founded = FALSE;
 
+			// by host name
+			if($db->select_assoc_ex($result, rpv("
+					SELECT
+						zh.`name`,
+						zh.`pid`,
+						zh.`host_id`
+					FROM @zabbix_hosts AS zh
+					WHERE zh.`name` = {s0}
+				",
+				$host['host']
+			)))
+			{
+				$founded = TRUE;
+				$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `name` = !", $host['hostid'], $host['host']));
+			}
+
+			/*
 			// by host id - возможно исправит ситуацию, когда хост сменил имя
 			if($db->select_assoc_ex($result, rpv("
 					SELECT
 						zh.`pid`,
 						zh.`host_id`,
-						m.`name`
+						zh.`name`
 					FROM @zabbix_hosts AS zh
 					LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
 					WHERE zh.`host_id` = {d0}
@@ -239,30 +257,8 @@
 				}
 				$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}) WHERE `host_id` = #", $host['hostid']));
 			}
-			// by host name - вторичный поиск по имени отрабатывает ситуацию, когда хост ранее добавлен руками
-			else if($db->select_assoc_ex($result, rpv("
-					SELECT
-						zh.`pid`,
-						zh.`host_id`,
-						m.`name`
-					FROM @zabbix_hosts AS zh
-					LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
-					WHERE m.`name` = {s0}
-				",
-				$host['host']
-			)))
-			{
-				$founded = TRUE;
-				foreach($result as &$row)
-				{
-					if($host['hostid'] !== $row['host_id'])
-					{
-						echo 'Different host ID: '.$host['host'].' ('.$host['hostid'].')'.' DB: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
-					}
-					$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = #", $host['hostid'], $row['pid']));
-				}
-			}
-
+			*/
+			
 			/* by IP
 			foreach($host['interfaces'] as &$interface)
 			{
@@ -333,7 +329,7 @@
 		if($db->select_assoc_ex($result, rpv("
 			SELECT
 				m.`id`,
-				m.`name`,
+				zh.`name`,
 				m.`mac`,
 				m.`ip`,
 				m.`inv_no`,
