@@ -216,10 +216,35 @@
 		{
 			$founded = FALSE;
 
-			// by host name
+			// by host id - возможно исправит ситуацию, когда хост сменил имя
 			if($db->select_assoc_ex($result, rpv("
 					SELECT
-						zh.`pid`
+						zh.`pid`,
+						zh.`host_id`,
+						m.`name`
+					FROM @zabbix_hosts AS zh
+					LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
+					WHERE zh.`host_id` = {d0}
+				",
+				$host['hostid']
+			)))
+			{
+				$founded = TRUE;
+				foreach($result as &$row)
+				{
+					if(strcasecmp($host['host'], $row['name']) !== 0)
+					{
+						echo 'Different host Name: '.$host['host'].' ('.$host['hostid'].')'.' DB: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+					}
+				}
+				$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}) WHERE `host_id` = #", $host['hostid']));
+			}
+			// by host name - вторичный поиск по имени отрабатывает ситуацию, когда хост ранее добавлен руками
+			else if($db->select_assoc_ex($result, rpv("
+					SELECT
+						zh.`pid`,
+						zh.`host_id`,
+						m.`name`
 					FROM @zabbix_hosts AS zh
 					LEFT JOIN @mac AS m ON m.`id` = zh.`pid`
 					WHERE m.`name` = {s0}
@@ -230,6 +255,10 @@
 				$founded = TRUE;
 				foreach($result as &$row)
 				{
+					if($host['hostid'] !== $row['host_id'])
+					{
+						echo 'Different host ID: '.$host['host'].' ('.$host['hostid'].')'.' DB: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+					}
 					$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = #", $host['hostid'], $row['pid']));
 				}
 			}
@@ -258,7 +287,7 @@
 
 			if(!$founded)
 			{
-				echo 'Host exist at Zabbix, but not founded in monitoring list: '.$host['host']."\n";
+				echo 'Host exist at Zabbix, but not founded in monitoring list: '.$host['host'].' ('.$host['hostid'].')'.PHP_EOL;
 			}
 		}
 
@@ -387,6 +416,8 @@
 							)
 						);
 
+						echo '  Host ID: '.$zabbix_result['hostids'][0]."\n";
+						
 						$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = # LIMIT 1", $zabbix_result['hostids'][0], $row['id']));
 					}
 					break;
@@ -395,7 +426,7 @@
 
 					case (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX):
 					{
-						echo 'Check before update at Zabbix: '.$row['name']."\n";
+						echo 'Check before update at Zabbix: '.$row['name'].' ('.$row['host_id'].")\n";
 
 						if(empty($row['name']) || empty($row['ip']))
 						{
@@ -445,7 +476,7 @@
 									&& $interface['ip'] !== $row['ip']
 								)
 								{
-									echo 'Updating interface: '.$interface['interfaceid']."\n";
+									echo '  Updating interface: '.$interface['interfaceid']."\n";
 									zabbix_api_request(
 										'hostinterface.update',
 										$auth_key,
@@ -460,7 +491,7 @@
 							if($host['proxy_hostid'] !== ZABBIX_Host_Proxy
 								|| !array_find($host['parentTemplates'], 'cb_template_cmp', $template_ids)
 								|| ($group_id && !array_find($host['groups'], 'cb_group_cmp', $group_id))
-								// || $host['host'] !== $host_name  // hostname не проверяем, т.к. он является ключём
+								|| $host['host'] !== $host_name  // hostname проверяем, т.к. он теперь не является ключом
 							)
 							{
 								$templates_to_clear = array_filter(
@@ -470,7 +501,7 @@
 									}
 								);
 
-								echo 'Update at Zabbix: '.$row['name']."\n";
+								echo '  Update at Zabbix: '.$row['name'].' ('.$row['host_id'].")\n";
 								//echo json_encode($templates_to_clear, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 								zabbix_api_request(
@@ -494,7 +525,7 @@
 
 					default:
 					{
-						echo 'Remove from Zabbix: '.$row['name']."\n";
+						echo 'Remove from Zabbix: '.$row['name'].' ('.$row['host_id'].")\n";
 
 						$removed++;
 
