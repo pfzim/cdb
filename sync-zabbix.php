@@ -23,13 +23,17 @@
 
 		4. В соответствии со значениями из таблицы zabbix_hosts добавляет,
 		   удаляет или обновляет параметры хостов в Zabbix.
-		   
+
 		Добавлено создание у удаление пользователей в соответстии с составом
 		группы AD G_Zabbix_Access. Пользователям назначается роль User role и
 		добавляются в группу LDAP Users. Операция производится только с
 		пользователями входящими в состав группы LDAP Users. Локальные
 		пользователи не удаляются.
 
+		RU-\d\d-B[o\d]\d-\w{3} - ТОФ
+		RU-\d\d-\d{4}-\w{3}    - ТТ
+		RU-\d\d-RC(\d|\d\d)    - RC
+		RU-\d\d-Ao\d           - ЦО
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -59,7 +63,12 @@
 
 	function cb_group_cmp($el, $payload)
 	{
-		return ($el['groupid'] === $payload);
+		return in_array($el['groupid'], $payload);
+	}
+
+	function cb_group_cmp_flipped($el, $payload)
+	{
+		return in_array($el, $payload['groupid']);
 	}
 
 	function cb_user_cmp($el, $payload)
@@ -78,6 +87,45 @@
 		}
 
 		return FALSE;
+	}
+
+	function zabbix_create_group($auth_key, $group_name)
+	{
+		echo 'Creating new group: '.$group_name.PHP_EOL;
+
+		$zabbix_result = zabbix_api_request(
+			'hostgroup.create',
+			$auth_key,
+			array(
+				'name'         => $group_name
+			)
+		);
+		
+		if(!isset($zabbix_result['groupids'][0]))
+		{
+			throw new Exception('ERROR: Zabbix API: Unexpected answer');
+		}
+
+		return $zabbix_result['groupids'][0];
+	}
+
+	function zabbix_get_or_create_group_id($auth_key, &$zabbix_groups, $group_prefix, $reg_num)
+	{
+		if(!isset($zabbix_groups[$reg_num]))
+		{
+			if($reg_num == 0)
+			{
+				$group_name = $group_prefix.'_ALL';
+			}
+			else
+			{
+				$group_name = $group_prefix.sprintf('%02d', $reg_num);
+			}
+
+			$zabbix_groups[$reg_num] = zabbix_create_group($auth_key, $group_name);
+		}
+
+		return $zabbix_groups[$reg_num];
 	}
 
 	// Формируем список устройств, которые должны мониторится в Zabbix
@@ -299,26 +347,99 @@
 			'hostgroup.get',
 			$auth_key,
 			array(
-				'startSearch'               => TRUE,
-				'search'                    => array(
-					'name' => 				ZABBIX_REGION_GROUP_PREFIX
+				'startSearch'           => TRUE,
+				'searchByAny'           => TRUE,
+				'search'                => array(
+					'name'                  => array(
+												ZABBIX_TT_GROUP_PREFIX,
+												ZABBIX_TOF_GROUP_PREFIX,
+												ZABBIX_RC_GROUP_PREFIX,
+												ZABBIX_CO_GROUP_PREFIX
+					)
 				),
-				'output'                    => ['groupid', 'name']
+				'output'                => ['groupid', 'name']
 			)
 		);
 
-		$zabbix_groups = array();
+		$zabbix_groups_tt_unknown = 0;
+		$zabbix_groups_tof_unknown = 0;
+		$zabbix_groups_rc_unknown = 0;
+		$zabbix_groups_co_unknown = 0;
+		$zabbix_groups_tt = array();
+		$zabbix_groups_tof = array();
+		$zabbix_groups_rc = array();
+		$zabbix_groups_co = array();
 
 		foreach($zabbix_result as &$group)
 		{
-			if($group['name'] === ZABBIX_REGION_GROUP_PREFIX)
+			if($group['name'] === ZABBIX_TT_GROUP_PREFIX.'_ALL')
 			{
-				$zabbix_groups[0] = $group['groupid'];
+				$zabbix_groups_tt[0] = $group['groupid'];
 			}
-			else if(preg_match('/^'.ZABBIX_REGION_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
+			else if($group['name'] === ZABBIX_TOF_GROUP_PREFIX.'_ALL')
 			{
-				$zabbix_groups[intval($matches[1])] = $group['groupid'];
+				$zabbix_groups_tof[0] = $group['groupid'];
 			}
+			else if($group['name'] === ZABBIX_RC_GROUP_PREFIX.'_ALL')
+			{
+				$zabbix_groups_rc[0] = $group['groupid'];
+			}
+			else if($group['name'] === ZABBIX_CO_GROUP_PREFIX.'_ALL')
+			{
+				$zabbix_groups_co[0] = $group['groupid'];
+			}
+			else if($group['name'] === ZABBIX_TT_GROUP_PREFIX.'_UNKNOWN')
+			{
+				$zabbix_groups_tt_unknown = $group['groupid'];
+			}
+			else if($group['name'] === ZABBIX_TOF_GROUP_PREFIX.'_UNKNOWN')
+			{
+				$zabbix_groups_tof_unknown = $group['groupid'];
+			}
+			else if($group['name'] === ZABBIX_RC_GROUP_PREFIX.'_UNKNOWN')
+			{
+				$zabbix_groups_rc_unknown = $group['groupid'];
+			}
+			else if($group['name'] === ZABBIX_CO_GROUP_PREFIX.'_UNKNOWN')
+			{
+				$zabbix_groups_co_unknown = $group['groupid'];
+			}
+			else if(preg_match('/^'.ZABBIX_TT_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
+			{
+				$zabbix_groups_tt[intval($matches[1])] = $group['groupid'];
+			}
+			else if(preg_match('/^'.ZABBIX_TOF_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
+			{
+				$zabbix_groups_tof[intval($matches[1])] = $group['groupid'];
+			}
+			else if(preg_match('/^'.ZABBIX_RC_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
+			{
+				$zabbix_groups_rc[intval($matches[1])] = $group['groupid'];
+			}
+			else if(preg_match('/^'.ZABBIX_CO_GROUP_PREFIX.'(\d+)/i', $group['name'], $matches))
+			{
+				$zabbix_groups_co[intval($matches[1])] = $group['groupid'];
+			}
+		}
+
+		if(!$zabbix_groups_tt_unknown)
+		{
+			$zabbix_groups_tt_unknown = zabbix_create_group($auth_key, ZABBIX_TT_GROUP_PREFIX.'_UNKNOWN');
+		}
+
+		if(!$zabbix_groups_tof_unknown)
+		{
+			$zabbix_groups_tof_unknown = zabbix_create_group($auth_key, ZABBIX_TOF_GROUP_PREFIX.'_UNKNOWN');
+		}
+
+		if(!$zabbix_groups_rc_unknown)
+		{
+			$zabbix_groups_rc_unknown = zabbix_create_group($auth_key, ZABBIX_RC_GROUP_PREFIX.'_UNKNOWN');
+		}
+
+		if(!$zabbix_groups_co_unknown)
+		{
+			$zabbix_groups_co_unknown = zabbix_create_group($auth_key, ZABBIX_CO_GROUP_PREFIX.'_UNKNOWN');
 		}
 
 		// Добавляем, обновляем и удаляем с мониторинга в Zabbix хосты
@@ -348,16 +469,47 @@
 			foreach($result as &$row)
 			{
 				$host_name = strtoupper($row['name']);
+				
+				$group_ids = array();
 
-				$region_num = 0;
-				if(preg_match('/^\w+-(\d+)-/', $host_name, $matches))
+				// TT
+				if(preg_match('/^RU-(\d{2})-\d{4}-\w{3}$/i', $host_name, $matches))
 				{
-					$region_num = intval($matches[1]);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tt, ZABBIX_TT_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tt, ZABBIX_TT_GROUP_PREFIX, intval($matches[1]));
+				}
+				// TOF
+				else if(preg_match('/^RU-(\d{2})-B[o\d]\d-\w{3}$/i', $host_name, $matches))
+				{
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tof, ZABBIX_TOF_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tof, ZABBIX_TOF_GROUP_PREFIX, intval($matches[1]));
+				}
+				// RC
+				else if(preg_match('/^RU-(\d{2})-RC\d{1,2}-/i', $host_name, $matches))
+				{
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_rc, ZABBIX_RC_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_rc, ZABBIX_RC_GROUP_PREFIX, intval($matches[1]));
+				}
+				// CO
+				else if(preg_match('/^RU-(\d{2})-Ao\d-/i', $host_name, $matches))
+				{
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_co, ZABBIX_CO_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_co, ZABBIX_CO_GROUP_PREFIX, intval($matches[1]));
+				}
+				// unknown mask add to all groups
+				else
+				{
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tt, ZABBIX_TT_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_tof, ZABBIX_TOF_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_rc, ZABBIX_RC_GROUP_PREFIX, 0);
+					$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups_co, ZABBIX_CO_GROUP_PREFIX, 0);
+					$group_ids[] = $zabbix_groups_tt_unknown;
+					$group_ids[] = $zabbix_groups_tof_unknown;
+					$group_ids[] = $zabbix_groups_rc_unknown;
+					$group_ids[] = $zabbix_groups_co_unknown;
 				}
 
-				$group_id = isset($zabbix_groups[$region_num]) ? $zabbix_groups[$region_num] : 0;
-
-				// Выбираем шаблом по номеру модели оборудования
+				// Выбираем шаблон по номеру модели оборудования
 				
 				$template_ids = array();
 				$template_ids[] = isset($zabbix_templates[intval($row['model_no'])]) ? $zabbix_templates[intval($row['model_no'])] : ZABBIX_TEMPLATE_FALLBACK;
@@ -388,7 +540,7 @@
 							$auth_key,
 							array(
 								'host'         => $host_name,
-								'groups'       => array('groupid'      => $group_id),
+								'groups'       => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 								'templates'    => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
 								'proxy_hostid' => ZABBIX_Host_Proxy,
 								'interfaces'   => array(
@@ -485,11 +637,11 @@
 							}
 
 							if($host['proxy_hostid'] !== ZABBIX_Host_Proxy
-								|| !array_find($host['parentTemplates'], 'cb_template_cmp', $template_ids)
-								|| ($group_id && !array_find($host['groups'], 'cb_group_cmp', $group_id))
-								|| $host['host'] !== $host_name  // hostname проверяем, т.к. он теперь не является ключом
+								|| count(array_diff($template_ids, array_reduce($host['parentTemplates'], function($result, $value) { $result[] = $value['templateid']; return $result; }, array())))
+								|| count(array_diff($group_ids, array_reduce($host['groups'], function($result, $value) { $result[] = $value['groupid']; return $result; }, array())))
+								|| $host['host'] !== $host_name
 							)
-							{
+							{																
 								$templates_to_clear = array_filter(
 									$host['parentTemplates'],
 									function($value) use($template_ids) {
@@ -506,7 +658,7 @@
 									array(
 										'hostid'          => $row['host_id'],
 										'host'            => $host_name,
-										'groups'          => array('groupid'      => $group_id),
+										'groups'          => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 										'templates'       => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
 										'templates_clear' => &$templates_to_clear,
 										'proxy_hostid'    => ZABBIX_Host_Proxy
