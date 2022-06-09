@@ -23,6 +23,10 @@
 
 		4. В соответствии со значениями из таблицы zabbix_hosts добавляет,
 		   удаляет или обновляет параметры хостов в Zabbix.
+		   
+		5. Состав локальной группы Zabbix LDAP Users синхронизируются группой
+		   AD G_Zabbix_Access.
+
 
 		Добавлено создание у удаление пользователей в соответстии с составом
 		группы AD G_Zabbix_Access. Пользователям назначается роль User role и
@@ -43,13 +47,13 @@
 	// наименованию
 
 	$zabbix_templates = array(
-		131 => 12923
+		131 /* Cisco 881 */            => 12923	/* Template Bristol Cisco */
 	);
 
-	define('ZABBIX_TEMPLATE_FALLBACK',  12923);    // Этот шаблон будет подключен, если типу оборудования не найден соответствующий шаблон
-	define('ZABBIX_TEMPLATE_FOR_BCC',   12924);    // Этот шаблон будет добавлен к основному, если к маршрутизатору подключен резервный комплект
-	define('ZABBIX_USER_ROLE_ID',       '1');      // Роль присваеваемая пользователю
-	define('ZABBIX_USER_GROUP_ID',      '14');     // Группа, в котору добавляется пользователь
+	define('ZABBIX_TEMPLATE_FALLBACK',  12923);    // Этот шаблон будет подключен, если типу оборудования не найден соответствующий шаблон /* Template Bristol Cisco */
+	define('ZABBIX_TEMPLATE_FOR_BCC',   12924);    // Этот шаблон будет добавлен к основному, если к маршрутизатору подключен резервный комплект /* Template Bristol Cisco addition BCC */
+	define('ZABBIX_USER_ROLE_ID',       '1');      // Роль присваеваемая пользователю /* User role */
+	define('ZABBIX_USER_GROUP_ID',      '14');     // Группа, в котору добавляется пользователь /* LDAP Users */
 	define('ZABBIX_ACCESS_AD_GROUP_DN', 'CN=G_Zabbix_Access,OU=Zabbix,OU=AccessGroups,OU=Service Accounts,DC=bristolcapital,DC=ru');     // Группа в AD с пользователями, которым будет предоставлен доступ к Zabbix
 
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.zabbix.php');

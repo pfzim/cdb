@@ -123,6 +123,16 @@
 			  ,[VENDOR_NO]
 		  FROM [ITINVENT].[dbo].[CI_TYPES]
 		  ORDER BY [TYPE_NO], [CI_TYPE]
+		  
+		List models:
+		  
+		SELECT
+			[MODEL_NO]
+			,[MODEL_NAME]
+			,[ADDINFO]
+		FROM [ITINVENT].[dbo].[CI_MODELS]
+		WHERE [CI_TYPE] = 1 AND [TYPE_NO] = 63
+		ORDER BY [MODEL_NO]
   */
 
 	if(!defined('Z_PROTECTED')) exit;
