@@ -125,6 +125,7 @@
 				.'&Type=itinvent'
 				.'&To=ritm'
 				.'&Host='.urlencode($row['netdev'])
+				.'&Vlan='.urlencode($row['vlan'])
 				.'&Message='.urlencode(
 					'Необходимо проанализировать заявки по данному сетевому устройству. Принять меры: добавить в ИТ Инвент, удалить из базы Снежинки или добавить в исключение.'
 					."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))

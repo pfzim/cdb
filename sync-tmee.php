@@ -44,6 +44,7 @@
 		ORDER BY [LastSync]
 	");
 
+	$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~{%CF_EXIST_TMEE})) WHERE (`flags` & {%CF_EXIST_TMEE}) = {%CF_EXIST_TMEE}"));
 
 	$i = 0;
 	while($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
@@ -74,7 +75,7 @@
 		else
 		{
 			$row_id = $res[0][0];
-			$db->put(rpv("UPDATE @computers SET `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_TMEE}) WHERE `id` = # LIMIT 1",
+			$db->put(rpv("UPDATE @computers SET `ee_lastsync` = !, `ee_encryptionstatus` = #, `flags` = ((`flags` & ~{%CF_DELETED}) | {%CF_EXIST_TMEE}) WHERE `id` = # LIMIT 1",
 				$lastsync, 
 				$row['EncryptionStatus'],
 				$row_id

@@ -225,7 +225,6 @@ function walk_route($route, $action)
 
 	$route = array(
 		'sync-all' => array(
-			'mark-before-sync',
 			'sync-ad',
 			'sync-tmao',
 			'sync-tmee',
@@ -334,9 +333,6 @@ function walk_route($route, $action)
 		),
 		'mark-after-sync' => array(
 			'@mark-after-sync.php'
-		),
-		'mark-before-sync' => array(
-			'@mark-before-sync.php'
 		),
 		'report-3par' => array(
 			'@report-3par.php'

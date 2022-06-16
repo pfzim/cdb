@@ -59,6 +59,8 @@
 		ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
 		if(ldap_bind($ldap, LDAP_USER, LDAP_PASSWD))
 		{
+			$db->put(rpv("UPDATE @persons SET `flags` = ((`flags` & ~{%PF_EXIST_AD})) WHERE (`flags` & {%PF_EXIST_AD}) = {%PF_EXIST_AD}"));
+
 			$cookie = '';
 			do
 			{
@@ -129,7 +131,7 @@
 						{
 							// before update remove marks: 0x0001 - Disabled in AD, 0x0002 - Deleted
 							$row_id = $result[0][0];
-							$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~({%PF_AD_DISABLED} | {%PF_DELETED} | {%PF_TEMP_MARK})) | #) WHERE `id` = # LIMIT 1",
+							$db->put(rpv("UPDATE @persons SET `dn` = !, `fname` = !, `mname` = !, `lname` = !, `flags` = ((`flags` & ~({%PF_AD_DISABLED} | {%PF_DELETED})) | #) WHERE `id` = # LIMIT 1",
 								$account['dn'],
 								@$account['givenname'][0],
 								@$account['initials'][0],

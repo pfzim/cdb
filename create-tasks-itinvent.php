@@ -179,6 +179,7 @@
 					.'&Type=itinvstatus'
 					.'&To=itinvent'
 					.'&Host='.urlencode($row['netdev'])
+					.'&Vlan='.urlencode($row['vlan'])
 					.'&Message='.urlencode(
 						'Списанное оборудование появилось в сети'
 						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
@@ -206,6 +207,7 @@
 					.'&Type=itinvent'
 					.'&To=bynetdev'
 					.'&Host='.urlencode($row['netdev'])
+					.'&Vlan='.urlencode($row['vlan'])
 					.'&Message='.urlencode(
 						'Обнаружено сетевое устройство '.((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
 						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))

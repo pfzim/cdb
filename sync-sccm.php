@@ -154,6 +154,8 @@
 
 */
 
+	$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~{%CF_EXIST_SCCM})) WHERE (`flags` & {%CF_EXIST_SCCM}) = {%CF_EXIST_SCCM}"));
+
 	$columns = array('LastDDR', 'LastPolicyRequest', 'LastSW', 'LastHealthEvaluation', 'LastStatusMessage', 'LastHW');
 
 	$i = 0;
@@ -201,7 +203,7 @@
 		else
 		{
 			$row_id = $res[0][0];
-			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `delay_checks` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_SCCM}) WHERE `id` = # LIMIT 1",
+			$db->put(rpv("UPDATE @computers SET `sccm_lastsync` = !, `delay_checks` = !, `flags` = ((`flags` & ~{%CF_DELETED}) | {%CF_EXIST_SCCM}) WHERE `id` = # LIMIT 1",
 				$lastsync,
 				$delay_checks,
 				$row_id

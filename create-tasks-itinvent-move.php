@@ -159,6 +159,7 @@
 				.'&Type=itinvmove'
 				.'&To=bynetdev'
 				.'&Host='.urlencode($row['netdev'])
+				.'&Vlan='.urlencode($row['vlan'])
 				.'&Message='.urlencode(
 					'Обнаружено расхождение в IT Invent: местоположение оборудования отличается от местоположения коммутатора/маршрутизатора, в который оно подключено.'
 					."\n\nИнвентарный номер оборудования: ".$row['m_inv_no']

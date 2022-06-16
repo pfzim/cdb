@@ -37,6 +37,8 @@
 		)
 	);
 
+	$db->put(rpv("UPDATE @computers SET `flags` = ((`flags` & ~{%CF_EXIST_TMAO})) WHERE (`flags` & {%CF_EXIST_TMAO}) = {%CF_EXIST_TMAO}"));
+
 	foreach($servers as $server => $params)
 	{
 		$conn = sqlsrv_connect($server, $params);
@@ -106,7 +108,7 @@
 			else
 			{
 				$row_id = $res[0][0];
-				$db->put(rpv("UPDATE @computers SET `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~{%CF_TEMP_MARK}) | {%CF_EXIST_TMAO}) WHERE `id` = # LIMIT 1",
+				$db->put(rpv("UPDATE @computers SET `ao_ptnupdtime` = !, `ao_script_ptn` = #, `ao_as_pstime` = !, `flags` = ((`flags` & ~{%CF_DELETED}) | {%CF_EXIST_TMAO}) WHERE `id` = # LIMIT 1",
 					$ptnupdtime,
 					$script_ptn,
 					$as_pstime,
@@ -134,7 +136,7 @@
 
 		// Mark very old events as fixed
 		
-		$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | {%CF_DELETED}) WHERE ((`flags` & {%CF_DELETED}) = 0) AND `last` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
+		$db->put(rpv("UPDATE @ac_log SET `flags` = (`flags` | {%ALF_FIXED}) WHERE ((`flags` & {%ALF_FIXED}) = 0) AND `last` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 
 		$result = sqlsrv_query($conn, "
 			SELECT
@@ -239,7 +241,7 @@
 							SET
 								`last` = !,
 								`cmdln` = !,
-								`flags` = (`flags` & ~{%CF_DELETED})
+								`flags` = (`flags` & ~{%ALF_FIXED})
 							WHERE
 								`id` = #
 							LIMIT 1

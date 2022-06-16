@@ -24,7 +24,7 @@
 	define('PF_AD_DISABLED',        0x0001);
 	define('PF_DELETED',            0x0002);
 	define('PF_HIDED',              0x0004);
-	define('PF_TEMP_MARK',          0x0008);
+	//define('PF_TEMP_MARK',          0x0008);
 
 	define('PF_MASK_EXIST',         0x00F0);
 	define('PF_EXIST_AD',           0x0010);
@@ -37,7 +37,7 @@
 	define('CF_AD_DISABLED',        0x0001);
 	define('CF_DELETED',            0x0002);
 	define('CF_HIDED',              0x0004);
-	define('CF_TEMP_MARK',          0x0008);
+	//define('CF_TEMP_MARK',          0x0008);
 
 	define('CF_MASK_EXIST',         0x00F0);
 	define('CF_EXIST_AD',           0x0010);
@@ -225,7 +225,7 @@ $g_comp_flags = array(
 	'Disabled',
 	'Deleted',
 	'Hide',
-	'Temp sync flag',
+	'',
 	'Active Directory',
 	'Apex One',
 	'Encryption Endpoint',
@@ -236,7 +236,7 @@ $g_comp_short_flags = array(
 	'D',
 	'R',
 	'H',
-	'T',
+	'',
 	'A',
 	'O',
 	'E',
