@@ -5,6 +5,15 @@ CBD собирает информацию из различных источни
 и при выявления не соответствия создаёт заявки в системе HelpDesk для устаранения выявленных
 несоответствий.
 
+## Установка
+
+Создать БД и таблицы
+Заполнить конфиг файл
+Добавить задания в cron
+Настроить ротацию логов
+
+## Техническая информация
+
 Описание битовых флагов `flags` в таблице `computers` (? and `persons`)
 
 | Bits   | Name             | Description                               |
@@ -79,7 +88,7 @@ FROM c_computers AS c
 | 0x001000 |  | Net errors                                |
 | 0x001100 |  | IT Invent software                        |
 
-
+```
 UPDATE c_tasks SET `flags` = ((`flags` & ~0x000008) | 0x01000000) WHERE `flags` & 0x000008;
 UPDATE c_tasks SET `flags` = ((`flags` & ~0x000010) | 0x02000000) WHERE `flags` & 0x000010;
 UPDATE c_tasks SET `flags` = ((`flags` & ~0x000020) | 0x03000000) WHERE `flags` & 0x000020;
@@ -99,6 +108,7 @@ UPDATE c_tasks SET `flags` = ((`flags` & ~0x040000) | 0x10000000) WHERE `flags` 
 UPDATE c_tasks SET `flags` = ((`flags` & ~0x080000) | 0x11000000) WHERE `flags` & 0x080000;
 
 UPDATE c_tasks SET `flags` = ((`flags` & ~0xFF000000) | ((`flags` & 0xFF000000) >> 16 )) WHERE `flags` & 0xFF000000;
+```
 
 Описание битовых флагов `flags` в таблице `ac_log`
 

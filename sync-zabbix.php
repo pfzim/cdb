@@ -25,6 +25,9 @@
 
 		5. Состав локальной группы Zabbix LDAP Users синхронизируются группой
 		   AD G_Zabbix_Access.
+		   
+		6. Добавлена поставновка на монторинг оборудования с типом "Коммутатор"
+		   указанным в ИТ Инвент.
 
 		Маршрутизаторы распределяются по группам с учётом региональной
 		принадлежности.
@@ -32,6 +35,9 @@
 		во все группы с суффиксом UNKNOWN.
 
 		Несуществующие группы создаются автоматически.
+		Родительские группы верхнего уровня нужно создать руками, если
+		требуется фильтрация по ним. Для создания можно использовать PowerShell
+		скрипт GroupsUpdateNames.ps1.
 
 		Шаблоны наименования групп:
 		  [TT|TOF|RC|CO]/[код_региона]_[любой_комментарий]/[тип_оборудования]/[подтип_оборудования]
@@ -134,10 +140,6 @@
 		return $zabbix_groups[$obj_code][$reg_code][$type_code];
 	}
 
-	// Формируем список устройств, которые должны мониторится в Zabbix
-
-	$i = 0;
-
 /*
 		Old:
 		SELECT
@@ -201,6 +203,11 @@
 			AND m.`type_no` = 63
 */
 
+	// Формируем список Маршрутизаторов, которые должны мониторится в Zabbix
+
+	// Снимаем флаг ZHF_MUST_BE_MONITORED
+	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_MUST_BE_MONITORED}) WHERE (`flags` & {%ZHF_MUST_BE_MONITORED})"));
+
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			m.`id`,
@@ -219,12 +226,10 @@
 			AND bc.`loc_no` = m.`loc_no`
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})
-			AND m.`type_no` = 63
+			AND m.`type_no` = {%ITINVENT_TYPE_ROUTER}
 		GROUP BY m.`id`
 	")))
 	{
-		$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_MUST_BE_MONITORED}) WHERE (`flags` & {%ZHF_MUST_BE_MONITORED})"));
-
 		foreach($result as &$row)
 		{
 			$db->put(rpv("
@@ -236,6 +241,33 @@
 				$row['name'],
 				$row['id'],
 				intval($row['bcc_count']) ? ZHF_TEMPLATE_WITH_BCC : 0
+			));
+		}
+	}
+
+	// Добавляем в список Коммутаторы
+
+	if($db->select_assoc_ex($result, rpv("
+		SELECT
+			m.`id`,
+			m.`name`
+		FROM @mac AS m
+		WHERE
+			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})) = ({%MF_FROM_NETDEV} | {%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_SERIAL_NUM})
+			AND m.`type_no` = {%ITINVENT_TYPE_SWITCH}
+	")))
+	{
+		foreach($result as &$row)
+		{
+			$db->put(rpv("
+					INSERT INTO @zabbix_hosts (`name`, `pid`, `host_id`, `flags`)
+					VALUES ({s0}, {d1}, 0, ({%ZHF_MUST_BE_MONITORED} | {d2}))
+					ON DUPLICATE KEY
+					UPDATE `pid` = {d1}, `flags` = (`flags` | {%ZHF_MUST_BE_MONITORED} | {d2})
+				",
+				$row['name'],
+				$row['id'],
+				0
 			));
 		}
 	}
@@ -252,7 +284,7 @@
 
 	$auth_key = $zabbix_result;
 
-	// get BCC list
+	// Getting all hosts from Zabbix
 	$zabbix_result = zabbix_api_request(
 		'host.get',
 		$auth_key,
@@ -374,7 +406,7 @@
 	define('ZABBIX_TYPE_ROUTER_BCC',           2);
 	define('ZABBIX_TYPE_WORKSTATION_ADMIN',    3);
 	define('ZABBIX_TYPE_WORKSTATION_KASSA',    4);
-	define('ZABBIX_TYPE_ZABBIX_TYPE_SWITCH',   5);
+	define('ZABBIX_TYPE_SWITCH',               5);
 
 	$zabbix_groups_objects_templates = array(
 		ZABBIX_OBJECT_CO  => ZABBIX_CO_GROUP_PREFIX,
@@ -382,7 +414,7 @@
 		ZABBIX_OBJECT_TOF => ZABBIX_TOF_GROUP_PREFIX,
 		ZABBIX_OBJECT_TT  => ZABBIX_TT_GROUP_PREFIX
 	);
-	
+
 	$zabbix_groups_types_templates = array(
 		ZABBIX_TYPE_UNKNOWN              => 'UNKNOWN',
 		ZABBIX_TYPE_ROUTER               => 'ROUTER',
@@ -391,7 +423,7 @@
 		ZABBIX_TYPE_WORKSTATION_KASSA    => 'WORKSTATION/KASSA',
 		ZABBIX_TYPE_SWITCH               => 'SWITCH'
 	);
-	
+
 	$zabbix_groups = array(
 		/*
 			obj_code => [
@@ -477,36 +509,45 @@
 		{
 			$host_name = strtoupper($row['name']);
 			
-			if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
-			{
-				$type_code = ZABBIX_TYPE_ROUTER_BCC;
-			}
-			else
-			{
-				$type_code = ZABBIX_TYPE_ROUTER;
-			}
+			// Выбираем группы
 			
+			if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)  // Коммутатор (switch)
+			{
+				$type_code = ZABBIX_TYPE_SWITCH;
+			}
+			else // Маршрутизатор
+			{
+				if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
+				{
+					$type_code = ZABBIX_TYPE_ROUTER_BCC;
+				}
+				else
+				{
+					$type_code = ZABBIX_TYPE_ROUTER;
+				}
+			}
+
 			$group_ids = array();
 
-			// TT
-			if(preg_match('/^RU-(\d{2})-\d{4}-\w{3}$/i', $host_name, $matches))
+			// TT: RU-00-0000-XXX
+			if(preg_match('/^RU-(\d{2})-\d{4}-\w{3}/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, 0, $type_code);
 			}
-			// TOF
-			else if(preg_match('/^RU-(\d{2})-B[o\d]\d-\w{3}$/i', $host_name, $matches))
+			// TOF: RU-00-Bo0-XXX
+			else if(preg_match('/^RU-(\d{2})-B[o\d]\d-\w{3}/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, 0, $type_code);
 			}
-			// RC
+			// RC: RU-00-RC0-
 			else if(preg_match('/^RU-(\d{2})-RC\d{1,2}-/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, $type_code);
 			}
-			// CO
+			// CO: RU-00-Ao0-
 			else if(preg_match('/^RU-(\d{2})-Ao\d-/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, intval($matches[1]), $type_code);
@@ -524,11 +565,19 @@
 			// Выбираем шаблон по номеру модели оборудования
 			
 			$template_ids = array();
-			$template_ids[] = isset($zabbix_templates[intval($row['model_no'])]) ? $zabbix_templates[intval($row['model_no'])] : ZABBIX_TEMPLATE_FALLBACK;
-
-			if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
+			
+			if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)  // Коммутатор (switch)
 			{
-				$template_ids[] = ZABBIX_TEMPLATE_FOR_BCC;
+					$template_ids[] = ZABBIX_TEMPLATE_SWITCH;
+			}
+			else // Маршрутизатор
+			{
+				$template_ids[] = isset($zabbix_templates[intval($row['model_no'])]) ? $zabbix_templates[intval($row['model_no'])] : ZABBIX_TEMPLATE_FALLBACK;
+
+				if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
+				{
+					$template_ids[] = ZABBIX_TEMPLATE_FOR_BCC;
+				}
 			}
 
 			switch(intval($row['flags']) & (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX))
