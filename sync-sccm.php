@@ -61,6 +61,7 @@
 			m.ItemKey AS ResourceID,
 			m.Netbios_Name0 AS DeviceName,
 			m.Creation_Date0 AS CreationDate,
+			m.BuildExt,
 			j1.LastDDR,
 			j1.LastPolicyRequest,
 			j1.LastOnline,
@@ -234,6 +235,12 @@
 				$row_id,
 				CDB_PROP_BASELINE_COMPLIANCE_RMS_V,
 				(intval($row['rmsv_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
+				$row_id,
+				CDB_PROP_OPERATINGSYSTEMVERSION_SCCM,
+				$row['BuildExt']
 			));
 		}
 

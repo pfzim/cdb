@@ -18,6 +18,7 @@
 	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',	110);
 	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',	111);
 	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',	112);
+	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM',	113);
 
 	// `flags` from `persons` table
 
@@ -56,6 +57,7 @@
 
 	// `type` from `tasks` table
 	
+	define('TT_CLOSE', 		        0);  // используется только в шаблонах заявок
 	define('TT_MBOX_UNLIM',         1);
 	define('TT_INV_MOVE',           2);
 	define('TT_INV_TASKFIX',        3);
