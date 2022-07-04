@@ -528,6 +528,8 @@
 			}
 
 			$group_ids = array();
+			
+			$location_is_rc = FALSE;
 
 			// TT: RU-00-0000-XXX
 			if(preg_match('/^RU-(\d{2})-\d{4}-\w{3}/i', $host_name, $matches))
@@ -546,6 +548,8 @@
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, $type_code);
+				
+				$location_is_rc = TRUE;
 			}
 			// CO: RU-00-Ao0-
 			else if(preg_match('/^RU-(\d{2})-Ao\d-/i', $host_name, $matches))
@@ -577,6 +581,11 @@
 				if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
 				{
 					$template_ids[] = ZABBIX_TEMPLATE_FOR_BCC;
+				}
+				
+				if($location_is_rc)
+				{
+					$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
 				}
 			}
 
