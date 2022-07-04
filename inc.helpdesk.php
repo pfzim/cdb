@@ -30,11 +30,14 @@ function helpdesk_api_request($post_data)
 
 	$answer = curl_exec($ch);
 
-	if($answer === FALSE)
+	$xml = FALSE;
+	
+	if($answer !== FALSE)
 	{
-		curl_close($ch);
-		return FALSE;
+		$xml = @simplexml_load_string($answer);
 	}
-
-	return @simplexml_load_string($answer);
+	
+	curl_close($ch);
+	
+	return $xml;
 }

@@ -271,6 +271,19 @@ $templates_helpdesk_requests = array(
 		,
 
 	TT_INV_SOFT =>
+		'Source=cdb'
+		.'&Action=new'
+		.'&Type=test'
+		.'&To=byname'
+		.'&Host=%host%'
+		.'&Message='.urlencode(
+			'На компьютере обнаружено ПО не зарегистрированное в IT Invent'
+			."\n\nИмя ПК: %host%"
+			."\nИсточник информации о ПК: %flags%"
+			."\nСписок обнаруженного ПО доступен по ссылке: ".CDB_URL.'-ui/cdb_ui.php?path=computer_info/%id%'
+			."\n\nКод работ: INV06"
+			."\n\nСледует зарегистрировать ПО в ИТ Инвент или удалить с ПК пользователя. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
+		)
 		,
 
 	TT_TMAO_DLP =>

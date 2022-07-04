@@ -49,24 +49,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					echo $row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 		}
 	}
@@ -122,45 +117,21 @@
 
 			//echo 'MAC: '.$row['mac']."\n";
 
-			$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
-
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS,
-				'Source=cdb'
-				.'&Action=new'
-				.'&Type=test'
-				.'&To=byname'
-				.'&Host='.urlencode($row['name'])
-				.'&Message='.urlencode(
-					'На компьютере обнаружено ПО не зарегистрированное в IT Invent'
-					."\n\nИмя ПК: ".$row['name']
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
-					."\nСписок обнаруженного ПО доступен по ссылке: ".CDB_URL.'-ui/cdb_ui.php?path=computer_info/'.$row['id']
-					."\n\nКод работ: INV06"
-					."\n\nСледует зарегистрировать ПО в ИТ Инвент или удалить с ПК пользователя. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_INV_SOFT,
+				array(
+					'host'			=> $row['name'],
+					'id'			=> $row['id'],
+					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 				)
-			);
+			));
 
-			$answer = curl_exec($ch);
-
-			if($answer === FALSE)
-			{
-				curl_close($ch);
-				break;
-			}
-
-			$xml = @simplexml_load_string($answer);
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
 				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_INV_SOFT}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
-
-			curl_close($ch);
-			//break;
 		}
 	}
 
