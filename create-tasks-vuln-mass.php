@@ -34,25 +34,20 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					//echo $answer."\r\n";
-					echo $row['plugin_name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				//echo $answer."\r\n";
+				echo $row['plugin_name'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 			//break;
 		}
@@ -107,30 +102,23 @@
 				break;
 			}
 			
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=new'
-				.'&Type=vuln'
-				.'&To=sas'
-				.'&Host='.urlencode($row['name'])
-				.'&Message='.urlencode(
-					'Nessus: Обнаружена массовая уязвимость требующая устранения. #'.$row['plugin_id']
-					."\n\nУязвимость: ".$row['plugin_name']
-					."\nУровень опасности: ".$row['severity']
-					."\nКоличество уязвимых устройств: ".$row['v_count']
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_VULN_FIX_MASS,
+				array(
+					'host'			=> $row['name'],
+					'plugin_id'		=> $row['plugin_id'],
+					'plugin_name'	=> $row['plugin_name'],
+					'severity'		=> $row['severity'],
+					'vuln_count'	=> $row['v_count']
 				)
-			);
-			if($answer !== FALSE)
+			));
+
+			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
-				{
-					//echo $answer."\r\n";
-					echo $row['plugin_name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULNS}, #, {%TT_VULN_FIX_MASS}, 0, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
-					$i++;
-				}
+				//echo $answer."\r\n";
+				echo $row['plugin_name'].' '.$xml->extAlert->query['number']."\r\n";
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_VULNS}, #, {%TT_VULN_FIX_MASS}, 0, NOW(), !, !)", $row['plugin_id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$i++;
 			}
 		}
 	}

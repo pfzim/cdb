@@ -55,24 +55,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['name'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 		}
 	}
@@ -161,88 +156,38 @@
 
 			//echo 'MAC: '.$row['mac']."\n";
 
-			$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
-
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			
 			$task_type = TT_INV_ADD;
 
 			// Если оборудование находится в статусе Списано, то создаётся отдельный тип заявки
 			if((intval($row['flags']) & MF_EXIST_IN_ITINV) && (intval($row['status']) == 7))
 			{
 				$task_type = TT_INV_ADD_DECOMIS;
-
-				curl_setopt($ch, CURLOPT_POSTFIELDS,
-					'Source=cdb'
-					.'&Action=new'
-					.'&Type=itinvstatus'
-					.'&To=itinvent'
-					.'&Host='.urlencode($row['netdev'])
-					.'&Vlan='.urlencode($row['vlan'])
-					.'&Message='.urlencode(
-						'Списанное оборудование появилось в сети'
-						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
-						."\nИнвентарный номер оборудования: ".$row['inv_no']
-						."\nТип: ".$row['type_name']
-						."\nСтатус: ".$row['status_name']
-						."\nDNS name: ".$row['name']
-						."\nIP: ".$row['ip']
-						."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
-						."\n\nУстройство подключено к: ".$row['netdev']
-						."\nПорт: ".$row['port']
-						."\nVLAN ID: ".$row['vlan']
-						."\nВремя регистрации: ".$row['regtime']
-						."\n\nКод работ: IIV11"
-						."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.FAQ-Зафиксировано-списанное-оборудование-в-сети.ashx'
-						."\nВ решении укажите Инвентарный номер оборудования!"
-					)
-				);
-			}
-			else
-			{
-				curl_setopt($ch, CURLOPT_POSTFIELDS,
-					'Source=cdb'
-					.'&Action=new'
-					.'&Type=itinvent'
-					.'&To=bynetdev'
-					.'&Host='.urlencode($row['netdev'])
-					.'&Vlan='.urlencode($row['vlan'])
-					.'&Message='.urlencode(
-						'Обнаружено сетевое устройство '.((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес').' которого не зафиксирован в IT Invent'
-						."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
-						."\nDNS name: ".$row['name']
-						."\nIP: ".$row['ip']
-						."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
-						."\n\nУстройство подключено к: ".$row['netdev']
-						."\nПорт: ".$row['port']
-						."\nVLAN ID: ".$row['vlan']
-						."\nВремя регистрации: ".$row['regtime']
-						."\n\nКод работ: IIV09"
-						."\n\nСледует актуализировать данные по указанному устройству и заполнить соответствующий атрибут. Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Обнаружено-сетевое-устроиство-MAC-адрес-которого-не-зафиксирован-в-IT-Invent.ashx'
-						."\nВ решении укажите Инвентарный номер оборудования!"
-					)
-				);
 			}
 
-			$answer = curl_exec($ch);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				$task_type,
+				array(
+					'host'			=> $row['netdev'],
+					'inv_no'		=> $row['inv_no'],
+					'type_name'		=> $row['type_name'],
+					'status_name'	=> $row['status_name'],
+					'vlan'			=> $row['vlan'],
+					'port'			=> $row['port'],
+					'regtime'		=> $row['regtime'],
+					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+					'dns_name'		=> $row['name'],
+					'ip'			=> $row['ip'],
+					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+				)
+			));
 
-			if($answer === FALSE)
-			{
-				curl_close($ch);
-				break;
-			}
-
-			$xml = @simplexml_load_string($answer);
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
 				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, #, 0, NOW(), !, !)", $row['id'], $task_type, $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
-
-			curl_close($ch);
-			//break;
 		}
 	}
 

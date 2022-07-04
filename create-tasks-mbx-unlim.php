@@ -33,27 +33,20 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					//echo $answer."\r\n";
-					echo $row['login'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['login'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
-			//break;
 		}
 	}
 
@@ -96,30 +89,19 @@
 				break;
 			}
 			
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=new'
-				.'&Type=test'
-				.'&To=goo'
-				.'&Host='.urlencode($row['login'])
-				.'&Message='.urlencode(
-					'Не настроена квота на почтовом ящике пользователя. Установите квоту.'
-					."\nУЗ: ".$row['login']
-					."\nКод работ: MBXQ"
-					//."\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Сброс-флага-разрещающего-установить-пустой-пароль.ashx'
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_MBOX_UNLIM,
+				array(
+					'host'			=> $row['login']
 				)
-			);
-			if($answer !== FALSE)
+			));
+
+			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
-				{
-					//echo $answer."\r\n";
-					echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TT_MBOX_UNLIM}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
-					$i++;
-				}
+				//echo $answer."\r\n";
+				echo $row['login'].' '.$xml->extAlert->query['number']."\r\n";
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_PERSONS}, #, {%TT_MBOX_UNLIM}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$i++;
 			}
 		}
 	}

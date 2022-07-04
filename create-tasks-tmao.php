@@ -38,27 +38,20 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['name'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
-			//break;
 		}
 	}
 
@@ -143,41 +136,26 @@
 				}
 			}
 
-			//$answer = '<?xml version="1.0" encoding="utf-8"? ><root><extAlert><event ref="c7db7df4-e063-11e9-8115-00155d420f11" date="2019-09-26T16:44:46" number="001437825" rule="" person=""/><query ref="" date="" number=""/><comment/></extAlert></root>';
-
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=new'
-				.'&Type=tmao'
-				.'&To=byname'
-				.'&Host='.urlencode($row['name'])
-				.'&Message='.urlencode(
-					'Выявлена проблема с антивирусом Trend Micro Apex One.'
-					."\n\nПК: ".$row['name']
-					."\nВерсия антивирусной базы: "
-					.$row['ao_script_ptn']
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
-					."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_TMAO,
+				array(
+					'host'			=> $row['name'],
+					'ao_script_ptn'	=> $row['ao_script_ptn'],
+					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 				)
-			);
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
+				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAO}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				if(substr($row['dn'], -strlen(LDAP_OU_SHOPS)) === LDAP_OU_SHOPS)
 				{
-					//echo $answer."\r\n";
-					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_TMAO}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
-					if(substr($row['dn'], -strlen(LDAP_OU_SHOPS)) === LDAP_OU_SHOPS)
-					{
-						$count_gup++;
-					}
-					else
-					{
-						$count_goo++;
-					}
+					$count_gup++;
+				}
+				else
+				{
+					$count_goo++;
 				}
 			}
 		}

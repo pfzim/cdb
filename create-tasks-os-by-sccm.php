@@ -119,7 +119,7 @@
 			$xml = helpdesk_api_request(helpdesk_build_request(
 				TT_OS_REINSTALL,
 				array(
-					'computer_name'	=> $row['name'],
+					'host'			=> $row['name'],
 					'os'			=> $row['os'],
 					'os_version'	=> $row['ver'],
 					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')

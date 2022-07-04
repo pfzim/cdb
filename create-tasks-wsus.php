@@ -45,25 +45,20 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					//echo $answer."\r\n";
-					echo $row['name'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				//echo $answer."\r\n";
+				echo $row['name'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 			//break;
 		}
@@ -166,32 +161,22 @@
 				$to = 'goo';
 			}
 
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=new'
-				.'&Type=update'
-				.'&To='.$to
-				.'&Host='.urlencode($row['name'])
-				.'&Message='.urlencode(
-					'Необходимо устранить проблему установки обновлений ОС.'
-					."\nПК: ".$row['name']
-					."\nОперационная система: ".$row['os'].' ('.$row['ver'].')'
-					."\nИсточник информации о ПК: ".flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
-					."\nКод работ: OSUP\n\n".WIKI_URL.'/Отдел%20ИТ%20Инфраструктуры.Инструкция-Устранение-ошибок-установки-обновлений.ashx'
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_WIN_UPDATE,
+				array(
+					'host'			=> $row['name'],
+					'to'			=> $to,
+					'os'			=> $row['os'],
+					'os_version'	=> $row['ver'],
+					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
 				)
-			);
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
-				{
-					//echo $answer."\r\n";
-					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
-					$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_WIN_UPDATE}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
-					$i++;
-				}
+				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
+				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_COMPUTERS}, #, {%TT_WIN_UPDATE}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
+				$i++;
 			}
 		}
 	}

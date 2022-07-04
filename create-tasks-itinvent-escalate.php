@@ -36,24 +36,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['mac'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 		}
 	}
@@ -114,43 +109,23 @@
 
 			//echo 'MAC: '.$row['mac']."\n";
 
-			$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
-
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS,
-				'Source=cdb'
-				.'&Action=new'
-				.'&Type=itinvent'
-				.'&To=ritm'
-				.'&Host='.urlencode($row['netdev'])
-				.'&Vlan='.urlencode($row['vlan'])
-				.'&Message='.urlencode(
-					'Необходимо проанализировать заявки по данному сетевому устройству. Принять меры: добавить в ИТ Инвент, удалить из базы Снежинки или добавить в исключение.'
-					."\n\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
-					."\nIP: ".$row['ip']
-					."\nDNS name: ".$row['name']
-					."\nУстройство подключено к: ".$row['netdev']
-					."\nПорт: ".$row['port']
-					."\nVLAN ID: ".$row['vlan']
-					."\nВремя регистрации: ".$row['regtime']
-					."\nКоличество повторных заявок: ".$row['issues']
-					."\n\nКод работ: IIV09"
-					."\n\nИстория выставленных нарядов: ".CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id']
-					."\n\nВ решении указать причину и принятые меры по недопущению открытия повторных заявок."
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_INV_TASKFIX,
+				array(
+					'host'			=> $row['netdev'],
+					'vlan'			=> $row['vlan'],
+					'id'			=> $row['id'],
+					'port'			=> $row['port'],
+					'regtime'		=> $row['regtime'],
+					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+					'dns_name'		=> $row['name'],
+					'ip'			=> $row['ip'],
+					'issues'		=> $row['issues'],
+					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
 				)
-			);
+			));
 
-			$answer = curl_exec($ch);
-
-			if($answer === FALSE)
-			{
-				curl_close($ch);
-				break;
-			}
-
-			$xml = @simplexml_load_string($answer);
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";

@@ -55,24 +55,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					echo $row['inv_no'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['inv_no'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 		}
 	}
@@ -146,56 +141,30 @@
 				break;
 			}
 
-			//echo 'MAC: '.$row['mac']."\n";
-
-			$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
-
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS,
-				'Source=cdb'
-				.'&Action=new'
-				.'&Type=itinvmove'
-				.'&To=bynetdev'
-				.'&Host='.urlencode($row['netdev'])
-				.'&Vlan='.urlencode($row['vlan'])
-				.'&Message='.urlencode(
-					'Обнаружено расхождение в IT Invent: местоположение оборудования отличается от местоположения коммутатора/маршрутизатора, в который оно подключено.'
-					."\n\nИнвентарный номер оборудования: ".$row['m_inv_no']
-					."\nDNS имя: ".$row['m_name']
-					."\n".((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2)))
-					."\nПорт: ".$row['port']
-					."\nVLAN ID: ".$row['vlan']
-					."\nВремя регистрации: ".$row['regtime']
-					."\nFlags: ".flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
-					."\n\nИнвентарный номер коммутатора/маршрутизатора: ".(empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no'])
-					."\nDNS имя: ".$row['netdev']
-					."\nСерийный номер: ".$row['d_mac']
-					."\nFlags: ".flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
-					."\n\nКод работ: IIV10"
-					."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Местоположение-оборудования-отличается-от-местоположения-коммутатора-в-которыи-оно-подключено.ashx'
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_INV_MOVE,
+				array(
+					'host'			=> $row['netdev'],
+					'm_inv_no'		=> $row['m_inv_no'],
+					'vlan'			=> $row['vlan'],
+					'port'			=> $row['port'],
+					'regtime'		=> $row['regtime'],
+					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+					'm_name'		=> $row['m_name'],
+					'd_inv_no'		=> (empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no']),
+					'd_mac'			=> $row['d_mac'],
+					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+					'd_flags'		=> flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
 				)
-			);
+			));
 
-			$answer = curl_exec($ch);
-
-			if($answer === FALSE)
-			{
-				curl_close($ch);
-				break;
-			}
-
-			$xml = @simplexml_load_string($answer);
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
 				echo $row['m_name'].' '.$xml->extAlert->query['number']."\r\n";
 				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_MOVE}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
-
-			curl_close($ch);
-			//break;
 		}
 	}
 

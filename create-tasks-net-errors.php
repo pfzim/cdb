@@ -40,24 +40,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$answer = @file_get_contents(
-				HELPDESK_URL.'/ExtAlert.aspx/'
-				.'?Source=cdb'
-				.'&Action=resolved'
-				.'&Id='.urlencode($row['operid'])
-				.'&Num='.urlencode($row['opernum'])
-				.'&Message='.urlencode("Заявка более не актуальна. Закрыта автоматически")
-			);
+			$xml = helpdesk_api_request(helpdesk_build_request(
+				TT_CLOSE,
+				array(
+					'operid'	=> $row['operid'],
+					'opernum'	=> $row['opernum']
+				)
+			));
 
-			if($answer !== FALSE)
+			if($xml !== FALSE)
 			{
-				$xml = @simplexml_load_string($answer);
-				if($xml !== FALSE)
-				{
-					echo $row['mac'].' '.$row['opernum']."\r\n";
-					$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
-					$i++;
-				}
+				echo $row['mac'].' '.$row['opernum']."\r\n";
+				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
+				$i++;
 			}
 		}
 	}
@@ -129,6 +124,7 @@
 			)))
 			{
 				$message = '';
+
 				foreach($net_errors as &$ne_row)
 				{
 					$message .= 
@@ -140,36 +136,14 @@
 					;
 				}
 
-
-				$ch = curl_init(HELPDESK_URL.'/ExtAlert.aspx');
-
-				curl_setopt($ch, CURLOPT_POST, true);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-				curl_setopt($ch, CURLOPT_POSTFIELDS,
-					'Source=cdb'
-					.'&Action=new'
-					.'&Type=neterrors'
-					.'&To=bynetdev'
-					.'&Host='.urlencode($row['name'])
-					.'&Message='.urlencode(
-						'Необходимо заменить кабель в ТТ на заводской патч-корд 5м'
-						."\n\nDNS имя маршрутизатора: ".$row['name']
-						."\n\n".$message
-						."\n\nКод работ: NET01"
-						//."\n\nСледует . Подробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.ashx'
+				$xml = helpdesk_api_request(helpdesk_build_request(
+					TT_NET_ERRORS,
+					array(
+						'host'			=> $row['name'],
+						'data'			=> $message
 					)
-				);
+				));
 
-				$answer = curl_exec($ch);
-
-				if($answer === FALSE)
-				{
-					curl_close($ch);
-					break;
-				}
-
-				$xml = @simplexml_load_string($answer);
 				if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 				{
 					echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
@@ -177,8 +151,6 @@
 					$i++;
 				}
 
-				curl_close($ch);
-				//break;
 			}
 		}
 	}
