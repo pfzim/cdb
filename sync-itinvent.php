@@ -277,6 +277,7 @@
 			,m14.[FIELD_VALUE] AS mac14
 			,m15.[FIELD_VALUE] AS mac15
 			,m16.[FIELD_VALUE] AS mac16
+			,m17.[FIELD_VALUE] AS mac17
 		INTO #tmptable
 		FROM [ITEMS] AS item WITH (NOLOCK)
 		LEFT JOIN [FIELDS_VALUES] AS m1 WITH (NOLOCK) ON m1.[ITEM_ID] = item.[ID] AND m1.[FIELD_NO] = 106 AND m1.[ITEM_NO] = 1
@@ -295,6 +296,7 @@
 		LEFT JOIN [FIELDS_VALUES] AS m14 WITH (NOLOCK) ON m14.[ITEM_ID] = item.[ID] AND m14.[FIELD_NO] = 227 AND m14.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m15 WITH (NOLOCK) ON m15.[ITEM_ID] = item.[ID] AND m15.[FIELD_NO] = 228 AND m15.[ITEM_NO] = 1
 		LEFT JOIN [FIELDS_VALUES] AS m16 WITH (NOLOCK) ON m16.[ITEM_ID] = item.[ID] AND m16.[FIELD_NO] = 229 AND m16.[ITEM_NO] = 1
+		LEFT JOIN [FIELDS_VALUES] AS m17 WITH (NOLOCK) ON m17.[ITEM_ID] = item.[ID] AND m17.[FIELD_NO] = 233 AND m17.[ITEM_NO] = 1
 		-- LEFT JOIN [BRANCHES] AS brn WITH (NOLOCK) ON brn.[BRANCH_NO] = item.[BRANCH_NO]
 		LEFT JOIN [LOCATIONS] AS loc WITH (NOLOCK) ON loc.[LOC_NO] = item.[LOC_NO]
 		WHERE
@@ -317,6 +319,7 @@
 				OR m14.[FIELD_VALUE] IS NOT NULL
 				OR m15.[FIELD_VALUE] IS NOT NULL
 				OR m16.[FIELD_VALUE] IS NOT NULL
+				OR m17.[FIELD_VALUE] IS NOT NULL
 			)
 	");
 
@@ -383,7 +386,7 @@
 				}
 
 				// Load MACs
-				for($k = 1; $k <= 16; $k++)    // mac* fields count
+				for($k = 1; $k <= 17; $k++)    // mac* fields count
 				{
 					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 					$duplicate = 0;
