@@ -53,13 +53,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -162,14 +168,21 @@
 				}
 			}
 
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_TMAO_DLP,
-				array(
-					'host'			=> $row['name'],
-					'dlp_status'	=> code_to_string($g_dlp_statuses, intval($row['dlp_status'])),
-					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type=tmao'
+				.'&To=byname'
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.helpdesk_message(
+					TT_TMAO_DLP,
+					array(
+						'host'			=> $row['name'],
+						'dlp_status'	=> code_to_string($g_dlp_statuses, intval($row['dlp_status'])),
+						'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{

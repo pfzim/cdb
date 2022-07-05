@@ -1,20 +1,22 @@
-function helpdesk_build_request($id, $params)
-{
-	global $templates_helpdesk_requests;
+<?php
 
-	if(!isset($templates_helpdesk_requests[$id]))
+function helpdesk_message($id, $params)
+{
+	global $template_helpdesk_messages;
+
+	if(!isset($template_helpdesk_messages[$id]))
 	{
 		throw new Exception('ERROR: Unknown request ID');
 	}
-	
-	$request = $templates_helpdesk_requests[$id];
+
+	$message = $template_helpdesk_messages[$id];
 
 	foreach($params as $key => $value)
 	{
-		$request = str_replace('%'.$key.'%', urlencode($value), $request);
+		$message = str_replace('%'.$key.'%', $value, $message);
 	}
-	
-	return $request;
+
+	return urlencode($message);
 }
 
 function helpdesk_api_request($post_data)
@@ -31,13 +33,13 @@ function helpdesk_api_request($post_data)
 	$answer = curl_exec($ch);
 
 	$xml = FALSE;
-	
+
 	if($answer !== FALSE)
 	{
 		$xml = @simplexml_load_string($answer);
 	}
-	
+
 	curl_close($ch);
-	
+
 	return $xml;
 }

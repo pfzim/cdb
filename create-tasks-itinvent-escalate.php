@@ -36,13 +36,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -109,22 +115,30 @@
 
 			//echo 'MAC: '.$row['mac']."\n";
 
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_INV_TASKFIX,
-				array(
-					'host'			=> $row['netdev'],
-					'vlan'			=> $row['vlan'],
-					'id'			=> $row['id'],
-					'port'			=> $row['port'],
-					'regtime'		=> $row['regtime'],
-					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
-					'dns_name'		=> $row['name'],
-					'ip'			=> $row['ip'],
-					'issues'		=> $row['issues'],
-					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type=itinvent'
+				.'&To=ritm'
+				.'&Host='.urlencode($row['netdev'])
+				.'&Vlan='.urlencode($row['vlan'])
+				.'&Message='.helpdesk_message(
+					TT_INV_TASKFIX,
+					array(
+						'host'			=> $row['netdev'],
+						'vlan'			=> $row['vlan'],
+						'id'			=> $row['id'],
+						'port'			=> $row['port'],
+						'regtime'		=> $row['regtime'],
+						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+						'dns_name'		=> $row['name'],
+						'ip'			=> $row['ip'],
+						'issues'		=> $row['issues'],
+						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
@@ -132,9 +146,6 @@
 				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, {%TT_INV_TASKFIX}, 0, NOW(), !, !)", $row['id'], $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
-
-			curl_close($ch);
-			//break;
 		}
 	}
 

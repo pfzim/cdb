@@ -80,6 +80,7 @@
 	define('TT_RMS_INST',           20);
 	define('TT_RMS_SETT',           21);
 	define('TT_RMS_VERS',           22);
+	define('TT_TEST',               999);
 
 $g_tasks_types = array(
 	'Something went wrong',

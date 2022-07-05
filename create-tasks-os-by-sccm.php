@@ -45,13 +45,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -116,15 +122,22 @@
 				break;
 			}
 			
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_OS_REINSTALL,
-				array(
-					'host'			=> $row['name'],
-					'os'			=> $row['os'],
-					'os_version'	=> $row['ver'],
-					'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type=update'
+				.'&To=byname'
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.helpdesk_message(
+					TT_OS_REINSTALL,
+					array(
+						'host'			=> $row['name'],
+						'os'			=> $row['os'],
+						'os_version'	=> $row['ver'],
+						'flags'			=> flags_to_string(intval($row['flags']) & CF_MASK_EXIST, $g_comp_flags, ', ')
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{

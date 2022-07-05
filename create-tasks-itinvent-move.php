@@ -55,13 +55,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -141,23 +147,31 @@
 				break;
 			}
 
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_INV_MOVE,
-				array(
-					'host'			=> $row['netdev'],
-					'm_inv_no'		=> $row['m_inv_no'],
-					'vlan'			=> $row['vlan'],
-					'port'			=> $row['port'],
-					'regtime'		=> $row['regtime'],
-					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
-					'm_name'		=> $row['m_name'],
-					'd_inv_no'		=> (empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no']),
-					'd_mac'			=> $row['d_mac'],
-					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
-					'd_flags'		=> flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type=itinvmove'
+				.'&To=bynetdev'
+				.'&Host='.urlencode($row['netdev'])
+				.'&Vlan='.urlencode($row['vlan'])
+				.'&Message='.helpdesk_message(
+					TT_INV_MOVE,
+					array(
+						'host'			=> $row['netdev'],
+						'm_inv_no'		=> $row['m_inv_no'],
+						'vlan'			=> $row['vlan'],
+						'port'			=> $row['port'],
+						'regtime'		=> $row['regtime'],
+						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+						'm_name'		=> $row['m_name'],
+						'd_inv_no'		=> (empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no']),
+						'd_mac'			=> $row['d_mac'],
+						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+						'd_flags'		=> flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{

@@ -33,13 +33,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -89,12 +95,19 @@
 				break;
 			}
 			
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_MBOX_UNLIM,
-				array(
-					'host'			=> $row['login']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type=test'
+				.'&To=goo'
+				.'&Host='.urlencode($row['login'])
+				.'&Message='.helpdesk_message(
+					TT_MBOX_UNLIM,
+					array(
+						'host'			=> $row['login']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{

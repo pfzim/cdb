@@ -58,7 +58,17 @@
 
 	$path_log = '/var/log/cdb/import-sn.log';
 
-	//$data_raw = file_get_contents('php://input');
+	/*
+	if(isset($_POST['json']))
+	{
+		$data_raw = @$_POST['json'];
+	}
+	else
+	{
+		$data_raw = file_get_contents('php://input');
+	}
+	*/
+
 	$data_raw = @$_POST['json'];
 	if(empty($data_raw))
 	{

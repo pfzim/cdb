@@ -55,13 +55,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -157,30 +163,42 @@
 			//echo 'MAC: '.$row['mac']."\n";
 
 			$task_type = TT_INV_ADD;
+			$task_code = 'itinvent';
+			$task_to = 'bynetdev';
 
 			// Если оборудование находится в статусе Списано, то создаётся отдельный тип заявки
 			if((intval($row['flags']) & MF_EXIST_IN_ITINV) && (intval($row['status']) == 7))
 			{
 				$task_type = TT_INV_ADD_DECOMIS;
+				$task_code = 'itinvstatus';
+				$task_to = 'itinvent';
 			}
 
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				$task_type,
-				array(
-					'host'			=> $row['netdev'],
-					'inv_no'		=> $row['inv_no'],
-					'type_name'		=> $row['type_name'],
-					'status_name'	=> $row['status_name'],
-					'vlan'			=> $row['vlan'],
-					'port'			=> $row['port'],
-					'regtime'		=> $row['regtime'],
-					'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-					'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
-					'dns_name'		=> $row['name'],
-					'ip'			=> $row['ip'],
-					'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=new'
+				.'&Type='.urlencode($task_code)
+				.'&To='.urlencode($task_to)
+				.'&Host='.urlencode($row['netdev'])
+				.'&Vlan='.urlencode($row['vlan'])
+				.'&Message='.helpdesk_message(
+					$task_type,
+					array(
+						'host'			=> $row['netdev'],
+						'inv_no'		=> $row['inv_no'],
+						'type_name'		=> $row['type_name'],
+						'status_name'	=> $row['status_name'],
+						'vlan'			=> $row['vlan'],
+						'port'			=> $row['port'],
+						'regtime'		=> $row['regtime'],
+						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
+						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+						'dns_name'		=> $row['name'],
+						'ip'			=> $row['ip'],
+						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{

@@ -43,13 +43,19 @@
 	{
 		foreach($result as &$row)
 		{
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_CLOSE,
-				array(
-					'operid'	=> $row['operid'],
-					'opernum'	=> $row['opernum']
+			$xml = helpdesk_api_request(
+				'Source=cdb'
+				.'&Action=resolved'
+				.'&Id='.urlencode($row['operid'])
+				.'&Num='.urlencode($row['opernum'])
+				.'&Message='.helpdesk_message(
+					TT_CLOSE,
+					array(
+						'operid'	=> $row['operid'],
+						'opernum'	=> $row['opernum']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE)
 			{
@@ -110,16 +116,23 @@
 				break;
 			}
 			
-			$xml = helpdesk_api_request(helpdesk_build_request(
-				TT_VULN_FIX,
-				array(
-					'host'			=> $row['name'],
-					'id'			=> $row['id'],
-					'plugin_name'	=> $row['plugin_name'],
-					'severity'		=> $row['severity'],
-					'scan_date'		=> $row['scan_date']
+			$xml = helpdesk_api_request(
+				'?Source=cdb'
+				.'&Action=new'
+				.'&Type=vuln'
+				.'&To=byname'
+				.'&Host='.urlencode($row['name'])
+				.'&Message='.helpdesk_message(
+					TT_VULN_FIX,
+					array(
+						'host'			=> $row['name'],
+						'id'			=> $row['id'],
+						'plugin_name'	=> $row['plugin_name'],
+						'severity'		=> $row['severity'],
+						'scan_date'		=> $row['scan_date']
+					)
 				)
-			));
+			);
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
