@@ -71,7 +71,7 @@
 
 			if($xml !== FALSE)
 			{
-				echo $row['name'].' '.$row['opernum']."\r\n";
+				echo $row['mac'].' '.$row['opernum']."\r\n";
 				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 				$i++;
 			}
@@ -113,6 +113,7 @@
 			m.`port`,
 			m.`vlan`,
 			m.`inv_no`,
+			m.`status`,
 			status.`name` AS `status_name`,
 			type.`name` AS `type_name`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,

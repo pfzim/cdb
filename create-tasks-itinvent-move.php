@@ -167,7 +167,7 @@
 						'm_name'		=> $row['m_name'],
 						'd_inv_no'		=> (empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no']),
 						'd_mac'			=> $row['d_mac'],
-						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', '),
 						'd_flags'		=> flags_to_string(intval($row['d_flags']), $g_mac_flags, ', ')
 					)
 				)
