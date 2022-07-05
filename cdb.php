@@ -426,12 +426,6 @@ function walk_route($route, $action)
 		'sync-zabbix' => array(
 			'@sync-zabbix.php'
 		),
-		'get-computer-info' => array(
-			'@get-computer-info.php'
-		),
-		'get-mac-info' => array(
-			'@get-mac-info.php'
-		),
 		'import-mac' => array(
 			'@import-mac.php'
 		),
@@ -440,9 +434,6 @@ function walk_route($route, $action)
 		),
 		'import-errors' => array(
 			'@import-errors.php'
-		),
-		'computer' => array(
-			'@computer.php'
 		),
 		'mac' => array(
 			'@mac.php'
