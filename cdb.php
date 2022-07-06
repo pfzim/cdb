@@ -51,7 +51,7 @@
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.flags.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.cdb.php');
 	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.helpdesk.php');
-	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.helpdesk_requests.php');
+	require_once(ROOTDIR.DIRECTORY_SEPARATOR.'inc.messages.php');
 
 /**
 	Отправка почтового сообщения
@@ -255,6 +255,7 @@ function walk_route($route, $action)
 			'create-tasks-vuln',
 			'create-tasks-vuln-mass',
 			'create-tasks-os',
+			//'create-tasks-os-by-sccm',
 			//'create-tasks-net-errors',
 			'create-tasks-wsus',
 			'report-tasks-status',
@@ -301,6 +302,9 @@ function walk_route($route, $action)
 		),
 		'create-tasks-os' => array(
 			'@create-tasks-os.php'
+		),
+		'create-tasks-os-by-sccm' => array(
+			'@create-tasks-os-by-sccm.php'
 		),
 		'create-tasks-wsus' => array(
 			'@create-tasks-wsus.php'
