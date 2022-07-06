@@ -219,6 +219,37 @@ EOT;
 					AND rmsv_value.`value` <> 1
 					AND c.`name` REGEXP {s4}
 			) AS `p_rmsv`,
+
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS msdt_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = msdt_value.`pid`
+				WHERE
+					msdt_value.`tid` = {%TID_COMPUTERS}
+					AND msdt_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_MSDT}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
+					AND msdt_value.`value` <> 1
+					AND c.`name` NOT REGEXP {s0}
+			) AS `p_msdt`,
+
+			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS edge_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = edge_value.`pid`
+				WHERE
+					edge_value.`tid` = {%TID_COMPUTERS}
+					AND edge_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_EDGE}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
+					AND edge_value.`value` <> 1
+					AND c.`name` NOT REGEXP {s0}
+			) AS `p_edge`,
+
 			(
 				SELECT COUNT(*)
 				FROM @persons AS p
@@ -260,6 +291,9 @@ EOT;
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_INST).'</td>     <td>'.$result[0]['p_rmsi'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_SETT).'</td>     <td>'.$result[0]['p_rmss'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).'</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).'</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MSDT).'</td>         <td>'.$result[0]['p_msdt'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_EDGE_INSTALL).'</td> <td>'.$result[0]['p_edge'].'</td>                                    <td>0</td>                            <td>'.TASKS_LIMIT_EDGE_GOO.' + '.TASKS_LIMIT_EDGE_GUP.'</td></tr>';
 	$html .= '</table>';
 
 	$html .= '<br /><table>';

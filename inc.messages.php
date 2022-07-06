@@ -1,4 +1,8 @@
 <?php
+	/**
+		\file
+		\brief Файл содержит шаблоны сообщений
+	*/
 
 $template_helpdesk_messages = array(
 	TT_CLOSE =>
@@ -187,9 +191,15 @@ $template_helpdesk_messages = array(
 		."\nВ решении укажите Инвентарный номер оборудования!"
 		,
 
-	TT_RMS_INST => '',
-	TT_RMS_SETT => '',
-	TT_RMS_VERS => '',
+	TT_RMS_INST => 'Unused',
+	TT_RMS_SETT => 'Unused',
+	TT_RMS_VERS => 'Unused',
+
+	TT_EDGE_INSTALL =>
+		'На компьютере не установлен Edge.'
+		."\n\nПК: %host%"
+		."\nИсточник информации о ПК: %flags%"
+		,
 
 	TT_TEST =>
 			'THIS IS A TEST!'

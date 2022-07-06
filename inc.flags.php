@@ -1,24 +1,26 @@
 <?php
 /**
 	\file
-	\brief Файл с описанием флагов и функцийй для работы с ними
+	\brief Файл с описанием флагов и функций для работы с ними
 */
 
 	// Идентификаторы свойств объектов в таблицах `properties_*`
 
-	define('CDB_PROP_USERACCOUNTCONTROL',			101);
-	define('CDB_PROP_OPERATINGSYSTEM',				102);
-	define('CDB_PROP_OPERATINGSYSTEMVERSION',		103);
-	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',	104);
-	define('CDB_PROP_MAILBOX_QUOTA',				105);
-	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);
-	define('CDB_PROP_PWDLASTSET',					107);
-	define('CDB_PROP_SID',							108);
-	define('CDB_PROP_TMAO_DLP_STATUS',				109);
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',	110);
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',	111);
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',	112);
-	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM',	113);
+	define('CDB_PROP_USERACCOUNTCONTROL',			101);  // UserAccesControl value from AD
+	define('CDB_PROP_OPERATINGSYSTEM',				102);  // OS name from AD
+	define('CDB_PROP_OPERATINGSYSTEMVERSION',		103);  // OS version from AD
+	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',	104);  // CI - Check - PS - InstallHotFix
+	define('CDB_PROP_MAILBOX_QUOTA',				105);  // Mailbox quota
+	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);  // Last logon timestamp from DC
+	define('CDB_PROP_PWDLASTSET',					107);  // When password changed form AD
+	define('CDB_PROP_SID',							108);  // SID from AD
+	define('CDB_PROP_TMAO_DLP_STATUS',				109);  // TMAO DLP status
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',	110);  // CI - Software - RMS - Installed
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',	111);  // CI - Software - RMS - Settings
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',	112);  // CI - Software - RMS - Version
+	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM',	113);  // OS version from SCCM
+	define('CDB_PROP_BASELINE_COMPLIANCE_MSDT',		114);  // CI - Check - Regkey: ms-msdt
+	define('CDB_PROP_BASELINE_COMPLIANCE_EDGE',		115);  // CI - Check - Regkey: Edge Version
 
 	// `flags` from `persons` table
 
@@ -80,33 +82,38 @@
 	define('TT_RMS_INST',           20);
 	define('TT_RMS_SETT',           21);
 	define('TT_RMS_VERS',           22);
+	define('TT_EDGE_INSTALL',       23);
+	define('TT_MSDT',               24);
 	define('TT_TEST',               999);
 
-$g_tasks_types = array(
-	'Something went wrong',
-	'Не установлена квота на ПЯ',
-	'Неправильное местоположение в IT Invent',
-	'Выяснить причиную повторения заявок IT Invent',
-	'Несоответствие baseline установка обновлений',
-	'Блокировка ПО TMAC',
-	'Не установлен или не работает TMEE',
-	'Не установлен или не работает TMAO',
-	'Имя не соответствует шаблону',
-	'Не установлен или не работает LAPS',
-	'Не установлен или не работает агент SCCM',
-	'Возможна установка пустого пароля',
-	'Устаревшая ОС',
-	'Отсутствует в IT Invent',
-	'Обнаружена уязвимость',
-	'Обнаружена массовая уязвимость',
-	'Обнаружены ошибки на сетевом оборудование',
-	'Инвентаризация ПО',
-	'Не работает модуль DLP антивируса',
-	'Списанное оборудование обнаружено в сети',
-	'RMS не установлен',
-	'Настройки RMS некорректные',
-	'Устаревшая версия RMS'
-);
+	$g_tasks_types = array(
+		TT_CLOSE 				=>	'Something went wrong',
+		TT_MBOX_UNLIM 			=>	'Не установлена квота на ПЯ',
+		TT_INV_MOVE 			=>	'Неправильное местоположение в IT Invent',
+		TT_INV_TASKFIX 			=>	'Выяснить причиную повторения заявок IT Invent',
+		TT_WIN_UPDATE 			=>	'Несоответствие baseline установка обновлений',
+		TT_TMAC 				=>	'Блокировка ПО TMAC',
+		TT_TMEE 				=>	'Не установлен или не работает TMEE',
+		TT_TMAO 				=>	'Не установлен или не работает TMAO',
+		TT_PC_RENAME 			=>	'Имя не соответствует шаблону',
+		TT_LAPS 				=>	'Не установлен или не работает LAPS',
+		TT_SCCM 				=>	'Не установлен или не работает агент SCCM',
+		TT_PASSWD 				=>	'Возможна установка пустого пароля',
+		TT_OS_REINSTALL 		=>	'Устаревшая ОС',
+		TT_INV_ADD 				=>	'Отсутствует в IT Invent',
+		TT_VULN_FIX 			=>	'Обнаружена уязвимость',
+		TT_VULN_FIX_MASS 		=>	'Обнаружена массовая уязвимость',
+		TT_NET_ERRORS 			=>	'Обнаружены ошибки на сетевом оборудование',
+		TT_INV_SOFT 			=>	'Инвентаризация ПО',
+		TT_TMAO_DLP 			=>	'Не работает модуль DLP антивируса',
+		TT_INV_ADD_DECOMIS 		=>	'Списанное оборудование обнаружено в сети',
+		TT_RMS_INST 			=>	'RMS не установлен',
+		TT_RMS_SETT 			=>	'Настройки RMS некорректные',
+		TT_RMS_VERS 			=>	'Устаревшая версия RMS',
+		TT_EDGE_INSTALL 		=>	'Не установлен MS Edge',
+		TT_MSDT					=>	'Уязвимость CVE-2022-30190 MSDT',
+		TT_TEST 				=>	'Тестовая заявка. Не должна появляться'
+	);
 
 	// `flags` from `ac_log` table
 

@@ -333,6 +333,9 @@ function walk_route($route, $action)
 		'create-tasks-vuln-mass' => array(
 			'@create-tasks-vuln-mass.php'
 		),
+		'create-tasks-edge' => array(
+			'@create-tasks-edge.php'
+		),
 		'create-tasks-test' => array(
 			'@create-tasks-test.php'
 		),

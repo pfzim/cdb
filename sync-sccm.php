@@ -73,6 +73,8 @@
 			rmsi.ComplianceState AS rmsi_value,
 			rmss.ComplianceState AS rmss_value,
 			rmsv.ComplianceState AS rmsv_value,
+			msdt.ComplianceState AS msdt_value,
+			edge.ComplianceState AS edge_value,
 			CASE
 				WHEN ReportsIgnore.Value IS NULL THEN 0
 				WHEN ReportsIgnore.Value = '' THEN 0
@@ -81,26 +83,42 @@
 			END AS delay_checks
 		FROM [dbo].[System_DISC] AS m
 		LEFT JOIN [dbo].[CH_ClientSummary] AS j1
-			ON m.ItemKey = j1.MachineID
+			ON j1.MachineID = m.ItemKey
+
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS ihf
-			ON m.ItemKey = ihf.ItemKey
+			ON ihf.ItemKey = m.ItemKey
 			AND ihf.CI_ID = {%SCCM_IHF_CI_ID}
 			AND ihf.CIVersion = {%SCCM_IHF_CI_VERSION}
+
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsi
-			ON m.ItemKey = rmsi.ItemKey
+			ON rmsi.ItemKey = m.ItemKey
 			AND rmsi.CI_ID = {%SCCM_RMSI_CI_ID}
 			AND rmsi.CIVersion = {%SCCM_RMSI_CI_VERSION}
+
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmss
-			ON m.ItemKey = rmss.ItemKey
+			ON rmss.ItemKey = m.ItemKey
 			AND rmss.CI_ID = {%SCCM_RMSS_CI_ID}
 			AND rmss.CIVersion = {%SCCM_RMSS_CI_VERSION}
+
 		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS rmsv
-			ON m.ItemKey = rmsv.ItemKey
+			ON rmsv.ItemKey = m.ItemKey
 			AND rmsv.CI_ID = {%SCCM_RMSV_CI_ID}
 			AND rmsv.CIVersion = {%SCCM_RMSV_CI_VERSION}
+
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS msdt
+			ON msdt.ItemKey = m.ItemKey
+			AND msdt.CI_ID = {%SCCM_MSDT_CI_ID}
+			AND msdt.CIVersion = {%SCCM_MSDT_CI_VERSION}
+
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS edge
+			ON edge.ItemKey = m.ItemKey
+			AND edge.CI_ID = {%SCCM_EDGE_CI_ID}
+			AND edge.CIVersion = {%SCCM_EDGE_CI_VERSION}
+
 		LEFT JOIN [dbo].[DeviceExtensionData] AS ReportsIgnore
 			ON ReportsIgnore.ResourceID = m.ItemKey
 			AND ReportsIgnore.PropertyId = {%SCCM_PROP_REPORTS_IGNORE_ID}
+
 		WHERE
 			ISNULL(m.Obsolete0, 0) <> 1
 			AND ISNULL(m.Decommissioned0, 0) <> 1
@@ -235,6 +253,18 @@
 				$row_id,
 				CDB_PROP_BASELINE_COMPLIANCE_RMS_V,
 				(intval($row['rmsv_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_MSDT,
+				(intval($row['msdt_value']) == 1) ? 1 : 0
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_EDGE,
+				(intval($row['edge_value']) == 1) ? 1 : 0
 			));
 
 			$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
