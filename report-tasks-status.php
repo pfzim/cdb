@@ -52,17 +52,18 @@ EOT;
 			c.`flags` AS c_flags,
 			(
 				SELECT COUNT(*)
-				FROM @tasks AS i1
-				WHERE i1.`pid` = t.`pid`
-					AND i1.`tid` = {%TID_COMPUTERS}
-					AND (i1.`flags` & (t.`flags` | {%TF_CLOSED})) = (t.`flags` | {%TF_CLOSED})
-					AND i1.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+				FROM @tasks AS t2
+				WHERE t2.`pid` = t.`pid`
+					AND t2.`tid` = {%TID_COMPUTERS}
+					AND t2.`type` = t.`type`
+					AND (t2.`flags` & {%TF_CLOSED}) = {%TF_CLOSED}
+					AND t2.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c ON c.`id` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 		ORDER BY c.`name`
 	")))
 	{
@@ -89,15 +90,15 @@ EOT;
 
 	if(!$db->select_assoc_ex($result, rpv("
 			SELECT
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_TMAO}) AS `o_tmao`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_TMEE}) AS `o_tmee`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_LAPS}) AS `o_laps`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_SCCM}) AS `o_sccm`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_PC_RENAME}) AS `o_name`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_TMAO_DLP}) AS `o_tmao_dlp`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_OS_REINSTALL})  AS `o_os`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_WIN_UPDATE}) AS `o_wsus`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_MBOX_UNLIM}) AS `o_mbxq`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_TMAO}) AS `o_tmao`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_TMEE}) AS `o_tmee`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_LAPS}) AS `o_laps`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_SCCM}) AS `o_sccm`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_PC_RENAME}) AS `o_name`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_TMAO_DLP}) AS `o_tmao_dlp`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_OS_REINSTALL})  AS `o_os`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_WIN_UPDATE}) AS `o_wsus`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_MBOX_UNLIM}) AS `o_mbxq`,
 
 			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` NOT REGEXP {s0} AND c.`ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao`,
 			(SELECT COUNT(*) FROM @computers AS c WHERE (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0 AND c.`delay_checks` < CURDATE() AND c.`name` REGEXP {s1} AND c.`ao_script_ptn` < ((SELECT CAST(MAX(`ao_script_ptn`) AS SIGNED) FROM @computers) - {%TMAO_PATTERN_VERSION_LAG})) AS `p_tmao_tt`,

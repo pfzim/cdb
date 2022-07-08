@@ -44,7 +44,7 @@ EOT;
 		LEFT JOIN @tasks AS t
 			ON t.`pid` = c.`id`
 			AND t.`type` = {%TT_LAPS}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 		WHERE
 			(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 			AND c.`laps_exp` < DATE_SUB(NOW(), INTERVAL {%LAPS_EXPIRE_DAYS} DAY)

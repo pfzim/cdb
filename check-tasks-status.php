@@ -86,7 +86,7 @@ function get_status_name($strings, $code)
 
 	$i = 0;
 
-	if($db->select_assoc_ex($result, rpv("SELECT t.`id`, t.`tid`, t.`pid`, t.`operid`, t.`opernum`, t.`type`, t.`flags` FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0")))
+	if($db->select_assoc_ex($result, rpv("SELECT t.`id`, t.`tid`, t.`pid`, t.`operid`, t.`opernum`, t.`type`, t.`flags` FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0")))
 	{
 		foreach($result as &$row)
 		{

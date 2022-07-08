@@ -59,7 +59,7 @@ EOT;
 		LEFT JOIN @computers AS c ON c.`id` = t.`pid`
 		WHERE
 			t.`type` = {%TT_SCCM}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 		ORDER BY c.`name`
 	")))
 	{

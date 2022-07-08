@@ -82,7 +82,7 @@
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_EDGE_INSTALL}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 			AND c.`dn` LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{
@@ -96,7 +96,7 @@
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_EDGE_INSTALL}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 			AND c.`dn` NOT LIKE '%{%LDAP_OU_SHOPS}'
 	")))
 	{

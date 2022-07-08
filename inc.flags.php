@@ -29,7 +29,7 @@
 	define('PF_HIDED',              0x0004);
 	//define('PF_TEMP_MARK',          0x0008);
 
-	define('PF_MASK_EXIST',         0x00F0);
+	define('PF_MASK_EXIST',         0x00F0);  // Sum of next flags
 	define('PF_EXIST_AD',           0x0010);
 	//define('PF_EXIST_TMAO',         0x0020);
 	//define('PF_EXIST_TMEE',         0x0040);
@@ -42,7 +42,7 @@
 	define('CF_HIDED',              0x0004);
 	//define('CF_TEMP_MARK',          0x0008);
 
-	define('CF_MASK_EXIST',         0x00F0);
+	define('CF_MASK_EXIST',         0x00F0);  // Sum of next flags
 	define('CF_EXIST_AD',           0x0010);
 	define('CF_EXIST_TMAO',         0x0020);
 	define('CF_EXIST_TMEE',         0x0040);
@@ -51,6 +51,7 @@
 	// `flags` from `tasks` table
 
 	define('TF_CLOSED',             0x0001);
+	define('TF_FAKE_TASK',          0x0002);  // Used for disable checks
 	
 	// `type` from `names` table
 	

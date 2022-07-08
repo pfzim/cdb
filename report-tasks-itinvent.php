@@ -60,7 +60,8 @@ EOT;
 				FROM @tasks AS t2
 				WHERE t2.`pid` = t.`pid`
 					AND t2.`tid` = {%TID_MAC}
-					AND (t2.`flags` & (t.`flags` | {%TF_CLOSED})) = (t.`flags` | {%TF_CLOSED})
+					AND t2.`type` = t.`type`
+					AND (t2.`flags` & {%TF_CLOSED}) = {%TF_CLOSED}
 					AND t2.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
 		FROM @tasks AS t
@@ -68,7 +69,7 @@ EOT;
 		LEFT JOIN @devices AS d ON d.`id` = m.`pid`
 		WHERE
 			t.`tid` = {%TID_MAC}
-			AND (t.`flags` & {%TF_CLOSED}) = 0
+			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 		ORDER BY t.`flags`, d.`name`, m.`port`, m.`name`
 	")))
 	{
@@ -99,9 +100,9 @@ EOT;
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD}) AS `o_inv_add`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_ADD_DECOMIS}) AS `o_inv_add_decomis`,
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & {%TF_CLOSED}) = 0 AND t.`type` = {%TT_INV_MOVE}) AS `o_iimv`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_ADD}) AS `o_inv_add`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_ADD_DECOMIS}) AS `o_inv_add_decomis`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_MOVE}) AS `o_iimv`,
 
 			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `p_inv_add`,
 			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV}) AND m.`status` = 7) AS `p_inv_add_decomis`,

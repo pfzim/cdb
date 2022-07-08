@@ -69,7 +69,7 @@ EOT;
 			LEFT JOIN @tasks AS t
 				ON t.`pid` = c.`id`
 				AND t.`type` = {%TT_PC_RENAME}
-				AND (t.`flags` & {%TF_CLOSED}) = 0
+				AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
 			WHERE
 				(c.`flags` & ({%CF_DELETED} | {%CF_HIDED})) = 0
 				AND c.`name` NOT REGEXP {s0}
