@@ -19,6 +19,15 @@
 		
 		Поле delay_checks указывает с какой даты активируются проверки и
 		выставления нарядов по этому компьютеру.
+		
+		Загрузка разультатов проверок следующих конфигурационных единиц:
+		- CI - Check - PS - InstallHotFix
+		- CI - Software - RMS - Installed
+		- CI - Software - RMS - Settings
+		- CI - Software - RMS - Version
+		- CI - Check - Regkey: ms-msdt
+		- CI - Check - Regkey: Edge Version
+
 	*/
 
 	/*

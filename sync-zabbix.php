@@ -206,7 +206,7 @@
 	// Формируем список Маршрутизаторов, которые должны мониторится в Zabbix
 
 	// Снимаем флаг ZHF_MUST_BE_MONITORED
-	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_MUST_BE_MONITORED}) WHERE (`flags` & {%ZHF_MUST_BE_MONITORED})"));
+	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~({%ZHF_MUST_BE_MONITORED} | {%ZHF_TEMPLATE_WITH_BCC})) WHERE (`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_TEMPLATE_WITH_BCC}))"));
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
