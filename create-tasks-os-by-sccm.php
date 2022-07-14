@@ -29,10 +29,10 @@
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
-		LEFT JOIN @properties_str AS j_os
-			ON j_os.`tid` = {%TID_COMPUTERS}
-			AND j_os.`pid` = t.`pid`
-			AND j_os.`oid` = {%CDB_PROP_OPERATINGSYSTEM}
+		LEFT JOIN @properties_str AS j_ver
+			ON j_ver.`tid` = {%TID_COMPUTERS}
+			AND j_ver.`pid` = c.`id`
+			AND j_ver.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION_SCCM}
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_OS_REINSTALL}

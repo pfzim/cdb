@@ -86,7 +86,7 @@
 						
 						// Временное исключение по OU путём установки флага CF_AD_DISABLED
 						$temporary_exclude = 0;
-						if(defined('LDAP_OU_EXCLUDE') && str_ends_with(strtolower($account['dn']), strtolower(LDAP_OU_EXCLUDE)))
+						if(defined('LDAP_OU_EXCLUDE') && !empty(LDAP_OU_EXCLUDE) && (substr_compare($account['dn'], LDAP_OU_EXCLUDE, -strlen(LDAP_OU_EXCLUDE), NULL, FALSE) === 0 ))
 						{
 							$temporary_exclude = CF_AD_DISABLED;
 						}

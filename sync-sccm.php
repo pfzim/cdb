@@ -59,10 +59,9 @@
 	);
 
 	$conn = sqlsrv_connect(SCCM_DB_HOST, $params);
-	if($conn === false)
+	if($conn === FALSE)
 	{
-		print_r(sqlsrv_errors());
-		exit;
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), TRUE));
 	}
 
 	$result = sqlsrv_query($conn, rpv("
@@ -134,6 +133,10 @@
 			AND m.Client0 = 1
 	"));
 
+	if($result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), TRUE));
+	}
 /*
 		SELECT
 			m.ItemKey AS ResourceID,
