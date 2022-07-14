@@ -25,7 +25,7 @@
 
 		5. Состав локальной группы Zabbix LDAP Users синхронизируются группой
 		   AD G_Zabbix_Access.
-		   
+
 		6. Добавлена поставновка на монторинг оборудования с типом "Коммутатор"
 		   указанным в ИТ Инвент.
 
@@ -48,7 +48,7 @@
 		  RU-\d{2}-\d{4}-\w{3}    - ТТ
 		  RU-\d{2}-RC\d{1,2}      - RC
 		  RU-\d{2}-Ao\d           - ЦО
-		
+
 		Добавлено создание и удаление пользователей в соответстии с составом
 		группы AD G_Zabbix_Access. Пользователям назначается роль User role и
 		добавляются в группу LDAP Users. Операция производится только с
@@ -106,7 +106,7 @@
 				'name'         => $group_name
 			)
 		);
-		
+
 		if(!isset($zabbix_result['groupids'][0]))
 		{
 			throw new Exception('ERROR: Zabbix API: Unexpected answer');
@@ -341,7 +341,7 @@
 			// }
 			// $db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}) WHERE `host_id` = #", $host['hostid']));
 		// }
-		
+
 		// // by IP
 		// foreach($host['interfaces'] as &$interface)
 		// {
@@ -395,7 +395,7 @@
 			'output'                => ['groupid', 'name']
 		)
 	);
-	
+
 	define('ZABBIX_OBJECT_CO',    1);
 	define('ZABBIX_OBJECT_RC',    2);
 	define('ZABBIX_OBJECT_TOF',   3);
@@ -444,9 +444,9 @@
 				if($matches[1] === $value)
 				{
 					$obj_code = $key;
-					
+
 					$reg_code = intval($matches[2]);
-					
+
 					foreach($zabbix_groups_types_templates as $key => $value)
 					{
 						if($matches[3] === $value)
@@ -465,9 +465,9 @@
 				if($matches[1] === $value)
 				{
 					$obj_code = $key;
-					
+
 					$reg_code = 0;
-					
+
 					foreach($zabbix_groups_types_templates as $key => $value)
 					{
 						if($matches[2] === $value)
@@ -508,9 +508,9 @@
 		foreach($result as &$row)
 		{
 			$host_name = strtoupper($row['name']);
-			
+
 			// Выбираем группы
-			
+
 			if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)  // Коммутатор (switch)
 			{
 				$type_code = ZABBIX_TYPE_SWITCH;
@@ -528,7 +528,7 @@
 			}
 
 			$group_ids = array();
-			
+
 			$location_is_rc = FALSE;
 
 			// TT: RU-00-0000-XXX
@@ -548,7 +548,7 @@
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, $type_code);
-				
+
 				$location_is_rc = TRUE;
 			}
 			// CO: RU-00-Ao0-
@@ -567,25 +567,30 @@
 			}
 
 			// Выбираем шаблон по номеру модели оборудования
-			
+
 			$template_ids = array();
-			
+
 			if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)  // Коммутатор (switch)
 			{
 					$template_ids[] = ZABBIX_TEMPLATE_SWITCH;
 			}
 			else // Маршрутизатор
 			{
-				$template_ids[] = isset($zabbix_templates[intval($row['model_no'])]) ? $zabbix_templates[intval($row['model_no'])] : ZABBIX_TEMPLATE_FALLBACK;
-
+				// С дополнительным комплектом связи
 				if(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
 				{
 					$template_ids[] = ZABBIX_TEMPLATE_FOR_BCC;
 				}
-				
+
+				// Маршрутизатор РЦ
 				if($location_is_rc)
 				{
 					$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
+				}
+				// Маршрутизатор ТТ и другие
+				else
+				{
+					$template_ids[] = isset($zabbix_templates[intval($row['model_no'])]) ? $zabbix_templates[intval($row['model_no'])] : ZABBIX_TEMPLATE_FALLBACK;
 				}
 			}
 
@@ -596,7 +601,7 @@
 				case ZHF_MUST_BE_MONITORED:
 				{
 					echo 'Add to Zabbix: '.$row['name']."\n";
-					
+
 					if(empty($row['name']) || empty($row['ip']))
 					{
 						echo '  Error: Empty IP or name'."\n";
@@ -612,7 +617,7 @@
 							'host'         => $host_name,
 							'groups'       => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 							'templates'    => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
-							'proxy_hostid' => ZABBIX_Host_Proxy,
+							'proxy_hostid' => ZABBIX_HOST_PROXY,
 							'interfaces'   => array(
 								array(
 									'type'    => '2',
@@ -624,10 +629,10 @@
 									'details' => array(
 										'version'        => '3',
 										'bulk'           => '1',
-										'securityname'   => ZABBIX_Host_SecName,
+										'securityname'   => ZABBIX_HOST_SNMP_SECNAME,
 										'securitylevel'  => '2',
-										'authpassphrase' => ZABBIX_Host_SecAuth,
-										'privpassphrase' => ZABBIX_Host_SecPass
+										'authpassphrase' => ZABBIX_HOST_SNMP_SECAUTH,
+										'privpassphrase' => ZABBIX_HOST_SNMP_SECPASS
 									)
 								)
 							)
@@ -635,7 +640,7 @@
 					);
 
 					echo '  Host ID: '.$zabbix_result['hostids'][0]."\n";
-					
+
 					$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `pid` = # LIMIT 1", $zabbix_result['hostids'][0], $row['id']));
 				}
 				break;
@@ -706,12 +711,17 @@
 							}
 						}
 
-						if($host['proxy_hostid'] !== ZABBIX_Host_Proxy
-							|| count(array_diff($template_ids, array_reduce($host['parentTemplates'], function($result, $value) { $result[] = $value['templateid']; return $result; }, array())))
-							|| count(array_diff($group_ids, array_reduce($host['groups'], function($result, $value) { $result[] = $value['groupid']; return $result; }, array())))
+						$exist_templates = array_reduce($host['parentTemplates'], function($result, $value) { $result[] = $value['templateid']; return $result; }, array());
+						$exist_groups = array_reduce($host['groups'], function($result, $value) { $result[] = $value['groupid']; return $result; }, array());
+
+						if($host['proxy_hostid'] !== ZABBIX_HOST_PROXY
+							|| count(array_diff($template_ids, $exist_templates))
+							|| count(array_diff($exist_templates, $template_ids))
+							|| count(array_diff($group_ids, $exist_groups))
+							|| count(array_diff($exist_groups, $group_ids))
 							|| $host['host'] !== $host_name
 						)
-						{																
+						{
 							$templates_to_clear = array_filter(
 								$host['parentTemplates'],
 								function($value) use($template_ids) {
@@ -731,7 +741,7 @@
 									'groups'          => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 									'templates'       => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
 									'templates_clear' => &$templates_to_clear,
-									'proxy_hostid'    => ZABBIX_Host_Proxy
+									'proxy_hostid'    => ZABBIX_HOST_PROXY
 								)
 							);
 						}
@@ -760,11 +770,11 @@
 
 	echo 'Added and updated: '.$added_and_updated."\n";
 	echo 'Deleted: '.$removed."\n";
-	
+
 	//return;
 
 	# Register new users from AD group
-	
+
 	$users_in_ad_group = array();
 
 	$entries_count = 0;
@@ -795,12 +805,12 @@
 				{
 					throw new Exception('ldap_search return error: '.ldap_error($ldap));
 				}
-				
+
 				$matcheddn = NULL;
 				$referrals = NULL;
 				$errcode = NULL;
 				$errmsg = NULL;
-				
+
 				if(!ldap_parse_result($ldap, $sr, $errcode , $matcheddn , $errmsg , $referrals, $controls))
 				{
 					throw new Exception('ldap_parse_result return error code: '.$errcode.', message: '.$errmsg.', ldap_error: '.ldap_error($ldap));
@@ -818,7 +828,7 @@
 				{
 					$i--;
 					$account = &$entries[$i];
-					
+
 					if(!empty($account['samaccountname'][0]))
 					{
 						array_push($users_in_ad_group, $account['samaccountname'][0]);
@@ -857,7 +867,7 @@
 		if(!in_array($user['username'], $users_in_ad_group))
 		{
 			echo 'Delete user from Zabbix: '.$user['username']."\n";
-			
+
 			$zabbix_result = zabbix_api_request(
 				'user.delete',
 				$auth_key,
@@ -873,7 +883,7 @@
 		if(!array_find($exist_users, 'cb_user_cmp', $username))
 		{
 			echo 'Add user to Zabbix: '.$username."\n";
-			
+
 			$zabbix_result = zabbix_api_request(
 				'user.create',
 				$auth_key,

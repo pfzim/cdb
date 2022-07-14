@@ -83,6 +83,13 @@
 						}
 
 						$db->start_transaction();
+						
+						// Временное исключение по OU путём установки флага CF_AD_DISABLED
+						$temporary_exclude = 0;
+						if(defined('LDAP_OU_EXCLUDE') && str_ends_with(strtolower($account['dn']), strtolower(LDAP_OU_EXCLUDE)))
+						{
+							$temporary_exclude = CF_AD_DISABLED;
+						}
 
 						$row_id = 0;
 						if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @computers AS m WHERE m.`name` = ! LIMIT 1", $account['cn'][0])))
@@ -91,7 +98,7 @@
 								$account['cn'][0],
 								$account['dn'],
 								$laps_exp,
-								(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD
+								(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD | $temporary_exclude
 							)))
 							{
 								$row_id = $db->last_id();
@@ -104,7 +111,7 @@
 							$db->put(rpv("UPDATE @computers SET `dn` = !, `laps_exp` = !, `flags` = ((`flags` & ~({%CF_AD_DISABLED} | {%CF_DELETED})) | #) WHERE `id` = # LIMIT 1",
 								$account['dn'],
 								$laps_exp,
-								(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD,
+								(($account['useraccountcontrol'][0] & 0x02)?CF_AD_DISABLED:0) | CF_EXIST_AD | $temporary_exclude,
 								$row_id
 							));
 						}

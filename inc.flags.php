@@ -37,7 +37,7 @@
 
 	// `flags` from `computers` table
 
-	define('CF_AD_DISABLED',        0x0001);
+	define('CF_AD_DISABLED',        0x0001);  // or meaning temporary excluded
 	define('CF_DELETED',            0x0002);
 	define('CF_HIDED',              0x0004);
 	//define('CF_TEMP_MARK',          0x0008);
