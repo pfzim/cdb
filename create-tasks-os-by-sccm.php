@@ -29,17 +29,17 @@
 		FROM @tasks AS t
 		LEFT JOIN @computers AS c
 			ON c.`id` = t.`pid`
-		LEFT JOIN @properties_str AS j_ver
-			ON j_ver.`tid` = {%TID_COMPUTERS}
-			AND j_ver.`pid` = c.`id`
-			AND j_ver.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION_SCCM}
+		LEFT JOIN @properties_int AS j_ver_cmp
+			ON j_ver_cmp.`tid` = {%TID_COMPUTERS}
+			AND j_ver_cmp.`pid` = c.`id`
+			AND j_ver_cmp.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP}
 		WHERE
 			t.`tid` = {%TID_COMPUTERS}
 			AND t.`type` = {%TT_OS_REINSTALL}
 			AND (t.`flags` & {%TF_CLOSED}) = 0
 			AND (
 				c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})
-				OR j_ver.`value` = '{%CHECK_OPERATION_SYSTEM_VERSION_SCCM}'
+				OR j_ver_cmp.`value` >= 0
 			)
 	")))
 	{
@@ -102,10 +102,14 @@
 				ON j_ver.`tid` = {%TID_COMPUTERS}
 				AND j_ver.`pid` = c.`id`
 				AND j_ver.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION_SCCM}
+			LEFT JOIN @properties_int AS j_ver_cmp
+				ON j_ver_cmp.`tid` = {%TID_COMPUTERS}
+				AND j_ver_cmp.`pid` = c.`id`
+				AND j_ver_cmp.`oid` = {%CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP}
 			WHERE
 				(c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
 				AND c.`delay_checks` < CURDATE()
-				AND j_ver.`value` <> '{%CHECK_OPERATION_SYSTEM_VERSION_SCCM}'
+				AND j_ver_cmp.`value` < 0
 				AND c.`name` NOT REGEXP {s0}
 			GROUP BY c.`id`
 			HAVING

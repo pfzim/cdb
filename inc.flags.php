@@ -6,21 +6,22 @@
 
 	// Идентификаторы свойств объектов в таблицах `properties_*`
 
-	define('CDB_PROP_USERACCOUNTCONTROL',			101);  // UserAccesControl value from AD
-	define('CDB_PROP_OPERATINGSYSTEM',				102);  // OS name from AD
-	define('CDB_PROP_OPERATINGSYSTEMVERSION',		103);  // OS version from AD
-	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',	104);  // CI - Check - PS - InstallHotFix
-	define('CDB_PROP_MAILBOX_QUOTA',				105);  // Mailbox quota
-	define('CDB_PROP_LASTLOGONTIMESTAMP',			106);  // Last logon timestamp from DC
-	define('CDB_PROP_PWDLASTSET',					107);  // When password changed form AD
-	define('CDB_PROP_SID',							108);  // SID from AD
-	define('CDB_PROP_TMAO_DLP_STATUS',				109);  // TMAO DLP status
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',	110);  // CI - Software - RMS - Installed
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',	111);  // CI - Software - RMS - Settings
-	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',	112);  // CI - Software - RMS - Version
-	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM',	113);  // OS version from SCCM
-	define('CDB_PROP_BASELINE_COMPLIANCE_MSDT',		114);  // CI - Check - Regkey: ms-msdt
-	define('CDB_PROP_BASELINE_COMPLIANCE_EDGE',		115);  // CI - Check - Regkey: Edge Version
+	define('CDB_PROP_USERACCOUNTCONTROL',				101);  // UserAccesControl value from AD
+	define('CDB_PROP_OPERATINGSYSTEM',					102);  // OS name from AD
+	define('CDB_PROP_OPERATINGSYSTEMVERSION',			103);  // OS version from AD
+	define('CDB_PROP_BASELINE_COMPLIANCE_HOTFIX',		104);  // CI - Check - PS - InstallHotFix
+	define('CDB_PROP_MAILBOX_QUOTA',					105);  // Mailbox quota
+	define('CDB_PROP_LASTLOGONTIMESTAMP',				106);  // Last logon timestamp from DC
+	define('CDB_PROP_PWDLASTSET',						107);  // When password changed form AD
+	define('CDB_PROP_SID',								108);  // SID from AD
+	define('CDB_PROP_TMAO_DLP_STATUS',					109);  // TMAO DLP status
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_I',		110);  // CI - Software - RMS - Installed
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_S',		111);  // CI - Software - RMS - Settings
+	define('CDB_PROP_BASELINE_COMPLIANCE_RMS_V',		112);  // CI - Software - RMS - Version
+	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM',		113);  // OS version from SCCM
+	define('CDB_PROP_BASELINE_COMPLIANCE_MSDT',			114);  // CI - Check - Regkey: ms-msdt
+	define('CDB_PROP_BASELINE_COMPLIANCE_EDGE',			115);  // CI - Check - Regkey: Edge Version
+	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP',	116);  // Результат сравнения версии ОС
 
 	// `flags` from `persons` table
 

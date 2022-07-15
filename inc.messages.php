@@ -179,7 +179,7 @@ $template_helpdesk_messages = array(
 		."\n\n%mac_or_sn%"
 		."\nИнвентарный номер оборудования: %inv_no%"
 		."\nТип: %type_name%"
-		."\nСтатус: %status_name"
+		."\nСтатус: %status_name%"
 		."\nDNS name: %dns_name%"
 		."\nIP: %ip%"
 		."\nFlags: %flags%"

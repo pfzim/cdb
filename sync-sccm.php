@@ -284,6 +284,40 @@
 				CDB_PROP_OPERATINGSYSTEMVERSION_SCCM,
 				$row['BuildExt']
 			));
+			
+			// Сравниваем версию ОС (формат строки: 0.0.0.0)
+			// установленная версия < ожидаемой = -1
+			// установленная версия = ожидаемой = 0
+			// установленная версия > ожидаемой = 1
+
+			$os_ver = explode('.', $row['BuildExt']);
+			$expected_ver = explode('.', CHECK_OPERATION_SYSTEM_VERSION_SCCM);
+			
+			$len = min(count($os_ver), count($expected_ver));
+			
+			$ver_cmp = 0;
+			$k = 0;
+			
+			while($k < $len)
+			{
+				if(intval($os_ver[$k]) > intval($expected_ver[$k]))
+				{
+					$ver_cmp = 1;
+					break;
+				}
+				else if(intval($os_ver[$k]) < intval($expected_ver[$k]))
+				{
+					$ver_cmp = -1;
+					break;
+				}
+				$k++;
+			}
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP,
+				$ver_cmp
+			));
 		}
 
 		$i++;
