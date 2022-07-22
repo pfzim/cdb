@@ -54,6 +54,13 @@
 		добавляются в группу LDAP Users. Операция производится только с
 		пользователями входящими в состав группы LDAP Users. Локальные
 		пользователи не удаляются.
+		
+		Добавлена установка тэгов хостов:
+		  obj  - определяется по шаблону имени хоста [co, rc, tof, tt, unknown]
+		  reg  - числовой код региона берется из имени хоста, либо unknown
+		  code - код объекта берётся из имени хоста, либо unknown
+		  type - тип оборудования берётся из ИТ Инвент. Значения тега из
+		         массива $zabbix_tags_types_templates
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -424,6 +431,15 @@
 		ZABBIX_TYPE_SWITCH               => 'SWITCH'
 	);
 
+	$zabbix_tags_types_templates = array(
+		ZABBIX_TYPE_UNKNOWN              => 'unknown',
+		ZABBIX_TYPE_ROUTER               => 'router',
+		ZABBIX_TYPE_ROUTER_BCC           => 'router_wbcc',
+		ZABBIX_TYPE_WORKSTATION_ADMIN    => 'wks_admin',
+		ZABBIX_TYPE_WORKSTATION_KASSA    => 'wks_kassa',
+		ZABBIX_TYPE_SWITCH               => 'switch'
+	);
+
 	$zabbix_groups = array(
 		/*
 			obj_code => [
@@ -528,34 +544,83 @@
 			}
 
 			$group_ids = array();
+			$tags = array();
 
 			$location_is_rc = FALSE;
 
 			// TT: RU-00-0000-XXX
-			if(preg_match('/^RU-(\d{2})-\d{4}-\w{3}/i', $host_name, $matches))
+			if(preg_match('/^RU-(\d{2})-(\d{4})-\w{3}/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, 0, $type_code);
+				$tags[] = array(
+					'tag' => 'obj',
+					'value' => 'tt'
+				);
+				$tags[] = array(
+					'tag' => 'reg',
+					'value' => $matches[1]
+				);
+				$tags[] = array(
+					'tag' => 'code',
+					'value' => $matches[2]
+				);
 			}
 			// TOF: RU-00-Bo0-XXX
-			else if(preg_match('/^RU-(\d{2})-B[o\d]\d-\w{3}/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\d{2})-(B[o\d]\d)-\w{3}/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, 0, $type_code);
+				$tags[] = array(
+					'tag' => 'obj',
+					'value' => 'tof'
+				);
+				$tags[] = array(
+					'tag' => 'reg',
+					'value' => $matches[1]
+				);
+				$tags[] = array(
+					'tag' => 'code',
+					'value' => $matches[2]
+				);
 			}
 			// RC: RU-00-RC0-
-			else if(preg_match('/^RU-(\d{2})-RC\d{1,2}-/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\d{2})-(RC\d{1,2})-/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, $type_code);
+				$tags[] = array(
+					'tag' => 'obj',
+					'value' => 'rc'
+				);
+				$tags[] = array(
+					'tag' => 'reg',
+					'value' => $matches[1]
+				);
+				$tags[] = array(
+					'tag' => 'code',
+					'value' => $matches[2]
+				);
 
 				$location_is_rc = TRUE;
 			}
 			// CO: RU-00-Ao0-
-			else if(preg_match('/^RU-(\d{2})-Ao\d-/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\d{2})-(Ao\d)-/i', $host_name, $matches))
 			{
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, 0, $type_code);
+				$tags[] = array(
+					'tag' => 'obj',
+					'value' => 'co'
+				);
+				$tags[] = array(
+					'tag' => 'reg',
+					'value' => $matches[1]
+				);
+				$tags[] = array(
+					'tag' => 'code',
+					'value' => $matches[2]
+				);
 			}
 			// unknown mask add to all groups
 			else
@@ -564,7 +629,24 @@
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, 0, ZABBIX_TYPE_UNKNOWN);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, ZABBIX_TYPE_UNKNOWN);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, 0, ZABBIX_TYPE_UNKNOWN);
+				$tags[] = array(
+					'tag' => 'obj',
+					'value' => 'unknown'
+				);
+				$tags[] = array(
+					'tag' => 'reg',
+					'value' => 'unknown'
+				);
+				$tags[] = array(
+					'tag' => 'code',
+					'value' => 'unknown'
+				);
 			}
+
+			$tags[] = array(
+				'tag' => 'type',
+				'value' => $zabbix_tags_types_templates[$type_code]
+			);
 
 			// Выбираем шаблон по номеру модели оборудования
 
@@ -617,6 +699,7 @@
 							'host'         => $host_name,
 							'groups'       => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 							'templates'    => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
+							'tags'         => $tags,
 							'proxy_hostid' => ZABBIX_HOST_PROXY,
 							'interfaces'   => array(
 								array(
@@ -664,7 +747,7 @@
 						$auth_key,
 						array(
 							'hostids'                   => $row['host_id'],
-							'output'                    => ['hostid', 'host', 'status', 'proxy_hostid'],
+							'output'                    => ['hostid', 'host', 'status', 'proxy_hostid', 'tags'],
 							'selectGroups'              => ['groupid'],
 							'selectParentTemplates'     => ['templateid'],
 							'selectInterfaces' => ['interfaceid', 'ip', 'main', 'type'],
@@ -713,13 +796,17 @@
 
 						$exist_templates = array_reduce($host['parentTemplates'], function($result, $value) { $result[] = $value['templateid']; return $result; }, array());
 						$exist_groups = array_reduce($host['groups'], function($result, $value) { $result[] = $value['groupid']; return $result; }, array());
+						$exist_tags = !empty($host['tags']) ? array_reduce($host['tags'], function($result, $value) { $result[] = $value['tag'].'='.$value['value']; return $result; }, array()) : array();
+						$tags_flat = array_reduce($tags, function($result, $value) { $result[] = $value['tag'].'='.$value['value']; return $result; }, array());
 
 						if($host['proxy_hostid'] !== ZABBIX_HOST_PROXY
+							|| $host['host'] !== $host_name
 							|| count(array_diff($template_ids, $exist_templates))
 							|| count(array_diff($exist_templates, $template_ids))
 							|| count(array_diff($group_ids, $exist_groups))
 							|| count(array_diff($exist_groups, $group_ids))
-							|| $host['host'] !== $host_name
+							|| count(array_diff($tags_flat, $exist_tags))
+							|| count(array_diff($exist_tags, $tags_flat))
 						)
 						{
 							$templates_to_clear = array_filter(
@@ -740,6 +827,7 @@
 									'host'            => $host_name,
 									'groups'          => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 									'templates'       => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
+									'tags'            => $tags,
 									'templates_clear' => &$templates_to_clear,
 									'proxy_hostid'    => ZABBIX_HOST_PROXY
 								)

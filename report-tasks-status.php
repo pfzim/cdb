@@ -306,7 +306,7 @@ EOT;
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_WIN_UPDATE).'</td>   <td>'.$result[0]['p_wsus'].' (ТТ: '.$result[0]['p_wsus_tt'].')</td>  <td>'.$result[0]['o_wsus'].'</td>     <td>'.TASKS_LIMIT_WSUS_GUP.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MBOX_UNLIM).'</td>   <td>'.$result[0]['p_mbxq'].'</td>                                    <td>'.$result[0]['o_mbxq'].'</td>     <td>'.TASKS_LIMIT_MBX.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).'</td> <td>'.$result[0]['p_os'].'</td>                                      <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
-	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).' (по версии SCCM)</td> <td>'.$result[0]['p_os_sccm'].'</td>                                 <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).' (< '.CHECK_OPERATION_SYSTEM_VERSION_SCCM.')</td> <td>'.$result[0]['p_os_sccm'].'</td>                                 <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_INST).'</td>     <td>'.$result[0]['p_rmsi'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_SETT).'</td>     <td>'.$result[0]['p_rmss'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).'</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
