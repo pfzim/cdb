@@ -256,7 +256,7 @@ function walk_route($route, $action)
 			'create-tasks-vuln-mass',
 			'create-tasks-os',
 			//'create-tasks-os-by-sccm',
-			//'create-tasks-net-errors',
+			'create-tasks-net-errors',
 			'create-tasks-wsus',
 			'report-tasks-status',
 			'report-tasks-itinvent',

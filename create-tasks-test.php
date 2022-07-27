@@ -15,20 +15,20 @@
 	$xml = helpdesk_api_request(
 		'Source=cdb'
 		.'&Action=new'
-		.'&Type=test'
-		.'&To='.urlencode('sas')
-		.'&Host='.urlencode('TEST')
+		.'&Type=rms'
+		.'&To='.urlencode('byname')
+		.'&Host='.urlencode('7701-W0000')
 		.'&Message='.helpdesk_message(
 			TT_TEST,
 			array(
-				'host'			=> 'TEST',
-				'to'			=> 'sas',
-				'flags'			=> 'Flags test'
+				'host'			=> '7701-W0000',
+				'to'			=> 'byname',
+				'flags'			=> 'Flags was here'
 			)
 		)
 	);
 
 	if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 	{
-		echo 'TEST '.$xml->extAlert->query['number']."\r\n";
+		echo '7701-W0000 '.$xml->extAlert->query['number']."\r\n";
 	}

@@ -203,8 +203,7 @@ $template_helpdesk_messages = array(
 		,
 
 	TT_TEST =>
-			'THIS IS A TEST!'
-			."\n\nПК: %host%"
-			."\nИсточник информации о ПК: %flags%"
-			."\nКод работ: AVCTRL\n\n".WIKI_URL."/Отдел%20ИТ%20Инфраструктуры.Restore_AO_agent.ashx"
+		'THIS IS A TEST!'
+		."\n\nПК: %host%"
+		."\nИсточник информации о ПК: %flags%"
 );

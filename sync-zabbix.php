@@ -424,8 +424,8 @@
 
 	$zabbix_groups_types_templates = array(
 		ZABBIX_TYPE_UNKNOWN              => 'UNKNOWN',
-		ZABBIX_TYPE_ROUTER               => 'ROUTER',
-		ZABBIX_TYPE_ROUTER_BCC           => 'ROUTER/BCC',
+		ZABBIX_TYPE_ROUTER               => 'ROUTER/WOBCC',
+		ZABBIX_TYPE_ROUTER_BCC           => 'ROUTER/WBCC',
 		ZABBIX_TYPE_WORKSTATION_ADMIN    => 'WORKSTATION/ADMIN',
 		ZABBIX_TYPE_WORKSTATION_KASSA    => 'WORKSTATION/KASSA',
 		ZABBIX_TYPE_SWITCH               => 'SWITCH'
@@ -547,6 +547,7 @@
 			$tags = array();
 
 			$location_is_rc = FALSE;
+			$location_is_nn = FALSE;
 
 			// TT: RU-00-0000-XXX
 			if(preg_match('/^RU-(\d{2})-(\d{4})-\w{3}/i', $host_name, $matches))
@@ -621,6 +622,11 @@
 					'tag' => 'code',
 					'value' => $matches[2]
 				);
+				
+				if(strcasecmp($matches[2], 'Ao2') == 0)
+				{
+					$location_is_nn = TRUE;
+				}
 			}
 			// unknown mask add to all groups
 			else
@@ -664,8 +670,8 @@
 					$template_ids[] = ZABBIX_TEMPLATE_FOR_BCC;
 				}
 
-				// Маршрутизатор РЦ
-				if($location_is_rc)
+				// Маршрутизатор РЦ или ЦО НН
+				if($location_is_rc || $location_is_nn)
 				{
 					$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
 				}
@@ -747,10 +753,11 @@
 						$auth_key,
 						array(
 							'hostids'                   => $row['host_id'],
-							'output'                    => ['hostid', 'host', 'status', 'proxy_hostid', 'tags'],
+							'output'                    => ['hostid', 'host', 'status', 'proxy_hostid'],
+							'selectTags'                => 'extend',
 							'selectGroups'              => ['groupid'],
 							'selectParentTemplates'     => ['templateid'],
-							'selectInterfaces' => ['interfaceid', 'ip', 'main', 'type'],
+							'selectInterfaces'          => ['interfaceid', 'ip', 'main', 'type'],
 							//'selectTriggers'   => ['templateid', 'triggerid', 'description', 'status', 'priority']
 						)
 					);
@@ -798,7 +805,7 @@
 						$exist_groups = array_reduce($host['groups'], function($result, $value) { $result[] = $value['groupid']; return $result; }, array());
 						$exist_tags = !empty($host['tags']) ? array_reduce($host['tags'], function($result, $value) { $result[] = $value['tag'].'='.$value['value']; return $result; }, array()) : array();
 						$tags_flat = array_reduce($tags, function($result, $value) { $result[] = $value['tag'].'='.$value['value']; return $result; }, array());
-
+						
 						if($host['proxy_hostid'] !== ZABBIX_HOST_PROXY
 							|| $host['host'] !== $host_name
 							|| count(array_diff($template_ids, $exist_templates))
