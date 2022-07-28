@@ -13,6 +13,7 @@
 		  - sw_id  - имя коммутатора
 		  - port   - порт коммутатора в который подключено оборудование
 		  - vlan   - VLAN ID (integer) for device
+		  - desc   - описание порта
 		  
 		Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию
 		серийного номера вместо MAC адреса.
@@ -87,7 +88,7 @@
 
 	$pid = 0;
 	$last_sw_name = '';
-	
+
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
 	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $net_dev)))
@@ -117,7 +118,7 @@
 			// Парсим сторку
 			
 			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port,vlan
-			if(count($row) != 6 && count($row) != 5)
+			if(count($row) > 7 || count($row) < 5)
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect line format (count:'.count($row).'). Line '.$line_no.';';
@@ -206,6 +207,7 @@
 
 			$excluded = 0x0000;
 			$vlan = intval($row[5]);
+			$port_desc = @$row[6];
 
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 
@@ -223,8 +225,8 @@
 			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $mac, $is_sn ? MF_SERIAL_NUM : 0x0000 )))
 			{
 				if($db->put(rpv("
-						INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `vlan`, `first`, `date`, `flags`)
-						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {d5}, NOW(), NOW(), {d6})
+						INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `port_desc`, `vlan`, `first`, `date`, `flags`)
+						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {s5}, {d6}, NOW(), NOW(), {d7})
 					",
 					$pid,
 					$row[1],  // name
@@ -232,6 +234,7 @@
 					$row[2],  // ip
 					$row[4],  // port
 					$vlan,
+					$port_desc,
 					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
 				)))
 				{
@@ -248,10 +251,11 @@
 							`name` = {s1},
 							`ip` = {s2},
 							`port` = {s3},
-							`vlan` = {d4},
-							`first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d5})
+							`port_desc` = {s4},
+							`vlan` = {d5},
+							`first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d6})
 						WHERE
-							`id` = {d6}
+							`id` = {d7}
 						LIMIT 1
 					",
 					$pid,
@@ -259,6 +263,7 @@
 					$row[2],  // ip
 					$row[4],  // port
 					$vlan,
+					$port_desc,
 					MF_FROM_NETDEV | $excluded,
 					$row_id
 				));
