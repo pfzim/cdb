@@ -233,8 +233,8 @@
 					$mac,
 					$row[2],  // ip
 					$row[4],  // port
-					$vlan,
 					$port_desc,
+					$vlan,
 					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
 				)))
 				{
@@ -262,8 +262,8 @@
 					$row[1],  // name
 					$row[2],  // ip
 					$row[4],  // port
-					$vlan,
 					$port_desc,
+					$vlan,
 					MF_FROM_NETDEV | $excluded,
 					$row_id
 				));
