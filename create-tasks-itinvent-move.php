@@ -97,6 +97,7 @@
 			,m.`mac`
 			,DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`
 			,m.`port`
+			,m.`port_desc`
 			,m.`vlan`
 			,m.`flags`
 			-- ,m.`branch_no`
@@ -161,6 +162,7 @@
 						'm_inv_no'		=> $row['m_inv_no'],
 						'vlan'			=> $row['vlan'],
 						'port'			=> $row['port'],
+						'port_desc'		=> $row['port_desc'],
 						'regtime'		=> $row['regtime'],
 						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
 						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
