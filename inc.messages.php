@@ -45,7 +45,7 @@ $template_helpdesk_messages = array(
 		."\nВремя регистрации: %regtime%"
 		."\nКоличество повторных заявок: %issues%"
 		."\n\nКод работ: IIV09"
-		."\n\nИстория выставленных нарядов: ".CDB_URL.'/cdb.php?action=get-mac-info&id=%id%'
+		."\n\nИстория выставленных нарядов: ".CDB_URL.'-ui/cdb_ui.php?path=mac_info/%id%'
 		."\n\nВ решении указать причину и принятые меры по недопущению открытия повторных заявок."
 		,
 
