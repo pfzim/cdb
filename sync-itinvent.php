@@ -24,6 +24,11 @@
 		
 		Добавлена загрузка словаря по наменованиям "Тип оборудования" и "Статус"
 		для отображения их в веб-интерфейсе и заявках.
+		
+		Добавлены таблица инвентарных карточек inv и таблица взаимосвязей MAC
+		адресов с инвентарными карточками. Одна карточка (инвентарный номер)
+		может иметь множество MAC адресов и MAC адрес может иметь множество
+		карточек (инвентарных номеров) из-за ошибочных дубликатов в ИТ Инвент.
 	*/
 
 	/*
@@ -159,7 +164,7 @@
 		exit;
 	}
 
-	// Загрузка названией статусов
+	// Загрузка названий статусов
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
@@ -193,7 +198,7 @@
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	// Загрузка названией типа оборудования
+	// Загрузка названий типа оборудования
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
@@ -235,13 +240,137 @@
 		sqlsrv_free_stmt($invent_result);
 	}
 
+	// Загрузка названий моделей оборудования
+
+	$invent_result = sqlsrv_query($conn, "
+		SELECT
+			[MODEL_NO]
+			,[CI_TYPE]
+			,[MODEL_NAME]
+		INTO #tmptable
+		FROM [dbo].[CI_MODELS]
+		WHERE [CI_TYPE] = 1
+	");
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+
+		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+		$i = 0;
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		{
+			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_MODELS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
+				$row['CI_TYPE'],
+				$row['MODEL_NO'],
+				$row['MODEL_NAME']
+			));
+
+			$i++;
+		}
+
+		echo 'Count: '.$i."\r\n";
+
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	// Загрузка названий филиалов
+
+	$invent_result = sqlsrv_query($conn, "
+		SELECT
+			[BRANCH_NO]
+			,[BRANCH_NAME]
+		INTO #tmptable
+		FROM [dbo].[BRANCHES]
+	");
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+
+		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+		$i = 0;
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		{
+			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_BRANCHES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+				$row['BRANCH_NO'],
+				$row['BRANCH_NAME']
+			));
+
+			$i++;
+		}
+
+		echo 'Count: '.$i."\r\n";
+
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	// Загрузка названий местоположений
+
+	$invent_result = sqlsrv_query($conn, "
+		SELECT
+			[LOC_NO]
+			,[DESCR]
+		INTO #tmptable
+		FROM [dbo].[LOCATIONS]
+	");
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+
+		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+		$i = 0;
+		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+		{
+			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_LOCATIONS}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+				$row['LOC_NO'],
+				$row['DESCR']
+			));
+
+			$i++;
+		}
+
+		echo 'Count: '.$i."\r\n";
+
+		sqlsrv_free_stmt($invent_result);
+	}
+
+	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	if($invent_result !== FALSE)
+	{
+		sqlsrv_free_stmt($invent_result);
+	}
+
 	// Загрузка оборудования
 
 	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
+	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 60 DAY)"));
+
+	// Очистка таблицы связей MAC <-> INV_NO
+	$db->put(rpv("TRUNCATE TABLE @mac_inv"));
 
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
@@ -328,7 +457,7 @@
 		sqlsrv_free_stmt($invent_result);
 
 		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
+		
 		$i = 0;
 		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
 		{
@@ -340,15 +469,28 @@
 				$bcc = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
 
-				// Load SN
-				$mac = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
-				if(!empty($mac))
+				// Load SN and MACs
+
+				$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
+				
+				$macs = array();
+				
+				for($k = 1; $k <= 17; $k++)    // mac* fields count
 				{
-					$row_id = 0;
-					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $mac)))
+					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
+
+					if(!empty($mac) && strlen($mac) == 12)
 					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
-							$mac,
+						$macs[] = $mac;
+					}
+				}
+				
+				if(!empty($sn) || count($macs) > 0)
+				{
+					$inv_id = 0;
+					if(!$db->select_ex($result, rpv("SELECT i.`id`, i.`inv_no`, i.`flags` FROM @inv AS i WHERE i.`inv_no` = ! LIMIT 1", $row['INV_NO'])))
+					{
+						if($db->put(rpv("INSERT INTO @inv (`inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, #, #, #, #, #, #)",
 							$row['INV_NO'],
 							$row['TYPE_NO'],
 							$row['MODEL_NO'],
@@ -358,17 +500,55 @@
 							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
 						)))
 						{
-							$row_id = $db->last_id();
+							$inv_id = $db->last_id();
 						}
 					}
 					else
 					{
-						$row_id = $result[0][0];
+						$inv_id = $result[0][0];
 
-						if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $mac !== 'N/A' && $mac !== 'N\A' && $mac !== 'NA')    // Exist in IT Invent?
+						$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
+							$row['STATUS_NO'],
+							$row['BRANCH_NO'],
+							$row['LOC_NO'],
+							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc,
+							$inv_id
+						));
+					}
+				}
+
+				// Save SN
+				
+				if(!empty($sn))
+				{
+					$mac_id = 0;
+					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $sn)))
+					{
+						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+							$sn,
+							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
+							$row['STATUS_NO'],
+							$row['BRANCH_NO'],
+							$row['LOC_NO'],
+							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
+						)))
+						{
+							$mac_id = $db->last_id();
+						}
+					}
+					else
+					{
+						$mac_id = $result[0][0];
+
+						if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $sn !== 'N/A' && $sn !== 'N\A' && $sn !== 'NA')    // Exist in IT Invent?
 						{
 							$duplicate = MF_DUPLICATE;
-							echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
 						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
@@ -379,61 +559,65 @@
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
 							MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
-							$row_id
+							$mac_id
 						));
 					}
+
+					$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
+
 					$i++;
 				}
 
-				// Load MACs
-				for($k = 1; $k <= 17; $k++)    // mac* fields count
+				// Save MACs
+				foreach($macs as &$mac)    // mac* fields count
 				{
-					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
 					$duplicate = 0;
 
-					if(!empty($mac) && strlen($mac) == 12)
+					$mac_id = 0;
+					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
 					{
-						$row_id = 0;
-						if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
+						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+							$mac,
+							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
+							$row['STATUS_NO'],
+							$row['BRANCH_NO'],
+							$row['LOC_NO'],
+							MF_EXIST_IN_ITINV | $active | $mobile | $bcc
+						)))
 						{
-							if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
-								$mac,
-								$row['INV_NO'],
-								$row['TYPE_NO'],
-								$row['MODEL_NO'],
-								$row['STATUS_NO'],
-								$row['BRANCH_NO'],
-								$row['LOC_NO'],
-								MF_EXIST_IN_ITINV | $active | $mobile | $bcc
-							)))
-							{
-								$row_id = $db->last_id();
-							}
+							$mac_id = $db->last_id();
 						}
-						else
-						{
-							$row_id = $result[0][0];
-
-							if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
-							{
-								$duplicate = MF_DUPLICATE;
-								echo 'Possible duplicate: ID: '.$row_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
-							}
-
-							$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
-								$row['INV_NO'],
-								$row['TYPE_NO'],
-								$row['MODEL_NO'],
-								$row['STATUS_NO'],
-								$row['BRANCH_NO'],
-								$row['LOC_NO'],
-								MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
-								$row_id
-							));
-						}
-						$i++;
 					}
+					else
+					{
+						$mac_id = $result[0][0];
+
+						if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
+						{
+							$duplicate = MF_DUPLICATE;
+							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+						}
+
+						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+							$row['INV_NO'],
+							$row['TYPE_NO'],
+							$row['MODEL_NO'],
+							$row['STATUS_NO'],
+							$row['BRANCH_NO'],
+							$row['LOC_NO'],
+							MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
+							$mac_id
+						));
+					}
+
+					$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
+
+					$i++;
 				}
+
+				unset($mac);
 			}
 		}
 

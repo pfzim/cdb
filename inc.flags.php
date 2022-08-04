@@ -58,6 +58,9 @@
 	
 	define('NT_STATUSES',           1);
 	define('NT_CI_TYPES',           2);
+	define('NT_CI_MODELS',          3);
+	define('NT_BRANCHES',           4);
+	define('NT_LOCATIONS',          5);
 
 	// `type` from `tasks` table
 	
