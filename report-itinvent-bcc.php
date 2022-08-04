@@ -76,17 +76,20 @@ EOT;
 	{
 		foreach($result as &$row)
 		{
-			$table .= '<tr>';
-			$table .= '<td>'.$row['branch_no'].'</td>';
-			$table .= '<td>'.$row['loc_no'].'</td>';
-			$table .= '<td>'.$row['m_inv_no'].'</td>';
-			$table .= '<td>'.$row['name'].'</td>';
-			$table .= '<td><a href="'.CDB_URL.'/cdb.php?action=get-mac-info&id='.$row['id'].'">'.$row['mac'].'</a></td>';
-			$table .= '<td>'.$row['ip'].'</td>';
-			$table .= '<td>'.$row['dm_inv_no'].'</td>';
-			$table .= '<td>'.$row['last_update'].'</td>';
-			$table .= (intval($row['zh_flags']) & ZHF_EXIST_IN_ZABBIX) ? '<td class="pass">TRUE</td>' : '<td class="error">FALSE</td>';
-			$table .= '</tr>';
+			if((intval($row['zh_flags']) & ZHF_EXIST_IN_ZABBIX) == 0)
+			{
+				$table .= '<tr>';
+				$table .= '<td>'.$row['branch_no'].'</td>';
+				$table .= '<td>'.$row['loc_no'].'</td>';
+				$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=macs/0/'.$row['m_inv_no'].'">'.$row['m_inv_no'].'</a></td>';
+				$table .= '<td>'.$row['name'].'</td>';
+				$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=mac_info/'.$row['id'].'">'.$row['mac'].'</a></td>';
+				$table .= '<td>'.$row['ip'].'</td>';
+				$table .= '<td>'.$row['dm_inv_no'].'</td>';
+				$table .= '<td>'.$row['last_update'].'</td>';
+				$table .= (intval($row['zh_flags']) & ZHF_EXIST_IN_ZABBIX) ? '<td class="pass">TRUE</td>' : '<td class="error">FALSE</td>';
+				$table .= '</tr>';
+			}
 
 			$i++;
 		}

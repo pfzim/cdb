@@ -169,6 +169,11 @@
 
 	define('FF_ALLOWED',      0x0010);
 
+	// `flags` from `vm` table
+
+	define('VMF_EXIST_VMM',    0x0010);
+	define('VMF_EXIST_CMDB',   0x0020);
+
 	// `flags` from `files_inventory` table
 	
 	define('FIF_DELETED',     0x0002);
@@ -321,6 +326,24 @@ $g_files_short_flags = array(
 	'',
 	'',
 	'A'
+);
+
+$g_cmdb_vmm_flags = array(
+	'',
+	'',
+	'',
+	'',
+	'Exist in VMM',
+	'Exist in CMDB'
+);
+
+$g_cmdb_vmm_short_flags = array(
+	'',
+	'',
+	'',
+	'',
+	'V',
+	'C'
 );
 
 /**

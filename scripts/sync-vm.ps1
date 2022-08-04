@@ -65,6 +65,9 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 			$cluster = $result.GetString(1)
 		#>
 
+		$query.CommandText = 'UPDATE c_vm SET `flags` = (`flags` & ~0x0010) WHERE `flags` & 0x0010'
+		ExecuteNonQueryFailover -Query $query
+
 		$query.CommandText = 'SELECT m.`id`, m.`address`, m.`name` FROM c_devices AS m WHERE m.`type` = 2'
 		$dataTable = New-Object System.Data.DataTable
 		(New-Object system.Data.odbc.odbcDataAdapter($query)).fill($dataTable) | Out-Null
@@ -79,7 +82,7 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 			}
 			catch
 			{
-				Write-Host -ForegroundColor Red ('ERROR: {0}' -f $_.Exception.Message)
+				Write-Host -ForegroundColor Red ('ERROR: {1}: {0}' -f $_.Exception.Message, $row.name)
 				continue
 			}
 			
@@ -92,7 +95,7 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 				}
 				catch
 				{
-					Write-Host -ForegroundColor Red ('ERROR: {0}' -f $_.Exception.Message)
+					Write-Host -ForegroundColor Red ('ERROR: {1}: {0}' -f $_.Exception.Message, $node.Name)
 					continue
 				}
 				foreach($vm in $vms)
@@ -105,7 +108,7 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 					}
 					catch
 					{
-						Write-Host -ForegroundColor Red ('ERROR: {0}' -f $_.Exception.Message)
+						Write-Host -ForegroundColor Red ('ERROR: {1}: {0}' -f $_.Exception.Message, $node.Name)
 						continue
 					}
 					foreach($vhd in $vhds)
@@ -116,6 +119,9 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 					Write-Host -ForegroundColor Green ('{0,-20} {1,9} {2,10} {3,10}' -f $vm.VMName, $vm.ProcessorCount, $($vm.MemoryAssigned / 1gb -as [int]), ($hdd / 1gb -as [int]))
 
 					$query.CommandText = 'INSERT INTO c_vm_history (`pid`, `date`, `name`, `cpu`, `ram_size`, `hdd_size`) VALUES ({0}, NOW(), "{1}", {2}, {3}, {4})' -f $id, $vm.VMName, $vm.ProcessorCount, $($vm.MemoryAssigned / 1gb -as [int]), ($hdd / 1gb -as [int])
+					ExecuteNonQueryFailover -Query $query
+					
+					$query.CommandText = 'INSERT INTO c_vm (`name`, `cpu`, `ram_size`, `hdd_size`, `flags`) VALUES ("{0}", {1}, {2}, {3}, 0x0010) ON DUPLICATE KEY UPDATE `cpu` = {1}, `ram_size` = {2}, `hdd_size` = {3}, `flags` = (`flags` | 0x0010)' -f $vm.VMName.ToUpper(), $vm.ProcessorCount, $($vm.MemoryAssigned / 1gb -as [int]), ($hdd / 1gb -as [int])
 					ExecuteNonQueryFailover -Query $query
 				}
 			}

@@ -233,8 +233,8 @@ function walk_route($route, $action)
 			'mark-after-sync',         // Компьютеры отсутствующие во всех системах посмечаем флагом CF_DELETED
 			'sync-itinvent',
 			'sync-itinvent-sw',
-			'sync-zabbix',
-			'sync-nessus'
+			'sync-zabbix'
+			//'sync-nessus'
 		),
 		'cron-daily' => array(
 			'sync-all',
@@ -252,8 +252,8 @@ function walk_route($route, $action)
 			'create-tasks-itinvent',
 			'create-tasks-itinvent-move',
 			'create-tasks-itinvent-escalate',
-			'create-tasks-vuln',
-			'create-tasks-vuln-mass',
+			//'create-tasks-vuln',
+			//'create-tasks-vuln-mass',
 			'create-tasks-os',
 			//'create-tasks-os-by-sccm',
 			'create-tasks-net-errors',
@@ -263,10 +263,11 @@ function walk_route($route, $action)
 			'report-new-mac',
 			'report-laps',
 			'report-wsus',
-			'report-vuln-top-servers',
-			'report-vuln-top',
-			'report-vuln-top-netdev',
+			//'report-vuln-top-servers',
+			//'report-vuln-top',
+			//'report-vuln-top-netdev',
 			'report-users-lastlogon',
+			'report-cmdb-vmm',
 			'report-itinvent-bcc',
 			'report-itinvent-files-top'
 		),
@@ -396,6 +397,9 @@ function walk_route($route, $action)
 		'report-vm' => array(
 			'@report-vm.php'
 		),
+		'report-cmdb-vmm' => array(
+			'@report-cmdb-vmm.php'
+		),
 		'sync-3par' => array(
 			'@sync-3par.php'
 		),
@@ -432,6 +436,9 @@ function walk_route($route, $action)
 		),
 		'sync-zabbix' => array(
 			'@sync-zabbix.php'
+		),
+		'sync-cmdb' => array(
+			'@sync-cmdb.php'
 		),
 		'import-mac' => array(
 			'@import-mac.php'

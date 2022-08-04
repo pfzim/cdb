@@ -147,13 +147,13 @@
 				(m.`flags` & {%MF_EXIST_IN_ITINV}) = 0
 				OR m.`status` = 7                          -- Decommissioned
 			)
-			-- AND (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) <> ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
-			-- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		GROUP BY m.`id`
 		HAVING COUNT(t.`id`) = 0
 		ORDER BY RAND()
 	")))
 	{
+		// -- AND (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})) <> ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})
+		// -- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		foreach($result as &$row)
 		{
 			if($i >= $limit)
@@ -189,6 +189,7 @@
 						'host'			=> $row['netdev'],
 						'inv_no'		=> $row['inv_no'],
 						'type_name'		=> $row['type_name'],
+						'status_code'	=> $row['status'],
 						'status_name'	=> $row['status_name'],
 						'vlan'			=> $row['vlan'],
 						'port'			=> $row['port'],
