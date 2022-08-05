@@ -137,6 +137,19 @@
 	define('MF_DUPLICATE',          0x0200);
 	define('MF_INV_BCCDEV',         0x0400);
 
+	// `flags` from `inv` table
+
+	define('IF_TEMP_EXCLUDED',      0x0002);
+	define('IF_PERM_EXCLUDED',      0x0004);
+	define('IF_EXIST_IN_ZABBIX',    0x0008);
+	define('IF_EXIST_IN_ITINV',     0x0010);
+	define('IF_FROM_NETDEV',        0x0020);
+	define('IF_INV_ACTIVE',         0x0040);
+	define('IF_SERIAL_NUM',         0x0080);
+	define('IF_INV_MOBILEDEV',      0x0100);
+	define('IF_DUPLICATE',          0x0200);
+	define('IF_INV_BCCDEV',         0x0400);
+
 	// `flags` from `zabbix_hosts` table
 
 	define('ZHF_EXIST_IN_ZABBIX',       0x0008);
@@ -271,6 +284,34 @@ $g_mac_short_flags = array(
 	'N',
 	'A',
 	'S',
+	'M',
+	'D',
+	'B'
+);
+
+$g_inv_flags = array(
+	'',
+	'Temporary excluded',
+	'Permanently excluded',
+	'',
+	'IT Invent',
+	'',
+	'Active',
+	'',
+	'Mobile device',
+	'Duplicate detected',
+	'Backup CommChannel'
+);
+
+$g_inv_short_flags = array(
+	'',
+	'T',
+	'R',
+	'',
+	'I',
+	'',
+	'A',
+	'',
 	'M',
 	'D',
 	'B'

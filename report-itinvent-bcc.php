@@ -81,7 +81,7 @@ EOT;
 				$table .= '<tr>';
 				$table .= '<td>'.$row['branch_no'].'</td>';
 				$table .= '<td>'.$row['loc_no'].'</td>';
-				$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=macs/0/'.$row['m_inv_no'].'">'.$row['m_inv_no'].'</a></td>';
+				$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=invents/0/'.$row['m_inv_no'].'">'.$row['m_inv_no'].'</a></td>';
 				$table .= '<td>'.$row['name'].'</td>';
 				$table .= '<td><a href="'.CDB_URL.'-ui/cdb_ui.php?path=mac_info/'.$row['id'].'">'.$row['mac'].'</a></td>';
 				$table .= '<td>'.$row['ip'].'</td>';

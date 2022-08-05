@@ -466,8 +466,12 @@
 				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
 				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
 				$mobile = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 2) ? MF_INV_MOBILEDEV : 0x0000);
-				$bcc = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 85 && intval($row['STATUS_NO']) == 1) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
+				$bcc = ((intval($row['STATUS_NO']) == 1 && intval($row['CI_TYPE']) == 1 && (intval($row['TYPE_NO']) == 85 || intval($row['TYPE_NO']) == 45)) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
 				$duplicate = 0;
+
+				$inv_active = ($active ? IF_INV_ACTIVE : 0x0000);
+				$inv_mobile = ($mobile ? IF_INV_MOBILEDEV : 0x0000);
+				$inv_bcc = ($bcc ? IF_INV_BCCDEV : 0x0000);
 
 				// Load SN and MACs
 
@@ -497,7 +501,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
+							IF_EXIST_IN_ITINV | IF_SERIAL_NUM | $inv_active | $inv_mobile| $inv_bcc
 						)))
 						{
 							$inv_id = $db->last_id();
@@ -514,7 +518,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc,
+							IF_EXIST_IN_ITINV | IF_SERIAL_NUM | $inv_active | $inv_mobile| $inv_bcc,
 							$inv_id
 						));
 					}
