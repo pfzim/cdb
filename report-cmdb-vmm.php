@@ -42,9 +42,11 @@ EOT;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			vm.`name`,
+			vm.`os`,
 			vm.`cpu`,
 			vm.`ram_size`,
 			vm.`hdd_size`,
+			vm.`cmdb_os`,
 			vm.`cmdb_cpu`,
 			vm.`cmdb_ram_size`,
 			vm.`cmdb_hdd_size`,
@@ -56,6 +58,7 @@ EOT;
 				(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM})) <> ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM})
 				OR vm.`cpu` <> vm.`cmdb_cpu`
 				OR vm.`ram_size` <> vm.`cmdb_ram_size`
+				OR vm.`os` <> vm.`cmdb_os`
 				-- OR vm.`hdd_size` <> vm.`cmdb_hdd_size`
 			)
 		ORDER BY vm.`name`
@@ -83,6 +86,11 @@ EOT;
 				if(intval($row['ram_size']) != intval($row['cmdb_ram_size']))
 				{
 					$check_result .= 'RAM VMM '.$row['ram_size'].' != CMDB '.$row['cmdb_ram_size'].';';
+				}
+
+				if(strcasecmp($row['os'], $row['cmdb_os']) !== 0)
+				{
+					$check_result .= 'OS VMM '.$row['os'].' != CMDB '.$row['cmdb_os'].';';
 				}
 
 				// if(intval($row['hdd_size']) != intval($row['cmdb_hdd_size']))
