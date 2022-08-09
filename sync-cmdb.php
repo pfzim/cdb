@@ -72,14 +72,15 @@
 		foreach($result_json['data'] as &$card)
 		{
 			$db->put(rpv("
-					INSERT INTO c_vm (`name`, `cmdb_cpu`, `cmdb_ram_size`, `cmdb_hdd_size`, `flags`)
-					VALUES ({s0}, {d1}, {d2}, {d3}, {%VMF_EXIST_CMDB})
-					ON DUPLICATE KEY UPDATE `cmdb_cpu` = {d1}, `cmdb_ram_size` = {d2}, `cmdb_hdd_size` = {d3}, `flags` = (`flags` | {%VMF_EXIST_CMDB})
+					INSERT INTO c_vm (`name`, `cmdb_cpu`, `cmdb_ram_size`, `cmdb_hdd_size`, `cmdb_os`, `flags`)
+					VALUES ({s0}, {d1}, {d2}, {d3}, {s4}, {%VMF_EXIST_CMDB})
+					ON DUPLICATE KEY UPDATE `cmdb_cpu` = {d1}, `cmdb_ram_size` = {d2}, `cmdb_hdd_size` = {d3}, `cmdb_os` = {s4}, `flags` = (`flags` | {%VMF_EXIST_CMDB})
 				",
 				$card['brlVSrvHostname'],
 				$card['brlVSrvCPU'],
 				$card['brlVSrvRAM'],
-				0
+				0,  // hdd_size
+				$card['brlVSrvOSVersion'] // _brlSrvOS_description OR _brlSrvOS_description_translation
 			));
 			$i++;
 		}
