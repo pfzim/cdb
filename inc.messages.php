@@ -197,7 +197,12 @@ $template_helpdesk_messages = array(
 		."\nВ решении укажите Инвентарный номер оборудования!"
 		,
 
-	TT_RMS_INST => 'Unused',
+	TT_RMS_INST =>
+		'На компьютере не установлен RMS.'
+		."\n\nПК: %host%"
+		."\nИсточник информации о ПК: %flags%"
+		,
+
 	TT_RMS_SETT => 'Unused',
 	TT_RMS_VERS => 'Unused',
 

@@ -245,6 +245,8 @@ function walk_route($route, $action)
 			'create-tasks-tmee',
 			'create-tasks-ac',
 			'create-tasks-laps',
+			'create-tasks-rms',
+			'create-tasks-edge',
 			'create-tasks-rename',
 			'create-tasks-sccm',
 			'create-tasks-epwd',
@@ -291,6 +293,12 @@ function walk_route($route, $action)
 		),
 		'create-tasks-laps' => array(
 			'@create-tasks-laps.php'
+		),
+		'create-tasks-rms' => array(
+			'@create-tasks-rms.php'
+		),
+		'create-tasks-edge' => array(
+			'@create-tasks-edge.php'
 		),
 		'create-tasks-sccm' => array(
 			'@create-tasks-sccm.php'
