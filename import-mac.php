@@ -207,15 +207,16 @@
 
 			$excluded = 0x0000;
 			$vlan = intval($row[5]);
-			$port_desc = @$row[6];
+			$port = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', $row[4]);
+			$port_desc = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', @$row[6]);
 
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 
-			if(!$is_sn && ($row[4] != 'self'))
+			if(!$is_sn && ($port != 'self'))
 			{
 				// Исключение по VLAN, MAC адресу, имени коммутатора, порту
 				
-				if(is_excluded($mac, $last_sw_name, $row[4], $row[2], $vlan, $mac_exclude_json, $path_log))
+				if(is_excluded($mac, $last_sw_name, $port, $row[2], $vlan, $mac_exclude_json, $path_log))
 				{
 					$excluded = MF_TEMP_EXCLUDED;
 				}
@@ -232,7 +233,7 @@
 					$row[1],  // name
 					$mac,
 					$row[2],  // ip
-					$row[4],  // port
+					$port,    // port
 					$port_desc,
 					$vlan,
 					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
@@ -261,7 +262,7 @@
 					$pid,
 					$row[1],  // name
 					$row[2],  // ip
-					$row[4],  // port
+					$port,    // port
 					$port_desc,
 					$vlan,
 					MF_FROM_NETDEV | $excluded,
