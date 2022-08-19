@@ -117,7 +117,7 @@
 		{
 			// Парсим сторку
 			
-			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port,vlan
+			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port[,vlan,port_desc]
 			if(count($row) > 7 || count($row) < 5)
 			{
 				$code = 1;
@@ -206,7 +206,7 @@
 			}
 
 			$excluded = 0x0000;
-			$vlan = intval($row[5]);
+			$vlan = intval(@$row[5]);
 			$port = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', $row[4]);
 			$port_desc = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', @$row[6]);
 
