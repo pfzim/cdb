@@ -61,6 +61,10 @@
 		  code - код объекта берётся из имени хоста, либо unknown
 		  type - тип оборудования берётся из ИТ Инвент. Значения тега из
 		         массива $zabbix_tags_types_templates
+				 
+		Добавлен флаг ZHF_DONT_SYNC. Хосты помеченные этим флагом
+		не будут изменяться этим скриптом. Для установки этого флага и
+		отключения синхронизациии, у хоста требуется добавить тэг nosync.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -87,6 +91,11 @@
 	function cb_user_cmp($el, $payload)
 	{
 		return (strcasecmp($el['username'], $payload) == 0);
+	}
+
+	function cb_tag_cmp($el, $payload)
+	{
+		return (strcasecmp($el['tag'], $payload) == 0);
 	}
 
 	function array_find($arr, $func, $payload)
@@ -212,7 +221,7 @@
 
 	// Формируем список Маршрутизаторов, которые должны мониторится в Zabbix
 
-	// Снимаем флаг ZHF_MUST_BE_MONITORED
+	// Снимаем флаг ZHF_MUST_BE_MONITORED перед синхронизацией
 	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~({%ZHF_MUST_BE_MONITORED} | {%ZHF_TEMPLATE_WITH_BCC})) WHERE (`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_TEMPLATE_WITH_BCC}))"));
 
 	if($db->select_assoc_ex($result, rpv("
@@ -296,18 +305,21 @@
 		'host.get',
 		$auth_key,
 		array(
-			'output' => ['hostid', 'host'] // , 'status', 'proxy_hostid'
+			'output' => ['hostid', 'host'], // , 'status', 'proxy_hostid'
+			'selectTags' => ['tag'],
 			//'selectInterfaces' => ['interfaceid', 'ip'],
 			//'selectGroups' => 'extend',
 			//'selectTriggers' => ['templateid', 'triggerid', 'description', 'status', 'priority']
 		)
 	);
 
-	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~{%ZHF_EXIST_IN_ZABBIX}) WHERE (`flags` & {%ZHF_EXIST_IN_ZABBIX})"));
+	// Снимаем флаг ZHF_EXIST_IN_ZABBIX перед синхронизацией
+	$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` & ~({%ZHF_EXIST_IN_ZABBIX} | {%ZHF_DONT_SYNC})) WHERE (`flags` & ({%ZHF_EXIST_IN_ZABBIX} | {%ZHF_DONT_SYNC}))"));
 
 	foreach($zabbix_result as &$host)
 	{
 		$founded = FALSE;
+		$nosync = FALSE;
 
 		// by host name
 		if($db->select_assoc_ex($result, rpv("
@@ -322,7 +334,8 @@
 		)))
 		{
 			$founded = TRUE;
-			$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX}), `host_id` = # WHERE `name` = !", $host['hostid'], $host['host']));
+			$nosync = array_find($host['tags'], 'cb_tag_cmp', 'nosync');
+			$db->put(rpv("UPDATE @zabbix_hosts SET `flags` = (`flags` | {%ZHF_EXIST_IN_ZABBIX} | #), `host_id` = # WHERE `name` = !", $nosync ? ZHF_DONT_SYNC : 0, $host['hostid'], $host['host']));
 		}
 
 		// // by host id - возможно исправит ситуацию, когда хост сменил имя
@@ -373,6 +386,10 @@
 		if(!$founded)
 		{
 			echo 'Host exist at Zabbix, but not founded in monitoring list: '.$host['host'].' ('.$host['hostid'].')'.PHP_EOL;
+		}
+		else if($nosync)
+		{
+			echo 'Host exist at Zabbix and disabled for automatic modification: '.$host['host'].' ('.$host['hostid'].')'.PHP_EOL;
 		}
 	}
 
@@ -518,7 +535,8 @@
 		LEFT JOIN @mac AS m
 			ON m.`id` = zh.`pid`
 		WHERE
-			(zh.`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX}))
+			(zh.`flags` & {%ZHF_DONT_SYNC}) = 0
+			AND (zh.`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX}))
 	")))
 	{
 		foreach($result as &$row)
@@ -546,12 +564,14 @@
 			$group_ids = array();
 			$tags = array();
 
-			$location_is_rc = FALSE;
-			$location_is_nn = FALSE;
+			$location_code = 0;
+			// $location_is_rc = FALSE;
+			// $location_is_nn = FALSE;
 
 			// TT: RU-00-0000-XXX
-			if(preg_match('/^RU-(\d{2})-(\d{4})-\w{3}/i', $host_name, $matches))
+			if(preg_match('/^RU-(\\d{2})-(\\d{4})-\\w{3}/i', $host_name, $matches))
 			{
+				$location_code = ZABBIX_OBJECT_TT;
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TT, 0, $type_code);
 				$tags[] = array(
@@ -568,8 +588,9 @@
 				);
 			}
 			// TOF: RU-00-Bo0-XXX
-			else if(preg_match('/^RU-(\d{2})-(B[o\d]\d)-\w{3}/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\\d{2})-(B[o\\d]\\d)-\\w{3}/i', $host_name, $matches))
 			{
+				$location_code = ZABBIX_OBJECT_TOF;
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_TOF, 0, $type_code);
 				$tags[] = array(
@@ -586,8 +607,10 @@
 				);
 			}
 			// RC: RU-00-RC0-
-			else if(preg_match('/^RU-(\d{2})-(RC\d{1,2})-/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\\d{2})-(RC\\d{1,2})-/i', $host_name, $matches))
 			{
+				$location_code = ZABBIX_OBJECT_RC;
+				// $location_is_rc = TRUE;
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_RC, 0, $type_code);
 				$tags[] = array(
@@ -602,12 +625,11 @@
 					'tag' => 'code',
 					'value' => $matches[2]
 				);
-
-				$location_is_rc = TRUE;
 			}
 			// CO: RU-00-Ao0-
-			else if(preg_match('/^RU-(\d{2})-(Ao\d)-/i', $host_name, $matches))
+			else if(preg_match('/^RU-(\\d{2})-(Ao\\d)-/i', $host_name, $matches))
 			{
+				$location_code = ZABBIX_OBJECT_CO;
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, intval($matches[1]), $type_code);
 				$group_ids[] = zabbix_get_or_create_group_id($auth_key, $zabbix_groups, $zabbix_groups_objects_templates, $zabbix_groups_types_templates, ZABBIX_OBJECT_CO, 0, $type_code);
 				$tags[] = array(
@@ -623,10 +645,10 @@
 					'value' => $matches[2]
 				);
 				
-				if(strcasecmp($matches[2], 'Ao2') == 0)
-				{
-					$location_is_nn = TRUE;
-				}
+				// if(strcasecmp($matches[2], 'Ao2') == 0)
+				// {
+					// $location_is_nn = TRUE;
+				// }
 			}
 			// unknown mask add to all groups
 			else
@@ -671,9 +693,10 @@
 				}
 
 				// Маршрутизатор РЦ или ЦО НН
-				if($location_is_rc || $location_is_nn)
+				//if($location_is_rc || $location_is_nn)
+				if(($location_code == ZABBIX_OBJECT_RC) || ($location_code == ZABBIX_OBJECT_CO))
 				{
-					$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
+					$template_ids[] = ZABBIX_TEMPLATE_FOR_CO;
 				}
 				// Маршрутизатор ТТ и другие
 				else
