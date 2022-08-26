@@ -696,7 +696,7 @@
 				//if($location_is_rc || $location_is_nn)
 				if(($location_code == ZABBIX_OBJECT_RC) || ($location_code == ZABBIX_OBJECT_CO))
 				{
-					$template_ids[] = ZABBIX_TEMPLATE_FOR_CO;
+					$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
 				}
 				// Маршрутизатор ТТ и другие
 				else
