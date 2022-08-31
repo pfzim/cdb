@@ -381,6 +381,9 @@ function walk_route($route, $action)
 		'report-tasks-itinvent' => array(
 			'@report-tasks-itinvent.php'
 		),
+		'report-tasks-neterrors' => array(
+			'@report-tasks-neterrors.php'
+		),
 		'report-itinvent-files-top' => array(
 			'@report-itinvent-files-top.php'
 		),
