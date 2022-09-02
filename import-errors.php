@@ -4,10 +4,10 @@
 	/**
 		\file
 		\brief API для загрузки ошибок с сетевых устройств.
-		
+
 		С помощью этого API маршрутизаторы загружают информацию о количестве
 		вознихших ошибок на портах.
-		
+
 		Входящие параметры:
 		- netdev - имя сетевого устройства передающего данные
 		- list   - список данных, описание колонок:
@@ -44,7 +44,7 @@
 
 	$pid = 0;
 	$last_sw_id = '';
-	
+
 	$net_dev = $_POST['netdev'];
 	$dev_id = 0;
 	if($db->select_ex($result, rpv("SELECT m.`id` FROM @devices AS m WHERE m.`type` = {%DT_NETDEV} AND m.`name` = ! LIMIT 1", $net_dev)))
@@ -60,32 +60,32 @@
 	}
 
 	$line_no = 0;
-	
+
 	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, '/var/log/cdb/import-errors.log');
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
 		$line_no++;
-		
+
 		$line = trim($line);
-		
+
 		if(!empty($line))
 		{
 			// Парсим сторку
-			
+
 			$row = explode(',', $line);  // format: sw_id,port,SingleCollisionFrames,CarrierSenseErrors,InErrors
 
 			if(count($row) != 5)
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect line format. Line '.$line_no.';';
-				
+
 				error_log(date('c').'  Warning: Incorrect line format ('.$line_no.'): '.$line."\n", 3, '/var/log/cdb/import-errors.log');
 
 				$line = strtok("\n");
 				continue;
 			}
-			
+
 			if($row[0] === $net_dev)
 			{
 				$last_sw_id = $net_dev;
@@ -122,32 +122,21 @@
 					}
 				}
 			}
-			
-			$row_id = 0;
-			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @net_errors AS m WHERE m.`pid` = # LIMIT 1", $pid)))
+
+			if($db->put(rpv(
+				"
+					INSERT INTO @net_errors (`pid`, `port`, `date`, `scf`, `cse`, `ine`, `flags`)
+					VALUES ({d0}, {s1}, NOW(), {d2}, {d3}, {d4}, 0x0000)
+					ON DUPLICATE KEY UPDATE `date` = NOW(), `scf` = {d2}, `cse` = {d3}, `ine` = {d4}, `flags` = (`flags` & ~{%NEF_FIXED})
+				",
+				$pid,
+				$row[1],  // port
+				$row[2],  // SingleCollisionFrames
+				$row[3],  // CarrierSenseErrors
+				$row[4]   // InErrors
+			)))
 			{
-				if($db->put(rpv("INSERT INTO @net_errors (`pid`, `port`, `date`, `scf`, `cse`, `ine`, `flags`) VALUES (#, !, NOW(), #, #, #, 0x0000)",
-					$pid,
-					$row[1],  // port
-					$row[2],  // SingleCollisionFrames
-					$row[3],  // CarrierSenseErrors
-					$row[4]   // InErrors
-				)))
-				{
-					$row_id = $db->last_id();
-				}
-			}
-			else
-			{
-				$row_id = $result[0][0];
-				$db->put(rpv("UPDATE @net_errors SET `pid` = #, `port` = !, `date` = NOW(), `scf` = #, `cse` = #, `ine` = #, `flags` = (`flags` & ~{%NEF_FIXED}) WHERE `id` = # LIMIT 1",
-					$pid,
-					$row[1],  // port
-					$row[2],  // SingleCollisionFrames
-					$row[3],  // CarrierSenseErrors
-					$row[4],  // InErrors
-					$row_id
-				));
+				$row_id = $db->last_id();
 			}
 		}
 

@@ -102,7 +102,7 @@
 		GROUP BY d.`id`
 		HAVING
 			COUNT(t.`id`) = 0
-			AND COUNT(e.`id`) > 0
+			AND COUNT(e.`port`) > 0
 	")))
 	{
 		foreach($result as &$row)
@@ -125,6 +125,7 @@
 					WHERE
 						e.`pid` = #
 						AND (e.`flags` & {%NEF_FIXED}) = 0
+					ORDER BY e.`port`
 				",
 				$row['id']
 			)))

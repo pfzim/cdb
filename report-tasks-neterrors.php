@@ -41,12 +41,8 @@ EOT;
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
+			d.`id`,
 			d.`name` AS `d_name`,
-			ne.`port`,
-			ne.`scf`,
-			ne.`cse`,
-			ne.`ine`,
-			DATE_FORMAT(ne.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
 			t.`opernum`,
 			t.`operid`,
 			DATE_FORMAT(t.`date`, '%d.%m.%Y') AS `t_date`,
@@ -61,30 +57,74 @@ EOT;
 					AND t2.`date` > DATE_SUB(NOW(), INTERVAL 1 MONTH)
 			) AS `issues`
 		FROM @tasks AS t
-		LEFT JOIN @net_errors AS ne ON ne.`id` = t.`pid`
-		LEFT JOIN @devices AS d ON d.`id` = ne.`pid`
+		LEFT JOIN @devices AS d
+			ON
+				d.`id` = t.`pid`
+				AND d.`type` = {%DT_NETDEV}
 		WHERE
 			t.`tid` = {%TID_DEVICES}
 			AND t.`type` = {%TT_NET_ERRORS}
 			AND (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0
-		ORDER BY t.`type`, d.`name`, ne.`port`
+		ORDER BY t.`type`, d.`name`
 	")))
 	{
 
 		foreach($result as &$row)
 		{
+			$rows_count = 0;
+			$ports_errors_first = '';
+			$ports_errors = '';
+
+			if($db->select_assoc_ex($net_errors, rpv("
+					SELECT
+						e.`port`,
+						DATE_FORMAT(e.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
+						e.`scf`,
+						e.`cse`,
+						e.`ine`
+					FROM @net_errors AS e
+					WHERE
+						e.`pid` = #
+						-- AND (e.`flags` & {%NEF_FIXED}) = 0
+					ORDER BY e.`port`
+				",
+				$row['id']
+			)))
+			{
+				foreach($net_errors as &$ne_row)
+				{
+					if($ports_errors_first == '')
+					{
+						$ports_errors_first .= '<td>'.$ne_row['port'].'</td>';
+						$ports_errors_first .= '<td>'.$ne_row['scf'].'</td>';
+						$ports_errors_first .= '<td>'.$ne_row['cse'].'</td>';
+						$ports_errors_first .= '<td>'.$ne_row['ine'].'</td>';
+						$ports_errors_first .= '<td>'.$ne_row['last_update'].'</td>';
+					}
+					else
+					{
+						$ports_errors .= '<tr>';
+						$ports_errors .= '<td>'.$ne_row['port'].'</td>';
+						$ports_errors .= '<td>'.$ne_row['scf'].'</td>';
+						$ports_errors .= '<td>'.$ne_row['cse'].'</td>';
+						$ports_errors .= '<td>'.$ne_row['ine'].'</td>';
+						$ports_errors .= '<td>'.$ne_row['last_update'].'</td>';
+						$ports_errors .= '</tr>';
+					}
+
+					$rows_count++;
+				}
+			}
+			
 			$table .= '<tr>';
-			$table .= '<td><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
-			$table .= '<td>'.$row['t_date'].'</td>';
-			$table .= '<td>'.$row['d_name'].'</td>';
-			$table .= '<td>'.$row['port'].'</td>';
-			$table .= '<td>'.$row['scf'].'</td>';
-			$table .= '<td>'.$row['cse'].'</td>';
-			$table .= '<td>'.$row['ine'].'</td>';
-			$table .= '<td>'.$row['last_update'].'</td>';
-			$table .= '<td>'.code_to_string($g_tasks_types, intval($row['type'])).'</td>';
-			$table .= '<td'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';
+			$table .= '<td rowspan="'.$rows_count.'"><a href="'.HELPDESK_URL.'/QueryView.aspx?KeyValue='.$row['operid'].'">'.$row['opernum'].'</a></td>';
+			$table .= '<td rowspan="'.$rows_count.'">'.$row['t_date'].'</td>';
+			$table .= '<td rowspan="'.$rows_count.'">'.$row['d_name'].'</td>';
+			$table .= $ports_errors_first;
+			$table .= '<td rowspan="'.$rows_count.'">'.code_to_string($g_tasks_types, intval($row['type'])).'</td>';
+			$table .= '<td rowspan="'.$rows_count.'"'.((intval($row['issues']) > 1)?' class="error"':'').'>'.$row['issues'].'</td>';
 			$table .= '</tr>';
+			$table .= $ports_errors;
 
 			$i++;
 		}
