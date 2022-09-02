@@ -261,6 +261,7 @@ function walk_route($route, $action)
 			'create-tasks-net-errors',
 			'create-tasks-wsus',
 			'report-tasks-status',
+			'report-tasks-neterrors',
 			'report-tasks-itinvent',
 			'report-new-mac',
 			'report-laps',
