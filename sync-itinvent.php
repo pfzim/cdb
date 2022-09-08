@@ -501,7 +501,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							IF_EXIST_IN_ITINV | IF_SERIAL_NUM | $inv_active | $inv_mobile| $inv_bcc
+							IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc
 						)))
 						{
 							$inv_id = $db->last_id();
@@ -518,7 +518,7 @@
 							$row['STATUS_NO'],
 							$row['BRANCH_NO'],
 							$row['LOC_NO'],
-							IF_EXIST_IN_ITINV | IF_SERIAL_NUM | $inv_active | $inv_mobile| $inv_bcc,
+							IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc,
 							$inv_id
 						));
 					}
