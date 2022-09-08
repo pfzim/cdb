@@ -35,22 +35,29 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`
-		FROM @tasks AS t
-		LEFT JOIN @mac AS m
-			ON m.`id` = t.`pid`
+		SELECT * FROM (
+			SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`, ((COUNT(i.`id`) OVER (PARTITION BY m.`id`)) > 1) AS `duplicates`
+			FROM @tasks AS t
+			LEFT JOIN @mac AS m
+				ON m.`id` = t.`pid`
+			LEFT JOIN c_mac_inv AS mi
+				ON mi.`mac_id` = m.`id`
+			LEFT JOIN c_inv AS i
+				ON i.`id` = mi.`inv_id`
+			WHERE
+				t.`tid` = {%TID_MAC}
+				AND (
+					t.`type` = {%TT_INV_ADD}
+					OR t.`type` = {%TT_INV_ADD_DECOMIS}
+				)
+				AND (t.`flags` & {%TF_CLOSED}) = 0                                                                             -- Task status is Opened
+				AND (
+					m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                                                    -- Temprary excluded or Premanently excluded
+					OR (i.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
+				)
+		) AS `sub_query`
 		WHERE
-			t.`tid` = {%TID_MAC}
-			AND (
-				t.`type` = {%TT_INV_ADD}
-				OR t.`type` = {%TT_INV_ADD_DECOMIS}
-			)
-			AND (t.`flags` & {%TF_CLOSED}) = 0              -- Task status is Opened
-			AND (
-				m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                   -- Temprary excluded or Premanently excluded
-				OR (m.`flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_DUPLICATE})) = ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
-				-- OR (m.`flags` & {%MF_EXIST_IN_ITINV})     					              -- Exist in IT Invent        -- Temporary do not check status
-			)
+			NOT `sub_query`.`duplicates`
 	")))
 	{
 		foreach($result as &$row)
@@ -113,25 +120,29 @@
 			m.`port`,
 			m.`port_desc`,
 			m.`vlan`,
-			m.`inv_no`,
-			m.`status`,
+			i.`inv_no`,
+			i.`status`,
 			status.`name` AS `status_name`,
 			type.`name` AS `type_name`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
 			m.`flags`
 		FROM @mac AS m
+		LEFT JOIN c_mac_inv AS mi
+			ON mi.`mac_id` = m.`id`
+		LEFT JOIN c_inv AS i
+			ON i.`id` = mi.`inv_id`
 		LEFT JOIN @devices AS d
 			ON d.`id` = m.`pid`
 		LEFT JOIN @names AS status
 			ON
 				status.`type` = {%NT_STATUSES}
 				AND status.`pid` = 0
-				AND status.`id` = m.`status`
+				AND status.`id` = i.`status`
 		LEFT JOIN @names AS type
 			ON
 				type.`type` = {%NT_CI_TYPES}
 				AND type.`pid` = 1				-- From IT Invent CI_TYPE
-				AND type.`id` = m.`type_no`
+				AND type.`id` = i.`type_no`
 		LEFT JOIN @tasks AS t
 			ON
 				t.`tid` = {%TID_MAC}
@@ -144,10 +155,11 @@
 		WHERE
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}
 			AND (
-				(m.`flags` & {%MF_EXIST_IN_ITINV}) = 0
-				OR m.`status` = 7                          -- Decommissioned
+				i.`id` IS NULL
+				OR (i.`flags` & {%IF_EXIST_IN_ITINV}) = 0
+				OR i.`status` = 7                          -- Decommissioned
 			)
-		GROUP BY m.`id`
+		GROUP BY m.`id`, i.`id`
 		HAVING COUNT(t.`id`) = 0
 		ORDER BY RAND()
 	")))
