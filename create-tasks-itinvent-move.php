@@ -63,7 +63,8 @@
 				AND (
 					(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV})) <> ({%MF_FROM_NETDEV})   -- Temprary excluded or Premanently excluded
 					OR (
-						di.`branch_no` IS NOT NULL
+						(di.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})    -- Exist in IT Invent, Active in IT Invent
+						AND di.`branch_no` IS NOT NULL
 						AND di.`loc_no` IS NOT NULL
 						AND i.`branch_no` = di.`branch_no`
 						AND i.`loc_no` = di.`loc_no`
@@ -255,14 +256,14 @@
 						'port_desc'		=> $row['port_desc'],
 						'regtime'		=> $row['regtime'],
 						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),
 						'm_name'		=> $row['m_name'],
 						'm_status_name'	=> $row['m_status_name'],
 						'm_type_name'	=> $row['m_type_name'],
 						'm_model_name'	=> $row['m_model_name'],
 						'm_branch_name'	=> $row['m_branch_name'],
 						'm_loc_name'	=> $row['m_loc_name'],
-						'duplicates'	=> (intval($row['duplicates']) > 1) ? "Обнаружены дубликаты в ИТ Инвент!!!\n" : ''),
+						'duplicates'	=> ((intval($row['duplicates']) > 1) ? "\nОбнаружены дубликаты в ИТ Инвент!!!" : ''),
 						'd_inv_no'		=> (empty($row['d_inv_no']) ? 'Отсутствует, проведите инвентаризацию коммутатора/маршрутизатора' : $row['d_inv_no']),
 						'd_mac'			=> $row['d_mac'],
 						'd_status_name'	=> $row['d_status_name'],

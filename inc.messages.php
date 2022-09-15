@@ -27,7 +27,7 @@ $template_helpdesk_messages = array(
 		."\nТип: %m_type_name%"
 		."\nМодель: %m_model_name%"
 		."\nОфис: %m_branch_name%"
-		."\nМестоположение: %m_loc_name"
+		."\nМестоположение: %m_loc_name%"
 		."\nВремя регистрации: %regtime%"
 		."\nFlags: %flags%"
 		."%duplicates%"
@@ -38,7 +38,7 @@ $template_helpdesk_messages = array(
 		."\nТип: %d_type_name%"
 		."\nМодель: %d_model_name%"
 		."\nОфис: %d_branch_name%"
-		."\nМестоположение: %d_loc_name"
+		."\nМестоположение: %d_loc_name%"
 		."\nFlags: %d_flags%"
 		."\n\nКод работ: IIV10"
 		."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.Местоположение-оборудования-отличается-от-местоположения-коммутатора-в-которыи-оно-подключено.ashx'
