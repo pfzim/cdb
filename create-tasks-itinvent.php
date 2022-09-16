@@ -36,7 +36,7 @@
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT * FROM (
-			SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`, ((COUNT(i.`id`) OVER (PARTITION BY m.`id`)) > 1) AS `duplicates`
+			SELECT t.`id`, t.`operid`, t.`opernum`, m.`mac`, m.`flags` AS `m_flags`, i.`flags` AS `i_flags`, ((COUNT(i.`id`) OVER (PARTITION BY m.`id`)) > 1) AS `duplicates`
 			FROM @tasks AS t
 			LEFT JOIN @mac AS m
 				ON m.`id` = t.`pid`
@@ -51,13 +51,13 @@
 					OR t.`type` = {%TT_INV_ADD_DECOMIS}
 				)
 				AND (t.`flags` & {%TF_CLOSED}) = 0                                                                             -- Task status is Opened
-				AND (
-					m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                                                    -- Temprary excluded or Premanently excluded
-					OR (i.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
-				)
-		) AS `sub_query`
+		) AS `sq`
 		WHERE
-			NOT `sub_query`.`duplicates`
+			NOT `sq`.`duplicates`
+			AND (
+				sq.`m_flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                                                    -- Temprary excluded or Premanently excluded
+				OR (sq.`i_flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
+			)
 	")))
 	{
 		foreach($result as &$row)
