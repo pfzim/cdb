@@ -366,7 +366,7 @@
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
 
-	// Temporarily exclude MAC addresses from checks that not seen in network more than 30 days
+	// Temporarily exclude MAC addresses from checks that not seen in network more than 60 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 60 DAY)"));
 
 	// Очистка таблицы связей MAC <-> INV_NO

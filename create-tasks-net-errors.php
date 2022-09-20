@@ -15,6 +15,8 @@
 	
 		Для удобства обслуживания ошибки группируются по устройствам и
 		выставляется одна заявка на все проблемные порты одного коммутатора.
+		
+		Информация об ошибках переданная более 30 дней назад обнуляется.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -22,6 +24,9 @@
 	echo "\ncreate-tasks-net-errors:\n";
 
 	$limit = TASKS_LIMIT_NET_ERRORS;
+
+	// Net errors mark fixed witch not updated more than 30 days
+	$db->put(rpv("UPDATE @net_errors SET `flags` = (`flags` | {%NEF_FIXED}) WHERE (`flags` & {%NEF_FIXED}) = 0 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
 
 	// Close auto resolved tasks
 
@@ -86,23 +91,23 @@
 				AND t.pid = d.id
 				AND t.`type` = {%TT_NET_ERRORS}
 				AND (t.`flags` & {%TF_CLOSED}) = 0
-		LEFT JOIN @net_errors AS e ON
-			e.`pid` = d.`id`
+		LEFT JOIN @net_errors AS ne ON
+			ne.`pid` = d.`id`
 		WHERE
 			d.`type` = {%DT_NETDEV}
 			AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
-			AND (e.`flags` & {%NEF_FIXED}) = 0
-			AND e.`port` <> 'FastEthernet4'
+			AND (ne.`flags` & {%NEF_FIXED}) = 0
+			AND ne.`port` <> 'FastEthernet4'
 			AND (
-			  -- e.`scf` > 10
+			  -- ne.`scf` > 10
 			  -- OR 
-			  e.`cse` > 10
-			  -- OR e.`ine` > 10
+			  ne.`cse` > 10
+			  -- OR ne.`ine` > 10
 			)
 		GROUP BY d.`id`
 		HAVING
 			COUNT(t.`id`) = 0
-			AND COUNT(e.`port`) > 0
+			AND COUNT(ne.`port`) > 0
 	")))
 	{
 		foreach($result as &$row)
