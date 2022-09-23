@@ -214,8 +214,17 @@ $template_helpdesk_messages = array(
 		."\nИсточник информации о ПК: %flags%"
 		,
 
-	TT_RMS_SETT => 'Unused',
-	TT_RMS_VERS => 'Unused',
+	TT_RMS_SETT =>
+		'Некорректные настройки RMS.'
+		."\n\nПК: %host%"
+		."\nИсточник информации о ПК: %flags%"
+		,
+
+	TT_RMS_VERS =>
+		'На компьютере установлена устаревшая версия RMS.'
+		."\n\nПК: %host%"
+		."\nИсточник информации о ПК: %flags%"
+		,
 
 	TT_EDGE_INSTALL =>
 		'На компьютере не установлен Edge.'

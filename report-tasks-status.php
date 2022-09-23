@@ -95,6 +95,8 @@ EOT;
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_LAPS}) AS `o_laps`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_SCCM}) AS `o_sccm`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_RMS_INST}) AS `o_rmsi`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_RMS_SETT}) AS `o_rmss`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_RMS_VERS}) AS `o_rmsv`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_EDGE_INSTALL}) AS `o_edge`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_PC_RENAME}) AS `o_name`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_TMAO_DLP}) AS `o_tmao_dlp`,
@@ -310,9 +312,9 @@ EOT;
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MBOX_UNLIM).'</td>   <td>'.$result[0]['p_mbxq'].'</td>                                    <td>'.$result[0]['o_mbxq'].'</td>     <td>'.TASKS_LIMIT_MBX.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).'</td> <td>'.$result[0]['p_os'].'</td>                                      <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_OS_REINSTALL).' (< '.CHECK_OPERATION_SYSTEM_VERSION_SCCM.')</td> <td>'.$result[0]['p_os_sccm'].'</td>                                 <td>'.$result[0]['o_os'].'</td>       <td>'.TASKS_LIMIT_OS.'</td></tr>';
-	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_INST).' (CI: '.SCCM_RMSI_CI_ID.', VER: '.SCCM_RMSI_CI_VERSION.')</td>     <td>'.$result[0]['p_rmsi'].'</td>                                    <td>'.$result[0]['o_rmsi'].'</td>     <td>'.TASKS_LIMIT_RMS.'</td></tr>';
-	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_SETT).' (CI: '.SCCM_RMSS_CI_ID.', VER: '.SCCM_RMSS_CI_VERSION.')</td>     <td>'.$result[0]['p_rmss'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
-	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).' (CI: '.SCCM_RMSV_CI_ID.', VER: '.SCCM_RMSV_CI_VERSION.')</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_INST).' (CI: '.SCCM_RMSI_CI_ID.', VER: '.SCCM_RMSI_CI_VERSION.')</td>     <td>'.$result[0]['p_rmsi'].'</td>                                    <td>'.$result[0]['o_rmsi'].'</td>     <td>'.TASKS_LIMIT_RMS_I.'</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_SETT).' (CI: '.SCCM_RMSS_CI_ID.', VER: '.SCCM_RMSS_CI_VERSION.')</td>     <td>'.$result[0]['p_rmss'].'</td>                                    <td>'.$result[0]['o_rmss'].'</td>     <td>'.TASKS_LIMIT_RMS_S.'</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).' (CI: '.SCCM_RMSV_CI_ID.', VER: '.SCCM_RMSV_CI_VERSION.')</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>'.$result[0]['o_rmsv'].'</td>     <td>'.TASKS_LIMIT_RMS_V.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MSDT).' (CI: '.SCCM_MSDT_CI_ID.', VER: '.SCCM_MSDT_CI_VERSION.')</td>         <td>'.$result[0]['p_msdt'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_EDGE_INSTALL).' (CI: '.SCCM_EDGE_CI_ID.', VER: '.SCCM_EDGE_CI_VERSION.')</td> <td>'.$result[0]['p_edge'].'</td>                                    <td>'.$result[0]['o_edge'].'</td>     <td>'.TASKS_LIMIT_EDGE.'</td></tr>';
 	$html .= '</table>';
