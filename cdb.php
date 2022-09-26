@@ -298,6 +298,12 @@ function walk_route($route, $action)
 		'create-tasks-rms' => array(
 			'@create-tasks-rms.php'
 		),
+		'create-tasks-rmss' => array(
+			'@create-tasks-rmss.php'
+		),
+		'create-tasks-rmsv' => array(
+			'@create-tasks-rmsv.php'
+		),
 		'create-tasks-edge' => array(
 			'@create-tasks-edge.php'
 		),
