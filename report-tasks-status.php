@@ -284,7 +284,7 @@ EOT;
 					AND j_quota.`value` = 0
 			) AS `p_mbxq`,
 			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_AD})) = {%CF_EXIST_AD}) AS `objects_from_ad`,
-			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_AD})) = {%CF_EXIST_AD}) AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) AS `disabled_objects_from_ad`,
+			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_AD})) = {%CF_EXIST_AD} AND (`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED}))) AS `disabled_objects_from_ad`,
 			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_TMAO})) = {%CF_EXIST_TMAO}) AS `objects_from_tmao`,
 			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_TMEE})) = {%CF_EXIST_TMEE}) AS `objects_from_tmee`,
 			(SELECT COUNT(*) FROM @computers WHERE (`flags` & ({%CF_EXIST_SCCM})) = {%CF_EXIST_SCCM}) AS `objects_from_sccm`,
