@@ -246,6 +246,8 @@ function walk_route($route, $action)
 			'create-tasks-ac',
 			'create-tasks-laps',
 			'create-tasks-rms',
+			'create-tasks-rmss',
+			'create-tasks-rmsv',
 			'create-tasks-edge',
 			'create-tasks-rename',
 			'create-tasks-sccm',
