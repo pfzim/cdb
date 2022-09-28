@@ -12,6 +12,7 @@
 		Все типы обшибок можно посмотреть в модуле import-errors.php
 		
 		Ошибки на портах FastEthernet4 и FastEthernet2 не отслеживаются.
+		Исключения вынесены в БД в параметр net_errors_exclude_ports_regex.
 	
 		Для удобства обслуживания ошибки группируются по устройствам и
 		выставляется одна заявка на все проблемные порты одного коммутатора.
@@ -25,6 +26,28 @@
 	echo "\ncreate-tasks-net-errors:\n";
 
 	$limit = TASKS_LIMIT_NET_ERRORS;
+
+	// load config parameters from DB
+	
+	if($db->select_ex($cfg, rpv('
+		SELECT
+			m.`name`,
+			m.`value`
+		FROM @config AS m
+		WHERE
+			m.`uid` = 0
+			AND m.`name` IN (\'net_errors_exclude_ports_regex\')
+	')))
+	{
+		$config = array();
+
+		foreach($cfg as &$row)
+		{
+			$config[$row[0]] = $row[1];
+		}
+	}
+
+	$net_errors_exclude_ports_regex = empty($config['net_errors_exclude_ports_regex']) ? '' : $config['net_errors_exclude_ports_regex'];
 
 	// Net errors mark fixed witch not updated more than 30 days
 	$db->put(rpv("UPDATE @net_errors SET `flags` = (`flags` | {%NEF_FIXED}) WHERE (`flags` & {%NEF_FIXED}) = 0 AND `date` < DATE_SUB(NOW(), INTERVAL 30 DAY)"));
@@ -98,8 +121,7 @@
 			d.`type` = {%DT_NETDEV}
 			AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
 			AND (ne.`flags` & {%NEF_FIXED}) = 0
-			AND ne.`port` <> 'FastEthernet4'
-			AND ne.`port` <> 'FastEthernet2'
+			AND ne.`port` NOT REGEXP {s0}
 			AND (
 			  -- ne.`scf` > 10
 			  -- OR 
@@ -110,7 +132,9 @@
 		HAVING
 			COUNT(t.`id`) = 0
 			AND COUNT(ne.`port`) > 0
-	")))
+	",
+	$net_errors_exclude_ports_regex
+	)))
 	{
 		foreach($result as &$row)
 		{
@@ -122,18 +146,20 @@
 
 			if($db->select_assoc_ex($net_errors, rpv("
 					SELECT
-						e.`id`,
-						e.`port`,
-						e.`date`,
-						e.`scf`,
-						e.`cse`,
-						e.`ine`
-					FROM @net_errors AS e
+						ne.`id`,
+						ne.`port`,
+						ne.`date`,
+						ne.`scf`,
+						ne.`cse`,
+						ne.`ine`
+					FROM @net_errors AS ne
 					WHERE
-						e.`pid` = #
-						AND (e.`flags` & {%NEF_FIXED}) = 0
-					ORDER BY e.`port`
+						ne.`pid` = {d1}
+						AND (ne.`flags` & {%NEF_FIXED}) = 0
+						AND ne.`port` NOT REGEXP {s0}
+					ORDER BY ne.`port`
 				",
+				$net_errors_exclude_ports_regex,
 				$row['id']
 			)))
 			{
