@@ -115,7 +115,7 @@
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			m.id
-			,m.`inv_no` AS m_inv_no
+			,i.`inv_no` AS m_inv_no
 			,m.`name` AS m_name
 			,m.`mac`
 			,DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`
