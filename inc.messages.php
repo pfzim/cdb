@@ -232,6 +232,15 @@ $template_helpdesk_messages = array(
 		."\nИсточник информации о ПК: %flags%"
 		,
 
+	TT_INV_DUP =>
+		'Обнаружены дубликаты в ИТ Инвент: %dups% шт.'
+		."\n\n%data_type%: %mac%"
+		."\nFlags: %flags%"
+		."%data%"
+		."\n\nКод работ: IIV11"
+		."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.FAQ-Зафиксировано-списанное-оборудование-в-сети.ashx'
+		,
+
 	TT_TEST =>
 		'THIS IS A TEST!'
 		."\n\nПК: %host%"

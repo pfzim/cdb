@@ -89,6 +89,7 @@
 	define('TT_RMS_VERS',           22);
 	define('TT_EDGE_INSTALL',       23);
 	define('TT_MSDT',               24);
+	define('TT_INV_DUP',            25);
 	define('TT_TEST',               999);
 
 	$g_tasks_types = array(
@@ -117,6 +118,7 @@
 		TT_RMS_VERS 			=>	'Устаревшая версия RMS',
 		TT_EDGE_INSTALL 		=>	'Не установлен MS Edge',
 		TT_MSDT					=>	'Уязвимость CVE-2022-30190 MSDT',
+		TT_INV_DUP				=>	'Обнаружены дубликаты в ИТ Инвент',
 		TT_TEST 				=>	'Тестовая заявка. Не должна появляться'
 	);
 

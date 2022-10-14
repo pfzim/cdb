@@ -218,7 +218,7 @@
 
 			if($xml !== FALSE && !empty($xml->extAlert->query['ref']))
 			{
-				echo $row['name'].' '.$xml->extAlert->query['number']."\r\n";
+				echo $row['mac'].' '.$xml->extAlert->query['number']."\r\n";
 				$db->put(rpv("INSERT INTO @tasks (`tid`, `pid`, `type`, `flags`, `date`, `operid`, `opernum`) VALUES ({%TID_MAC}, #, #, 0, NOW(), !, !)", $row['id'], $task_type, $xml->extAlert->query['ref'], $xml->extAlert->query['number']));
 				$i++;
 			}
