@@ -38,10 +38,10 @@
 		) AS `sq`
 		WHERE
 			NOT `sq`.`duplicates`
-			AND (
-				sq.`m_flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                                                    -- Temprary excluded or Premanently excluded
-				OR (sq.`i_flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
-			)
+			-- AND (
+			-- 	sq.`m_flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED})                                                    -- Temprary excluded or Premanently excluded
+			-- 	OR (sq.`i_flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})     -- Exist AND active in IT Invent AND not have duplicates
+			-- )
 	")))
 	{
 		foreach($result as &$row)
@@ -82,22 +82,90 @@
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
-			m.`id`,
-			m.`mac`,
-			m.`name`,
-			m.`ip`,
-			m.`flags`,
-			COUNT(mi.`inv_id`) AS `dups`
-		FROM c_mac_inv AS mi
-		LEFT JOIN @mac AS m
-			ON m.`id` = mi.`mac_id`
-		LEFT JOIN @tasks AS t
-			ON
-				t.`tid` = {%TID_MAC}
-				AND t.pid = m.`id`
-				AND t.`type` = {%TT_INV_DUP}
-				AND (t.flags & {%TF_CLOSED}) = 0
-		GROUP BY mi.`mac_id`
+			sq.`id`,
+			sq.`mac`,
+			sq.`name`,
+			sq.`ip`,
+			sq.`flags`,
+			sq.`type_no`,
+			COUNT(*) AS `dups`
+		FROM (
+
+				SELECT
+					m.`id`,
+					m.`mac`,
+					m.`name`,
+					m.`ip`,
+					m.`flags`,
+					i.`type_no`
+				FROM c_mac_inv AS mi
+
+				LEFT JOIN c_mac AS m
+					ON m.`id` = mi.`mac_id`
+
+				LEFT JOIN c_inv AS i
+					ON i.`id` = mi.`inv_id`
+				
+				WHERE
+					(m.`flags` & {%MF_SERIAL_NUM})
+
+			) AS `sq`
+
+		LEFT JOIN c_tasks AS t
+		ON
+			t.`tid` = {%TID_MAC}
+			AND t.pid = sq.`id`
+			AND t.`type` = {%TT_INV_DUP}
+			AND (t.flags & {%TF_CLOSED}) = 0
+		GROUP BY
+			sq.`id`,
+			sq.`type_no`
+
+		HAVING
+			COUNT(t.`id`) = 0
+			AND `dups` > 1
+			
+		UNION
+
+		SELECT
+			sq.`id`,
+			sq.`mac`,
+			sq.`name`,
+			sq.`ip`,
+			sq.`flags`,
+			sq.`type_no`,
+			COUNT(*) AS `dups`
+		FROM (
+
+				SELECT
+					m.`id`,
+					m.`mac`,
+					m.`name`,
+					m.`ip`,
+					m.`flags`,
+					i.`type_no`
+				FROM c_mac_inv AS mi
+
+				LEFT JOIN c_mac AS m
+					ON m.`id` = mi.`mac_id`
+
+				LEFT JOIN c_inv AS i
+					ON i.`id` = mi.`inv_id`
+				
+				WHERE
+					(m.`flags` & {%MF_SERIAL_NUM}) = 0
+
+			) AS `sq`
+
+		LEFT JOIN c_tasks AS t
+		ON
+			t.`tid` = {%TID_MAC}
+			AND t.pid = sq.`id`
+			AND t.`type` = {%TT_INV_DUP}
+			AND (t.flags & {%TF_CLOSED}) = 0
+		GROUP BY
+			sq.`id`
+
 		HAVING
 			COUNT(t.`id`) = 0
 			AND `dups` > 1
@@ -125,8 +193,13 @@
 						,m_location.`name` AS `m_loc_name`
 						,i.`flags`
 					FROM @mac_inv AS mi
+
+					LEFT JOIN c_mac AS m
+						ON m.`id` = mi.`mac_id`
+
 					LEFT JOIN c_inv AS i
 						ON i.`id` = mi.`inv_id`
+
 					LEFT JOIN @names AS m_status
 						ON
 							m_status.`type` = {%NT_STATUSES}
@@ -154,9 +227,14 @@
 							AND m_location.`id` = i.`loc_no`
 					WHERE
 						mi.`mac_id` = {d0}
+						AND (						
+								i.`type_no` = {d1}
+								OR (m.`flags` & {%MF_SERIAL_NUM}) = 0
+							)
 					LIMIT 5
 				",
-				$row['id']
+				$row['id'],
+				$row['type_no']
 			)))
 			{
 				foreach($invs as &$inv)

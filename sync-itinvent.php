@@ -364,7 +364,7 @@
 
 	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
-	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
+	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 60 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 60 DAY)"));
@@ -476,6 +476,11 @@
 				// Load SN and MACs
 
 				$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
+
+				if(strcasecmp($sn, 'N/A') == 0)
+				{
+					$sn = '';
+				}
 				
 				$macs = array();
 				
@@ -552,7 +557,7 @@
 						if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $sn !== 'N/A' && $sn !== 'N\A' && $sn !== 'NA')    // Exist in IT Invent?
 						{
 							$duplicate = MF_DUPLICATE;
-							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$sn.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 						}
 
 						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
