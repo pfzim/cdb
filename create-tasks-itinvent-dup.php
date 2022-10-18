@@ -254,7 +254,7 @@
 			$xml = helpdesk_api_request(
 				'Source=cdb'
 				.'&Action=new'
-				.'&Type=itinvent'
+				.'&Type='.((intval($row['flags']) & MF_SERIAL_NUM) ? 'itinventdupsn' : 'itinventdupmac')
 				.'&To=itinvent'
 				.'&Host='.urlencode($row['mac'])
 				.'&Message='.helpdesk_message(
