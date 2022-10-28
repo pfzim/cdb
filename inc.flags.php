@@ -193,6 +193,11 @@
 	define('VMF_EXIST_VMM',    0x0010);
 	define('VMF_EXIST_CMDB',   0x0020);
 
+	// `flags` from `vm` table
+
+	define('AGF_EXIST_PALOALTO',    0x0010);
+	define('AGF_EXIST_CMDB',  	    0x0020);
+
 	// `flags` from `files_inventory` table
 	
 	define('FIF_DELETED',     0x0002);
