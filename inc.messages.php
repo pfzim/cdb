@@ -237,8 +237,7 @@ $template_helpdesk_messages = array(
 		."\n\n%data_type%: %mac%"
 		."\nFlags: %flags%"
 		."%data%"
-		."\n\nКод работ: IIV11"
-		."\n\nПодробнее: ".WIKI_URL.'/Процессы%20и%20функции%20ИТ.FAQ-Зафиксировано-списанное-оборудование-в-сети.ashx'
+		."\n\n%info%"
 		,
 
 	TT_TEST =>
