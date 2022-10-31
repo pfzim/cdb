@@ -229,6 +229,8 @@ function walk_route($route, $action)
 			'sync-ad',
 			'sync-tmao',
 			'sync-tmee',
+			'sync-cmdb',
+			'sync-paloalto',
 			'sync-sccm',
 			'mark-after-sync',         // Компьютеры отсутствующие во всех системах посмечаем флагом CF_DELETED
 			'sync-itinvent',
