@@ -211,7 +211,39 @@ function walk_route($route, $action)
 	}
 }
 
+function get_config(string $name)
+{
+	global $db;
+	global $g_config;
+	
+	if(!isset($g_config[$name]))
+	{
+		return NULL;
+	}
+
+	return $g_config[$name];
+}
+
+	$g_config = array();
+	
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
+
+	// load config parameters from DB
+	
+	if($db->select_ex($cfg, rpv('
+		SELECT
+			m.`name`,
+			m.`value`
+		FROM @config AS m
+		WHERE
+			m.`uid` = 0
+	')))
+	{
+		foreach($cfg as &$row)
+		{
+			$g_config[$row[0]] = $row[1];
+		}
+	}
 
 	$action = '';
 

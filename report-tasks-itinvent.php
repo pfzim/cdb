@@ -103,6 +103,7 @@ EOT;
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_ADD}) AS `o_inv_add`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_ADD_DECOMIS}) AS `o_inv_add_decomis`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_MOVE}) AS `o_iimv`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_DUP}) AS `o_dup`,
 
 			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `p_inv_add`,
 			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV}) AND m.`status` = 7) AS `p_inv_add_decomis`,
@@ -125,14 +126,80 @@ EOT;
 							AND m.`loc_no` <> dm.`loc_no`
 						)
 					)
-			) AS `p_iimv`
+			) AS `p_iimv`,
+
+			(
+				SELECT
+					COUNT(*)
+				FROM (
+					SELECT
+						sq.`id`,
+						sq.`type_no`,
+						COUNT(*) AS `dups`
+					FROM (
+
+							SELECT
+								m.`id`,
+								i.`type_no`
+							FROM c_mac_inv AS mi
+
+							LEFT JOIN c_mac AS m
+								ON m.`id` = mi.`mac_id`
+
+							LEFT JOIN c_inv AS i
+								ON i.`id` = mi.`inv_id`
+							
+							WHERE
+								(m.`flags` & {%MF_SERIAL_NUM})
+
+						) AS `sq`
+
+					GROUP BY
+						sq.`id`,
+						sq.`type_no`
+
+					HAVING
+						`dups` > 1
+						
+					UNION
+
+					SELECT
+						sq.`id`,
+						sq.`type_no`,
+						COUNT(*) AS `dups`
+					FROM (
+
+							SELECT
+								m.`id`,
+								i.`type_no`
+							FROM c_mac_inv AS mi
+
+							LEFT JOIN c_mac AS m
+								ON m.`id` = mi.`mac_id`
+
+							LEFT JOIN c_inv AS i
+								ON i.`id` = mi.`inv_id`
+							
+							WHERE
+								(m.`flags` & {%MF_SERIAL_NUM}) = 0
+
+						) AS `sq`
+
+					GROUP BY
+						sq.`id`
+
+					HAVING
+						`dups` > 1
+				) AS `sq2`
+			) AS `p_dup`
 	")))
 	{
 		$html .= '<table>';
 		$html .= '<tr><th>Описание</th>                                                   <th>Несоответствий</th>                       <th>Открыто заявок</th>                        <th>Лимит заявок</th></tr>';
 		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD).'</td>             <td>'.$result[0]['p_inv_add'].'</td>          <td>'.$result[0]['o_inv_add'].'</td>           <td rowspan="2">'.TASKS_LIMIT_ITINVENT.'</td></tr>';
-		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD_DECOMIS).'</td>    <td>'.$result[0]['p_inv_add_decomis'].'</td> <td>'.$result[0]['o_inv_add_decomis'].'</td>  </tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD_DECOMIS).'</td>     <td>'.$result[0]['p_inv_add_decomis'].'</td>  <td>'.$result[0]['o_inv_add_decomis'].'</td>   </tr>';
 		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_MOVE).'</td>            <td>'.$result[0]['p_iimv'].'</td>             <td>'.$result[0]['o_iimv'].'</td>              <td>'.TASKS_LIMIT_ITINVENT_MOVE.'</td></tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_DUP).'</td>             <td>'.$result[0]['p_dup'].'</td>              <td>'.$result[0]['o_dup'].'</td>               <td>'.TASKS_LIMIT_ITINVENT_DUP.'</td></tr>';
 		$html .= '</table>';
 	}
 	

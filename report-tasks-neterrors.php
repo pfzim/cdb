@@ -134,32 +134,79 @@ EOT;
 
 
 	if($db->select_assoc_ex($result, rpv("
-		SELECT
-			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_NET_ERRORS}) AS `o_net_errors`,
+			SELECT
+				(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_NET_ERRORS}) AS `o_net_errors`,
 
-			(
-				SELECT 
-					COUNT(*)
-				FROM @devices AS d
-				LEFT JOIN @net_errors AS e ON
-					e.`pid` = d.`id`
-				WHERE
-					d.`type` = {%DT_NETDEV}
-					AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
-					AND (e.`flags` & {%NEF_FIXED}) = 0
-					AND e.`port` <> 'FastEthernet4'
-					AND (
-					  -- e.`scf` > 10
-					  -- OR 
-					  e.`cse` > 10
-					  -- OR e.`ine` > 10
-					)
-			) AS `p_net_errors`
-	")))
+				(
+					SELECT 
+						COUNT(*)
+					FROM @devices AS d
+					LEFT JOIN @net_errors AS e ON
+						e.`pid` = d.`id`
+					WHERE
+						d.`type` = {%DT_NETDEV}
+						AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
+						AND (e.`flags` & {%NEF_FIXED}) = 0
+						AND e.`port` NOT REGEXP {s0}
+						AND (
+						  -- e.`scf` > 10
+						  -- OR 
+						  e.`cse` > 10
+						  -- OR e.`ine` > 10
+						)
+				) AS `p_net_errors`,
+
+				(
+					SELECT 
+						COUNT(*)
+					FROM @devices AS d
+					LEFT JOIN @net_errors AS e ON
+						e.`pid` = d.`id`
+					WHERE
+						d.`type` = {%DT_NETDEV}
+						AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
+						AND (e.`flags` & {%NEF_FIXED}) = 0
+						AND e.`port` = 'FastEthernet4'
+						AND e.`cse` > 0
+				) AS `p_fe4_cse`,
+
+				(
+					SELECT 
+						COUNT(*)
+					FROM @devices AS d
+					LEFT JOIN @net_errors AS e ON
+						e.`pid` = d.`id`
+					WHERE
+						d.`type` = {%DT_NETDEV}
+						AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
+						AND (e.`flags` & {%NEF_FIXED}) = 0
+						AND e.`port` = 'FastEthernet4'
+						AND e.`scf` > 0
+				) AS `p_fe4_scf`,
+
+				(
+					SELECT 
+						COUNT(*)
+					FROM @devices AS d
+					LEFT JOIN @net_errors AS e ON
+						e.`pid` = d.`id`
+					WHERE
+						d.`type` = {%DT_NETDEV}
+						AND (d.`flags` & ({%DF_DELETED} | {%DF_HIDED})) = 0    -- Not deleted, not hide
+						AND (e.`flags` & {%NEF_FIXED}) = 0
+						AND e.`port` = 'FastEthernet4'
+						AND e.`ine` > 0
+				) AS `p_fe4_ine`
+		",
+		get_config('net_errors_exclude_ports_regex')
+	)))
 	{
 		$html .= '<table>';
 		$html .= '<tr><th>Описание</th>                                                   <th>Несоответствий</th>                       <th>Открыто заявок</th>                        <th>Лимит заявок</th></tr>';
-		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_NET_ERRORS).'</td>          <td>'.$result[0]['p_net_errors'].'</td>       <td>'.$result[0]['o_net_errors'].'</td>       <td>'.TASKS_LIMIT_NET_ERRORS.'</td></tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_NET_ERRORS).'</td>          <td>'.$result[0]['p_net_errors'].'</td>       <td>'.$result[0]['o_net_errors'].'</td>        <td>'.TASKS_LIMIT_NET_ERRORS.'</td></tr>';
+		$html .= '<tr><td>Ошибки: FastEthernet4 CarrierSenseErrors</td>                   <td>'.$result[0]['p_fe4_cse'].'</td>          <td>-</td>                                     <td>-</td></tr>';
+		$html .= '<tr><td>Ошибки: FastEthernet4 SingleCollisionFrames</td>                <td>'.$result[0]['p_fe4_scf'].'</td>          <td>-</td>                                     <td>-</td></tr>';
+		$html .= '<tr><td>Ошибки: FastEthernet4 InErrors</td>                             <td>'.$result[0]['p_fe4_ine'].'</td>          <td>-</td>                                     <td>-</td></tr>';
 		$html .= '</table>';
 		$html .= '<br />';
 	}
