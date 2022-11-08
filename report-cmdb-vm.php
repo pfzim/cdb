@@ -1,16 +1,16 @@
 <?php
-	// Report CMDB - VMM
+	// Report CMDB - VM
 
 	/**
 		\file
-		\brief Формирование отчёта по отсутствующим в CMDB или VMM
+		\brief Формирование отчёта по отсутствующим в CMDB или VM
 		виртуальных серверах или различии в конфигурации
 	*/
 
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nreport-cmdb-vmm:\n";
+	echo "\nreport-cmdb-vm:\n";
 
 	global $g_cmdb_vmm_short_flags;
 
@@ -32,7 +32,7 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт-сверка CMDB-VMM</h1>
+	<h1>Отчёт-сверка CMDB-VM</h1>
 EOT;
 
 	$table = '<table>';
@@ -46,6 +46,7 @@ EOT;
 			vm.`cpu`,
 			vm.`ram_size`,
 			vm.`hdd_size`,
+			vm.`cmdb_type`,
 			vm.`cmdb_os`,
 			vm.`cmdb_cpu`,
 			vm.`cmdb_ram_size`,
@@ -55,7 +56,8 @@ EOT;
 		WHERE
 			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM}))
 			AND (
-				(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM})) <> ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM})
+				(vm.`flags` & {%VMF_EXIST_CMDB}) = 0
+				OR (vm.`flags` & ({%VMF_EXIST_VMM})) = 0
 				OR vm.`cpu` <> vm.`cmdb_cpu`
 				OR vm.`ram_size` <> vm.`cmdb_ram_size`
 				OR vm.`os` <> vm.`cmdb_os`
@@ -74,7 +76,7 @@ EOT;
 			}
 			else if((intval($row['flags']) & VMF_EXIST_VMM) == 0)
 			{
-				$check_result .= 'Отсутствует в VMM;';
+				$check_result .= 'Виртуальная машина не существует ('.$row['cmdb_type'].');';
 			}
 			else
 			{
@@ -115,10 +117,10 @@ EOT;
 	$table .= '</table>';
 
 	$html .= $table;
-	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-cmdb-vmm">Сформировать отчёт заново</a></small>';
+	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-cmdb-vm">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(REPORT_CMDB_VMM_MAIL_TO, CDB_TITLE.': Report CMDB VMM', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_CMDB_VM_MAIL_TO, CDB_TITLE.': Report CMDB VM', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK';
 	}

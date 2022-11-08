@@ -307,7 +307,7 @@ function get_config(string $name)
 			//'report-vuln-top',
 			//'report-vuln-top-netdev',
 			'report-users-lastlogon',
-			'report-cmdb-vmm',
+			'report-cmdb-vm',
 			'report-cmdb-vpn',
 			'report-itinvent-bcc',
 			'report-itinvent-files-top'
@@ -456,8 +456,8 @@ function get_config(string $name)
 		'report-vm' => array(
 			'@report-vm.php'
 		),
-		'report-cmdb-vmm' => array(
-			'@report-cmdb-vmm.php'
+		'report-cmdb-vm' => array(
+			'@report-cmdb-vm.php'
 		),
 		'report-cmdb-vpn' => array(
 			'@report-cmdb-vpn.php'
