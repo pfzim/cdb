@@ -22,6 +22,7 @@
 	define('CDB_PROP_BASELINE_COMPLIANCE_MSDT',			114);  // CI - Check - Regkey: ms-msdt
 	define('CDB_PROP_BASELINE_COMPLIANCE_EDGE',			115);  // CI - Check - Regkey: Edge Version
 	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP',	116);  // Результат сравнения версии ОС
+	define('CDB_PROP_SCCM_CLIENT_VERSION',				117);  // SCCM agent version
 
 	// `flags` from `persons` table
 

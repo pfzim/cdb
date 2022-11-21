@@ -69,6 +69,7 @@
 			m.ItemKey AS ResourceID,
 			m.Netbios_Name0 AS DeviceName,
 			m.Creation_Date0 AS CreationDate,
+			m.Client_Version0 AS ClientVersion,
 			m.BuildExt,
 			j1.LastDDR,
 			j1.LastPolicyRequest,
@@ -284,7 +285,13 @@
 				CDB_PROP_OPERATINGSYSTEMVERSION_SCCM,
 				$row['BuildExt']
 			));
-			
+
+			$db->put(rpv("INSERT INTO @properties_str (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
+				$row_id,
+				CDB_PROP_SCCM_CLIENT_VERSION,
+				$row['ClientVersion']
+			));
+
 			// Сравниваем версию ОС (формат строки: 0.0.0.0)
 			// установленная версия < ожидаемой = -1
 			// установленная версия = ожидаемой = 0
