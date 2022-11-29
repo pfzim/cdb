@@ -193,6 +193,8 @@
 
 	define('VMF_EXIST_VMM',    0x0010);
 	define('VMF_EXIST_CMDB',   0x0020);
+	define('VMF_EXIST_DTLN',   0x0040);
+	define('VMF_EXIST_VK',     0x0080);
 
 	// `flags` from `vm` table
 

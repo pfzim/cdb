@@ -57,10 +57,10 @@ EOT;
 			vm.`flags`
 		FROM @vm AS vm
 		WHERE
-			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM}))
+			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK}))
 			AND (
 				(vm.`flags` & {%VMF_EXIST_CMDB}) = 0
-				OR (vm.`flags` & ({%VMF_EXIST_VMM})) = 0
+				OR (vm.`flags` & ({%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK})) = 0
 				OR vm.`cpu` <> vm.`cmdb_cpu`
 				OR vm.`ram_size` <> vm.`cmdb_ram_size`
 				OR vm.`os` <> vm.`cmdb_os`
@@ -77,7 +77,7 @@ EOT;
 			{
 				$check_result .= 'Отсутствует в CMDB;';
 			}
-			else if((intval($row['flags']) & VMF_EXIST_VMM) == 0)
+			else if((intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK)) == 0)
 			{
 				$check_result .= 'Виртуальная машина не существует ('.$row['cmdb_type'].');';
 			}
@@ -93,7 +93,8 @@ EOT;
 					$check_result .= 'RAM VMM '.$row['ram_size'].' != CMDB '.$row['cmdb_ram_size'].';';
 				}
 
-				if(strcasecmp($row['os'], $row['cmdb_os']) !== 0)
+				//if(strcasecmp($row['os'], $row['cmdb_os']) !== 0)
+				if(stripos($row['os'], $row['cmdb_os']) === FALSE)
 				{
 					$check_result .= 'OS VMM '.$row['os'].' != CMDB '.$row['cmdb_os'].';';
 				}

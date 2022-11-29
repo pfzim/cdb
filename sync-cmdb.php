@@ -46,7 +46,7 @@
 	//print_r($result_json);
 
 	$sess_id = $result_json['data']['_id'];
-	echo 'SessionID: '. $sess_id.PHP_EOL;
+	//echo 'SessionID: '. $sess_id.PHP_EOL;
 
 	echo 'Loading servers...'.PHP_EOL;
 	
