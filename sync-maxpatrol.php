@@ -12,7 +12,7 @@
 	
 	echo PHP_EOL.'sync-maxpatrol:'.PHP_EOL;
 	
-	//$db->put(rpv("UPDATE @vm SET `flags` = ((`flags` & ~{%VMF_EXIST_VK})) WHERE (`flags` & {%VMF_EXIST_VK}) = {%VMF_EXIST_VK}"));
+	$db->put(rpv("UPDATE @maxpatrol SET `flags` = ((`flags` & ~{%MPF_EXIST})) WHERE (`flags` & {%MPF_EXIST}) = {%MPF_EXIST}"));
 
 	$ch = curl_init(MAXPATROL_AUTH_URL.'/connect/token');
 
@@ -56,7 +56,7 @@
 	$ch = curl_init(MAXPATROL_URL.'/api/assets_temporal_readmodel/v1/assets_grid');
 
 	$post_data = json_encode(array(
-		'pdql' => 'select(Host.Hostname, Host.IpAddress, Host.@AuditTime)',
+		'pdql' => 'select(Host.@Id, Host.Hostname, Host.IpAddress, Host.@AuditTime)',
 		'selectedGroupIds' => array(),
 		'additionalFilterParameters' => array(
 			'groupIds' => array(),
@@ -103,11 +103,11 @@
 		echo 'ERROR: Invalid answer from server: '.$response.PHP_EOL;
 		return;
 	}
-	
+
 	$row_count = intval($result_json['rowCount']);
 	$offset = 0;
 	$i = 0;
-	
+
 	echo 'Row count: '.$row_count.PHP_EOL;
 
 	while($offset < $row_count)
@@ -128,24 +128,27 @@
 			echo 'ERROR: Invalid answer from server: '.$response.PHP_EOL;
 			return;
 		}
-		
+
 		foreach($result_json['records'] as &$record)
 		{
-			echo 'Hostname: '.$record['Host.Hostname'].', IP: '.$record['Host.IpAddress'].', AuditTime: '.$record['Host.@AuditTime'].PHP_EOL;
+			$date = 'NULL';
+			if(!empty($record['Host.@AuditTime']))
+			{
+				$date = '\''.DateTime::createFromFormat(DateTime::ISO8601, $record['Host.@AuditTime'])->format('Y-m-d H:i:s').'\'';
+			}
+			
+			echo 'Id: '.$record['Host.@Id'].', Hostname: '.$record['Host.Hostname'].', IP: '.$record['Host.IpAddress'].', AuditTime: '.$date.PHP_EOL;
 
-			/*
 			$db->put(rpv("
-					INSERT INTO @vm (`name`, `cpu`, `ram_size`, `hdd_size`, `os`, `flags`)
-					VALUES ({s0}, {d1}, {d2}, {d3}, {s4}, {%VMF_EXIST_VK})
-					ON DUPLICATE KEY UPDATE `cpu` = {d1}, `ram_size` = {d2}, `hdd_size` = {d3}, `os` = {s4}, `flags` = (`flags` | {%VMF_EXIST_VK})
+					INSERT INTO @maxpatrol (`guid`, `name`, `ip`, `audit_time`, `flags`)
+					VALUES ({s0}, {s1}, {s2}, {r3}, {%MPF_EXIST})
+					ON DUPLICATE KEY UPDATE `name` = {s1}, `ip` = {s2}, `audit_time` = {r3}, `flags` = (`flags` | {%MPF_EXIST})
 				",
-				$server['name'],
-				$vm['vcpus'],
-				$vm['ram'],
-				$vm['disk'],
-				''
+				$record['Host.@Id'],
+				strtoupper($record['Host.Hostname']),
+				$record['Host.IpAddress'],
+				$date
 			));
-			*/
 
 			$i++;
 		}

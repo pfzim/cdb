@@ -264,6 +264,7 @@ function get_config(string $name)
 			'sync-dtln',
 			'sync-vk',
 			'sync-cmdb',
+			'sync-maxpatrol',
 			'sync-paloalto',
 			'sync-sccm',
 			'mark-after-sync',         // Компьютеры отсутствующие во всех системах посмечаем флагом CF_DELETED
@@ -311,6 +312,7 @@ function get_config(string $name)
 			'report-users-lastlogon',
 			'report-cmdb-vm',
 			'report-cmdb-vpn',
+			'report-cmdb-maxpatrol',
 			'report-itinvent-bcc',
 			'report-itinvent-files-top'
 		),
@@ -460,6 +462,9 @@ function get_config(string $name)
 		),
 		'report-cmdb-vm' => array(
 			'@report-cmdb-vm.php'
+		),
+		'report-cmdb-maxpatrol' => array(
+			'@report-cmdb-maxpatrol.php'
 		),
 		'report-cmdb-vpn' => array(
 			'@report-cmdb-vpn.php'

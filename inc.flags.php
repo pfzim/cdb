@@ -189,6 +189,10 @@
 
 	define('FF_ALLOWED',      0x0010);
 
+	// `flags` from `maxpatrol` table
+
+	define('MPF_EXIST',       0x0010);
+	
 	// `flags` from `vm` table
 
 	define('VMF_EXIST_VMM',    0x0010);
