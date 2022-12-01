@@ -94,10 +94,10 @@ EOT;
 				}
 
 				//if(strcasecmp($row['os'], $row['cmdb_os']) !== 0)
-				if(stripos($row['os'], $row['cmdb_os']) === FALSE)
-				{
-					$check_result .= 'OS VMM '.$row['os'].' != CMDB '.$row['cmdb_os'].';';
-				}
+				// if(stripos($row['os'], $row['cmdb_os']) === FALSE)
+				// {
+					// $check_result .= 'OS VMM '.$row['os'].' != CMDB '.$row['cmdb_os'].';';
+				// }
 
 				// if(intval($row['hdd_size']) != intval($row['cmdb_hdd_size']))
 				// {

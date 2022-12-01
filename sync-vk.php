@@ -60,7 +60,7 @@
 
 	if(!preg_match('/^X-Subject-Token:\\s+([^\\r\\n;]+)/mi', $header, $matches))
 	{
-		echo 'ERROR: Token not found.';
+		echo 'ERROR: Token not found: '.$result.PHP_EOL;
 		return;
 	}
 
@@ -206,7 +206,7 @@
 				",
 				$server['name'],
 				$vm['vcpus'],
-				$vm['ram']/1024,
+				$vm['ram'],
 				$vm['disk'],
 				''
 			));

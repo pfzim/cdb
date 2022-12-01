@@ -262,6 +262,7 @@ function get_config(string $name)
 			'sync-tmao',
 			'sync-tmee',
 			'sync-dtln',
+			'sync-vk',
 			'sync-cmdb',
 			'sync-paloalto',
 			'sync-sccm',
@@ -508,6 +509,9 @@ function get_config(string $name)
 		),
 		'sync-vk' => array(
 			'@sync-vk.php'
+		),
+		'sync-maxpatrol' => array(
+			'@sync-maxpatrol.php'
 		),
 		'sync-paloalto' => array(
 			'@sync-paloalto.php'

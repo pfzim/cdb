@@ -71,7 +71,7 @@
 				",
 				$vm['name'],
 				$vm['numberOfCpus'],
-				$vm['memoryMB']/1024,
+				$vm['memoryMB'],
 				$vm['totalStorageAllocatedMb']/1024,
 				$vm['guestOs']
 			));
