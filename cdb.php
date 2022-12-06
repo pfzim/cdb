@@ -218,6 +218,7 @@ function get_config(string $name)
 	
 	if(!isset($g_config[$name]))
 	{
+		throw new Exception('Configuration: undefined parameter: '.$name);
 		return NULL;
 	}
 
@@ -313,12 +314,12 @@ function get_config(string $name)
 			'report-cmdb-vm',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
-			'report-itinvent-bcc',
-			'report-itinvent-files-top'
+			'report-itinvent-bcc'
+			//,'report-itinvent-files-top'
 		),
 		'cron-weekly' => array(
 			'sync-3par',
-			'sync-sccm-files',
+			//'sync-sccm-files',
 			'report-3par',
 			'report-vm'
 		),

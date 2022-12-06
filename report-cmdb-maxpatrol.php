@@ -3,14 +3,14 @@
 
 	/**
 		\file
-		\brief Формирование отчёта по серверам из CMDB и дате их
+		\brief Формирование отчёта по списку серверов из CMDB и дате их
 		сканировния из MaxPatrol
 	*/
 
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nreport-cmdb-vm:\n";
+	echo PHP_EOL.'nreport-cmdb-maxpatrol:'.PHP_EOL;
 
 	global $g_cmdb_vmm_short_flags;
 
@@ -32,11 +32,11 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт о времени последнего сканированию MaxPatrol серверов из CMDB</h1>
+	<h1>Время последнего сканирования MaxPatrol серверов по списку из CMDB</h1>
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Audit time</th></tr>';
+	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
@@ -46,11 +46,12 @@ EOT;
 		FROM @vm AS vm
 		LEFT JOIN @maxpatrol AS mp
 			ON mp.`name` = vm.`name`
+			AND mp.`flags` & {%MPF_EXIST}
 		WHERE
 			vm.`flags` & {%VMF_EXIST_CMDB}
-			AND mp.`flags` & {%MPF_EXIST}
 		ORDER BY
-			mp.`audit_time`
+			mp.`audit_time`,
+			vm.`name`
 	")))
 	{
 		foreach($result as &$row)
@@ -72,9 +73,9 @@ EOT;
 
 	if(php_mailer(REPORT_CMDB_MAXPATROL_MAIL_TO, CDB_TITLE.': Report CMDB MaxPatrol', $html, 'You client does not support HTML'))
 	{
-		echo 'Send mail: OK';
+		echo 'Send mail: OK'.PHP_EOL;
 	}
 	else
 	{
-		echo 'Send mail: FAILED';
+		echo 'Send mail: FAILED'.PHP_EOL;
 	}
