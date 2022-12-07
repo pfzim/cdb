@@ -36,13 +36,14 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th></tr>';
+	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th></tr>';
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			vm.`name`,
-			DATE_FORMAT(mp.`audit_time`, '%d.%m.%Y %H:%i:%s') AS `audit_time`
+			DATE_FORMAT(mp.`audit_time`, '%d.%m.%Y %H:%i:%s') AS `audit_time`,
+			vm.`cmdb_os`
 		FROM @vm AS vm
 		LEFT JOIN @maxpatrol AS mp
 			ON mp.`name` = vm.`name`
@@ -59,6 +60,7 @@ EOT;
 			$table .= '<tr>';
 			$table .= '<td>'.$row['name'].'</td>';
 			$table .= '<td>'.$row['audit_time'].'</td>';
+			$table .= '<td>'.$row['cmdb_os'].'</td>';
 			$table .= '</tr>';
 
 			$i++;
