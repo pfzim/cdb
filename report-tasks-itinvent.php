@@ -135,12 +135,14 @@ EOT;
 					SELECT
 						sq.`id`,
 						sq.`type_no`,
+						sq.`model_no`,
 						COUNT(*) AS `dups`
 					FROM (
 
 							SELECT
 								m.`id`,
-								i.`type_no`
+								i.`type_no`,
+								i.`model_no`
 							FROM c_mac_inv AS mi
 
 							LEFT JOIN c_mac AS m
@@ -156,7 +158,8 @@ EOT;
 
 					GROUP BY
 						sq.`id`,
-						sq.`type_no`
+						sq.`type_no`,
+						sq.`model_no`
 
 					HAVING
 						`dups` > 1

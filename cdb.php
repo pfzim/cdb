@@ -314,6 +314,7 @@ function get_config(string $name)
 			'report-cmdb-vm',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
+			'report-maxpatrol-smb',
 			'report-itinvent-bcc'
 			//,'report-itinvent-files-top'
 		),
@@ -466,6 +467,9 @@ function get_config(string $name)
 		),
 		'report-cmdb-maxpatrol' => array(
 			'@report-cmdb-maxpatrol.php'
+		),
+		'report-maxpatrol-smb' => array(
+			'@report-maxpatrol-smb.php'
 		),
 		'report-cmdb-vpn' => array(
 			'@report-cmdb-vpn.php'

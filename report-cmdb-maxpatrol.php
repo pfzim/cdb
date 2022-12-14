@@ -10,7 +10,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo PHP_EOL.'nreport-cmdb-maxpatrol:'.PHP_EOL;
+	echo PHP_EOL.'report-cmdb-maxpatrol:'.PHP_EOL;
 
 	global $g_cmdb_vmm_short_flags;
 

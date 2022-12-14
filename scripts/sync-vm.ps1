@@ -146,7 +146,7 @@ Invoke-Command -ComputerName $g_config.vmm_server -Credential $ps_creds -Authent
 		$vms = Get-SCVirtualMachine -VMMServer $g_config.vmm_server
 		foreach($vm in $vms)
 		{
-			$query.CommandText = 'INSERT INTO c_vm (`name`, `cpu`, `ram_size`, `hdd_size`, `os`, `flags`) VALUES ("{0}", {1}, {2}, {3}, "{4}", 0x0010) ON DUPLICATE KEY UPDATE `cpu` = {1}, `ram_size` = {2}, `hdd_size` = {3}, `os` = "{4}", `flags` = (`flags` | 0x0010)' -f $vm.Name.ToUpper(), $vm.CPUCount, ($vm.MemoryAssignedMB -as [int]), ($vm.TotalSize / 1gb -as [int]), $vm.OperatingSystem
+			$query.CommandText = 'INSERT INTO c_vm (`name`, `cpu`, `ram_size`, `hdd_size`, `os`, `flags`) VALUES ("{0}", {1}, {2}, {3}, "{4}", 0x0010) ON DUPLICATE KEY UPDATE `cpu` = {1}, `ram_size` = {2}, `hdd_size` = {3}, `os` = "{4}", `flags` = (`flags` | 0x0010)' -f $vm.Name.ToUpper(), $vm.CPUCount, ($vm.Memory -as [int]), ($vm.TotalSize / 1gb -as [int]), $vm.OperatingSystem
 			ExecuteNonQueryFailover -Query $query
 		}
 

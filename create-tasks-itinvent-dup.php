@@ -7,7 +7,7 @@
 		
 		Критерии создания заявок при выполненни условий:
 		  - В разных карточках оборудования ИТ Инвент вненсены одинаковые MAC адреса
-		  - В разных карточках одного типа оборудования снесены одинаковые серийные номера.
+		  - В разных карточках одного типа и модели оборудования внесены одинаковые серийные номера.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -89,6 +89,7 @@
 			sq.`ip`,
 			sq.`flags`,
 			sq.`type_no`,
+			sq.`model_no`,
 			COUNT(*) AS `dups`
 		FROM (
 
@@ -98,7 +99,8 @@
 					m.`name`,
 					m.`ip`,
 					m.`flags`,
-					i.`type_no`
+					i.`type_no`,
+					i.`model_no`
 				FROM c_mac_inv AS mi
 
 				LEFT JOIN c_mac AS m
@@ -120,7 +122,8 @@
 			AND (t.flags & {%TF_CLOSED}) = 0
 		GROUP BY
 			sq.`id`,
-			sq.`type_no`
+			sq.`type_no`,
+			sq.`model_no`
 
 		HAVING
 			COUNT(t.`id`) = 0
@@ -135,6 +138,7 @@
 			sq.`ip`,
 			sq.`flags`,
 			sq.`type_no`,
+			sq.`model_no`,
 			COUNT(*) AS `dups`
 		FROM (
 
@@ -144,7 +148,8 @@
 					m.`name`,
 					m.`ip`,
 					m.`flags`,
-					i.`type_no`
+					i.`type_no`,
+					i.`model_no`
 				FROM c_mac_inv AS mi
 
 				LEFT JOIN c_mac AS m
