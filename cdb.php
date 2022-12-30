@@ -262,6 +262,7 @@ function get_config(string $name)
 			'sync-ad',
 			'sync-tmao',
 			'sync-tmee',
+			'sync-vsphere',
 			'sync-dtln',
 			'sync-vk',
 			'sync-cmdb',
@@ -314,7 +315,7 @@ function get_config(string $name)
 			'report-cmdb-vm',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
-			'report-maxpatrol-smb',
+			//'report-maxpatrol-smb',
 			'report-itinvent-bcc'
 			//,'report-itinvent-files-top'
 		),
@@ -513,6 +514,9 @@ function get_config(string $name)
 		),
 		'sync-cmdb' => array(
 			'@sync-cmdb.php'
+		),
+		'sync-vsphere' => array(
+			'@sync-vsphere.php'
 		),
 		'sync-dtln' => array(
 			'@sync-dtln.php'

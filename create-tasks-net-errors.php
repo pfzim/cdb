@@ -19,6 +19,8 @@
 		
 		Устаревша информация об ошибках переданная более 30 дней назад
 		обнуляется.
+		
+		Добавлено автозакрытие нарядов, где количество ошибок стало равно 0.
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -56,15 +58,20 @@
 
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
-		SELECT t.`id`, t.`operid`, t.`opernum`, d.`name`
-		FROM @tasks AS t
-		LEFT JOIN @devices AS d
+		SELECT t.`id`, t.`operid`, t.`opernum`, d.`name`, d.`flags` AS `d_flags`, SUM(ne.`cse`) AS `errors`
+		FROM c_tasks AS t
+		LEFT JOIN c_devices AS d
 			ON d.`id` = t.`pid` AND t.`tid` = {%TID_DEVICES} AND d.`type` = {%DT_NETDEV}
+		LEFT JOIN c_net_errors AS ne
+			ON ne.`pid` = t.`pid`
 		WHERE
 			t.`tid` = {%TID_DEVICES}
 			AND t.`type` = {%TT_NET_ERRORS}
 			AND (t.`flags` & {%TF_CLOSED}) = 0     -- Task status is Opened
-			AND d.`flags` & ({%DF_DELETED} | {%DF_HIDED})                              -- Deleted, Manual hide
+		GROUP BY t.`id`
+		HAVING
+			`d_flags` & ({%DF_DELETED} | {%DF_HIDED})                              -- Deleted, Manual hide
+			OR `errors` = 0
 	")))
 	{
 		foreach($result as &$row)
@@ -85,7 +92,7 @@
 
 			if($xml !== FALSE)
 			{
-				echo $row['mac'].' '.$row['opernum']."\r\n";
+				echo $row['name'].' '.$row['opernum']."\r\n";
 				$db->put(rpv("UPDATE @tasks SET `flags` = (`flags` | {%TF_CLOSED}) WHERE `id` = # LIMIT 1", $row['id']));
 				$i++;
 			}

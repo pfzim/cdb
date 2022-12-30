@@ -105,16 +105,19 @@
 
 	$line_no = 0;
 
-	error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, $path_log);
+	//error_log("\n".date('c').'  Start import from device: '.$net_dev." List:\n".$_POST['list']."\n", 3, $path_log);
+	error_log("\n".date('c').'  '.$net_dev.": starting import\n", 3, $path_log);
 	$line = strtok($_POST['list'], "\n");
 	while($line !== FALSE)
 	{
 		$line_no++;
 		
 		$line = trim($line);
-		
+
 		if(!empty($line))
 		{
+			error_log(date('c').'  '.$net_dev.','.$line."\n", 3, $path_log);
+
 			// Парсим сторку
 			
 			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port[,vlan,port_desc]

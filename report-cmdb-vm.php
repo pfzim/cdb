@@ -57,10 +57,10 @@ EOT;
 			vm.`flags`
 		FROM @vm AS vm
 		WHERE
-			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK}))
+			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK} | {%VMF_EXIST_VSPHERE}))
 			AND (
 				(vm.`flags` & {%VMF_EXIST_CMDB}) = 0
-				OR (vm.`flags` & ({%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK})) = 0
+				OR (vm.`flags` & ({%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK} | {%VMF_EXIST_VSPHERE})) = 0
 				OR vm.`cpu` <> vm.`cmdb_cpu`
 				OR vm.`ram_size` <> vm.`cmdb_ram_size`
 				OR vm.`os` <> vm.`cmdb_os`
@@ -77,7 +77,7 @@ EOT;
 			{
 				$check_result .= 'Отсутствует в CMDB;';
 			}
-			else if((intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK)) == 0)
+			else if((intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK | VMF_EXIST_VSPHERE)) == 0)
 			{
 				$check_result .= 'Виртуальная машина не существует ('.$row['cmdb_type'].');';
 			}

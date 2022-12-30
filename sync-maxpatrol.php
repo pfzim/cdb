@@ -172,10 +172,15 @@
 		'pdql' => 'select(Host.IpAddress, Host.Hostname, Host.Fqdn, Host.Endpoints) | filter('
 			.'Host.Endpoints NOT LIKE "%/%" and '
 			.'Host.Endpoints NOT LIKE "%:%" and '
-			.'Host.Endpoints not like "%.%.%.%" and '
+			.'Host.Endpoints NOT LIKE "%.%.%.%" and '
 			.'Host.Endpoints NOT LIKE "_$" and '
+			.'Host.Hostname NOT LIKE "NN-PRINT-__" and '
+			.'Host.Hostname NOT LIKE "RC_-PRINT-__" and '
+			.'Host.Endpoints NOT LIKE "RC_-PRN-__" and '
+			.'Host.Endpoints NOT LIKE "7701-PRN-__" and '
 			.'Host.Endpoints NOT LIKE "\\\\%\\ClusterStorage$" and '
-			.'Host.Endpoints NOT IN ["Admin$","IPC$","print$","NETLOGON","SYSVOL"])',
+			.'Host.Endpoints NOT IN ["Admin$","IPC$","print$","NETLOGON","SYSVOL"]'
+		.')',
 		'selectedGroupIds' => array(),
 		'additionalFilterParameters' => array(
 			'groupIds' => array(),
@@ -254,7 +259,7 @@
 					INSERT INTO @maxpatrol_smb (`hostname`, `share`)
 					VALUES ({s0}, {s1})
 				",
-				strtoupper($record['Host.Hostname']),
+				empty($record['Host.Hostname']) ? $record['Host.IpAddress'] : strtoupper($record['Host.Hostname']),
 				$record['Host.Endpoints']
 			));
 
