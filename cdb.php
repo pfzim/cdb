@@ -475,6 +475,9 @@ function get_config(string $name)
 		'report-cmdb-vpn' => array(
 			'@report-cmdb-vpn.php'
 		),
+		'report-zabbix-problems' => array(
+			'@report-zabbix-problems.php'
+		),
 		'sync-3par' => array(
 			'@sync-3par.php'
 		),
