@@ -178,7 +178,8 @@
 			.'Host.Hostname NOT LIKE "RC_-PRINT-__" and '
 			.'Host.Endpoints NOT LIKE "RC_-PRN-__" and '
 			.'Host.Endpoints NOT LIKE "7701-PRN-__" and '
-			.'Host.Endpoints NOT LIKE "\\\\%\\ClusterStorage$" and '
+			.'Host.Endpoints NOT LIKE "\\\\\\\\%\\\\ClusterStorage$" and '
+			.'Host.Endpoints NOT LIKE "\\\\\\\\%\\\\_$" and '
 			.'Host.Endpoints NOT IN ["Admin$","IPC$","print$","NETLOGON","SYSVOL"]'
 		.')',
 		'selectedGroupIds' => array(),

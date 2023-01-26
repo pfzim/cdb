@@ -240,6 +240,11 @@ $template_helpdesk_messages = array(
 		."\n\n%info%"
 		,
 
+	TT_MAXPATROL_AUDIT =>
+		'Операционная система не сканировалась MaxPatrol'
+		."\nName: %host%"
+		,
+
 	TT_TEST =>
 		'THIS IS A TEST!'
 		."\n\nПК: %host%"
