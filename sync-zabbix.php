@@ -156,6 +156,24 @@
 		return $zabbix_groups[$obj_code][$reg_code][$type_code];
 	}
 
+	function zabbix_get_or_create_maintenance_group_id($auth_key, &$zabbix_maintenance_groups, $reg_code)
+	{
+		if(!isset($zabbix_maintenance_groups[$reg_code]))
+		{
+			if($reg_code)
+			{
+				$group_name = ZABBIX_MAINTENANCE_GROUP_PREFIX.'/'.sprintf('%02d', $reg_code);
+			}
+			else
+			{
+				$group_name = ZABBIX_MAINTENANCE_GROUP_PREFIX;
+			}
+
+			$zabbix_maintenance_groups[$reg_code] = zabbix_create_group($auth_key, $group_name);
+		}
+
+		return $zabbix_maintenance_groups[$reg_code];
+	}
 /*
 		Old:
 		SELECT
@@ -431,6 +449,7 @@
 			'searchByAny'           => TRUE,
 			'search'                => array(
 				'name'                  => array(
+											ZABBIX_MAINTENANCE_GROUP_PREFIX,
 											ZABBIX_TT_GROUP_PREFIX,
 											ZABBIX_TOF_GROUP_PREFIX,
 											ZABBIX_RC_GROUP_PREFIX,
@@ -481,6 +500,12 @@
 		ZABBIX_TYPE_SWITCH               => 'switch'
 	);
 
+	$zabbix_maintenance_groups = array(
+		/*
+				reg_code => => group_id // 'MAINTENANCE/REG_NAME'
+		*/
+	);
+
 	$zabbix_groups = array(
 		/*
 			obj_code => [
@@ -494,7 +519,16 @@
 	foreach($zabbix_result as &$group)
 	{
 		$reg_code = 0;
-		if(preg_match('/^([^\/]+)\/(\d+)[^\/]*\/(.*)$/i', $group['name'], $matches))  // Группы с номером региона
+		if($group['name'] == ZABBIX_MAINTENANCE_GROUP_PREFIX)  // Группа режима обслуживания не относящаяся к региону
+		{
+			$zabbix_maintenance_groups[0] = $group['groupid'];
+		}
+		else if(preg_match('/^'.ZABBIX_MAINTENANCE_GROUP_PREFIX.'\\/(\d+)/i', $group['name'], $matches))  // Группы режима обслуживания
+		{
+			$reg_code = intval($matches[1]);
+			$zabbix_maintenance_groups[$reg_code] = $group['groupid'];
+		}
+		else if(preg_match('/^([^\/]+)\\/(\d+)[^\\/]*\\/(.*)$/i', $group['name'], $matches))  // Группы с номером региона
 		{
 			foreach($zabbix_groups_objects_templates as $key => $value)
 			{
@@ -515,7 +549,7 @@
 				}
 			}
 		}
-		else if(preg_match('/^([^\/]+)\/(.*)$/i', $group['name'], $matches))  // Группы без номера региона
+		else if(preg_match('/^([^\\/]+)\\/(.*)$/i', $group['name'], $matches))  // Группы без номера региона
 		{
 			foreach($zabbix_groups_objects_templates as $key => $value)
 			{
@@ -602,7 +636,7 @@
 					$obj_type = 'tt';
 					$reg_code = $matches[1];
 					$obj_code = $matches[2];
-					$group_ids[] = ZABBIX_MAINTENANCE_GROUP_ID;
+					$group_ids[] = zabbix_get_or_create_maintenance_group_id($auth_key, $zabbix_maintenance_groups, intval($reg_code));
 					if(intval($matches[3]) == 1)
 					{
 						$type_code = ZABBIX_TYPE_WORKSTATION_ADMIN;
@@ -623,7 +657,7 @@
 					$obj_code = $matches[2];
 					$type_code = ZABBIX_TYPE_WORKSTATION_GENERAL;
 					$template_ids[] = ZABBIX_TEMPLATE_WORKSTATION_GENERAL;
-					$group_ids[] = ZABBIX_MAINTENANCE_GROUP_ID;
+					$group_ids[] = zabbix_get_or_create_maintenance_group_id($auth_key, $zabbix_maintenance_groups, intval($reg_code));
 				}
 				// Unknown hostname mask
 				else
