@@ -602,6 +602,7 @@
 					$obj_type = 'tt';
 					$reg_code = $matches[1];
 					$obj_code = $matches[2];
+					$group_ids[] = ZABBIX_MAINTENANCE_GROUP_ID;
 					if(intval($matches[3]) == 1)
 					{
 						$type_code = ZABBIX_TYPE_WORKSTATION_ADMIN;
@@ -622,6 +623,7 @@
 					$obj_code = $matches[2];
 					$type_code = ZABBIX_TYPE_WORKSTATION_GENERAL;
 					$template_ids[] = ZABBIX_TEMPLATE_WORKSTATION_GENERAL;
+					$group_ids[] = ZABBIX_MAINTENANCE_GROUP_ID;
 				}
 				// Unknown hostname mask
 				else
