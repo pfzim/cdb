@@ -225,6 +225,11 @@ function get_config(string $name)
 	return $g_config[$name];
 }
 
+function get_config_int(string $name)
+{
+	return intval(get_config($name));
+}
+
 	$g_config = array();
 	
 	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
@@ -284,9 +289,9 @@ function get_config(string $name)
 			'create-tasks-tmee',
 			'create-tasks-ac',
 			'create-tasks-laps',
-			'create-tasks-rms',
-			'create-tasks-rmss',
-			'create-tasks-rmsv',
+			//'create-tasks-rms',
+			//'create-tasks-rmss',
+			//'create-tasks-rmsv',
 			'create-tasks-edge',
 			'create-tasks-rename',
 			'create-tasks-sccm',
@@ -299,6 +304,7 @@ function get_config(string $name)
 			//'create-tasks-vuln',
 			//'create-tasks-vuln-mass',
 			'create-tasks-os',
+			'create-tasks-maxpatrol-os-scan',
 			//'create-tasks-os-by-sccm',
 			'create-tasks-net-errors',
 			'create-tasks-wsus',
@@ -315,7 +321,8 @@ function get_config(string $name)
 			'report-cmdb-vm',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
-			//'report-maxpatrol-smb',
+			'report-cmdb-relations',
+			//'report-maxpatrol-smb',  // moved to orchestrator
 			'report-itinvent-bcc'
 			//,'report-itinvent-files-top'
 		),
@@ -390,6 +397,9 @@ function get_config(string $name)
 		),
 		'create-tasks-net-errors' => array(
 			'@create-tasks-net-errors.php'
+		),
+		'create-tasks-maxpatrol-os-scan' => array(
+			'@create-tasks-maxpatrol-os-scan.php'
 		),
 		'create-tasks-vuln' => array(
 			'@create-tasks-vuln.php'
@@ -474,6 +484,9 @@ function get_config(string $name)
 		),
 		'report-cmdb-vpn' => array(
 			'@report-cmdb-vpn.php'
+		),
+		'report-cmdb-relations' => array(
+			'@report-cmdb-relations.php'
 		),
 		'report-zabbix-problems' => array(
 			'@report-zabbix-problems.php'
