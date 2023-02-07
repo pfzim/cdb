@@ -397,7 +397,10 @@ $g_cmdb_vmm_flags = array(
 	'',
 	'',
 	'Exist in VMM',
-	'Exist in CMDB'
+	'Exist in CMDB',
+	'Exist in DTLN',
+	'Exist in VK',
+	'Exist in vSphere'
 );
 
 $g_cmdb_vmm_short_flags = array(
@@ -406,7 +409,10 @@ $g_cmdb_vmm_short_flags = array(
 	'',
 	'',
 	'V',
-	'C'
+	'C',
+	'D',
+	'M',
+	'S'
 );
 
 /**

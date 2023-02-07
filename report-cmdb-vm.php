@@ -15,6 +15,7 @@
 
 	echo "\nreport-cmdb-vm:\n";
 
+	global $g_cmdb_vmm_flags;
 	global $g_cmdb_vmm_short_flags;
 
 	$html = <<<'EOT'
@@ -42,6 +43,9 @@ EOT;
 	$table .= '<tr><th>Name</th><th>CPU</th><th>RAM</th><th>HDD</th><th>Check result</th></tr>';
 
 	$i = 0;
+	$cmdb = 0;
+	$vm = 0;
+	
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			vm.`name`,
@@ -73,9 +77,19 @@ EOT;
 		{
 			$check_result = '';
 
+			if((intval($row['flags']) & VMF_EXIST_CMDB))
+			{
+				$cmdb++;
+			}
+
+			if((intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK | VMF_EXIST_VSPHERE)))
+			{
+				$vm++;
+			}
+
 			if((intval($row['flags']) & VMF_EXIST_CMDB) == 0)
 			{
-				$check_result .= 'Отсутствует в CMDB;';
+				$check_result .= 'Отсутствует в CMDB ('.flags_to_string(intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK | VMF_EXIST_VSPHERE), $g_cmdb_vmm_flags, ', ', '').');';
 			}
 			else if((intval($row['flags']) & (VMF_EXIST_VMM | VMF_EXIST_DTLN | VMF_EXIST_VK | VMF_EXIST_VSPHERE)) == 0)
 			{
@@ -105,20 +119,28 @@ EOT;
 				// }
 			}
 
-			$table .= '<tr>';
-			$table .= '<td>'.$row['name'].'</td>';
-			$table .= '<td>'.$row['cpu'].'</td>';
-			$table .= '<td>'.$row['ram_size'].'</td>';
-			$table .= '<td>'.$row['hdd_size'].'</td>';
-			//$table .= '<td>'.flags_to_string(intval($row['flags']), $g_cmdb_vmm_short_flags, '', '-').'</td>';
-			$table .= '<td>'.$check_result.'</td>';
-			$table .= '</tr>';
+			if(!empty($check_result))
+			{
+				$table .= '<tr>';
+				$table .= '<td>'.$row['name'].'</td>';
+				$table .= '<td>'.$row['cpu'].'</td>';
+				$table .= '<td>'.$row['ram_size'].'</td>';
+				$table .= '<td>'.$row['hdd_size'].'</td>';
+				//$table .= '<td>'.flags_to_string(intval($row['flags']), $g_cmdb_vmm_short_flags, '', '-').'</td>';
+				$table .= '<td>'.$check_result.'</td>';
+				$table .= '</tr>';
+			}
 
 			$i++;
 		}
 	}
 
 	$table .= '</table>';
+
+	$html .= '<p>';
+	$html .= 'Всего записей в CMDB: '.$cmdb.'<br />';
+	$html .= 'Количество виртуальных машин: '.$vm.'<br />';
+	$html .= '</p>';
 
 	$html .= $table;
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-cmdb-vm">Сформировать отчёт заново</a></small>';

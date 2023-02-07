@@ -284,7 +284,7 @@ function get_config_int(string $name)
 			'sync-all',
 			'report-tmao-servers',
 			'check-tasks-status',
-			'create-tasks-tmao',
+			//'create-tasks-tmao',
 			//'create-tasks-tmao-dlp',
 			'create-tasks-tmee',
 			'create-tasks-ac',
