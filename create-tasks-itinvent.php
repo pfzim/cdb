@@ -156,7 +156,7 @@
 			(m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}
 			AND (
 				i.`id` IS NULL
-				OR (i.`flags` & {%IF_EXIST_IN_ITINV}) = 0
+				OR (i.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) <> ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})
 				OR i.`status` = 7                          -- Decommissioned
 			)
 		GROUP BY m.`id`, i.`id`
