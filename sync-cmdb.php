@@ -134,3 +134,51 @@
 	}
 
 	echo 'Count: '.$i.PHP_EOL;
+
+	echo 'Loading SMB resources...'.PHP_EOL;
+
+	$ch = curl_init(CMDB_URL.'/classes/brlSBM/cards');
+
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;', 'Cmdbuild-authorization: '.$sess_id));
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$result = curl_exec($ch);
+	curl_close($ch);
+
+	$result_json = @json_decode($result, true);
+	
+	if(!isset($result_json['success'])
+		|| ($result_json['success'] != 1)
+		|| !isset($result_json['data'])
+	)
+	{
+		echo 'ERROR: Invalid answer from server!'.PHP_EOL;
+		return;
+	}
+	
+	$i = 0;
+	foreach($result_json['data'] as &$card)
+	{
+		echo 'Server: '.strtoupper($card['_brlVirSrvRef_description']).', Share: '.$card['brlSMBName'].PHP_EOL;
+
+		$id = 0;
+		if(!$db->select_ex($result, rpv("SELECT ms.`id` FROM @maxpatrol_smb AS ms WHERE ms.`hostname` = ! AND ms.`share` = ! LIMIT 1", strtoupper($card['_brlVirSrvRef_description']), $card['brlSMBName'])))
+		{
+			$db->put(rpv("
+					INSERT INTO @maxpatrol_smb (`hostname`, `share`, `flags`)
+					VALUES ({s0}, {s1}, {%MSF_EXIST_CMDB})
+				",
+				strtoupper($card['_brlVirSrvRef_description']),
+				$card['brlSMBName']
+			));
+		}
+		else
+		{
+			$db->put(rpv("UPDATE @maxpatrol_smb SET `flags` = (`flags` | {%MSF_EXIST_CMDB}) WHERE `id` = # LIMIT 1", $result[0][0]));
+		}
+
+		$i++;
+	}
+
+	echo 'Count: '.$i.PHP_EOL;
