@@ -597,10 +597,10 @@
 			ON mi.`mac_id` = m.`id`
 		LEFT JOIN c_inv AS i
 			ON i.`id` = mi.`inv_id`
+			AND (i.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})
 		WHERE
 			(zh.`flags` & {%ZHF_DONT_SYNC}) = 0
 			AND (zh.`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX}))
-			AND (i.`flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})) = ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE})
 			-- AND zh.`name` <> ''
 			-- AND m.`ip` <> ''
 	")))
