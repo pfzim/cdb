@@ -257,8 +257,8 @@
 			echo 'Hostname: '.$record['Host.Hostname'].', Endpoints: '.$record['Host.Endpoints'].PHP_EOL;
 
 			$db->put(rpv("
-					INSERT INTO @maxpatrol_smb (`hostname`, `share`)
-					VALUES ({s0}, {s1})
+					INSERT INTO @maxpatrol_smb (`hostname`, `share`, `flags`)
+					VALUES ({s0}, {s1}, {%MSF_EXIST_MAXPATROL})
 				",
 				empty($record['Host.Hostname']) ? $record['Host.IpAddress'] : strtoupper($record['Host.Hostname']),
 				$record['Host.Endpoints']

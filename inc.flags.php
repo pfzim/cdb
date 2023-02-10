@@ -208,6 +208,12 @@
 	define('AGF_EXIST_PALOALTO',    0x0010);
 	define('AGF_EXIST_CMDB',  	    0x0020);
 
+	// `flags` from `maxpatrol_smb` table
+
+	define('MSF_UNAUTH_ACCESS',     0x0001);
+	define('MSF_EXIST_MAXPATROL',   0x0010);
+	define('MSF_EXIST_CMDB',  	    0x0020);
+
 	// `flags` from `files_inventory` table
 	
 	define('FIF_DELETED',     0x0002);

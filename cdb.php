@@ -270,8 +270,8 @@ function get_config_int(string $name)
 			'sync-vsphere',
 			'sync-dtln',
 			'sync-vk',
+			'sync-maxpatrol',          // Must be before sync-cmdb
 			'sync-cmdb',
-			'sync-maxpatrol',
 			'sync-paloalto',
 			'sync-sccm',
 			'mark-after-sync',         // Компьютеры отсутствующие во всех системах посмечаем флагом CF_DELETED
@@ -319,6 +319,7 @@ function get_config_int(string $name)
 			//'report-vuln-top-netdev',
 			'report-users-lastlogon',
 			'report-cmdb-vm',
+			'report-cmdb-vm-backup',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
 			'report-cmdb-relations',
@@ -475,6 +476,9 @@ function get_config_int(string $name)
 		),
 		'report-cmdb-vm' => array(
 			'@report-cmdb-vm.php'
+		),
+		'report-cmdb-vm-backup' => array(
+			'@report-cmdb-vm-backup.php'
 		),
 		'report-cmdb-maxpatrol' => array(
 			'@report-cmdb-maxpatrol.php'

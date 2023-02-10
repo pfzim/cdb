@@ -153,8 +153,9 @@
 		
 		$token = $matches[1];
 
-		echo 'Loading VM list...'.PHP_EOL;
 		//echo 'Token: '.$token.PHP_EOL;
+
+		echo 'Loading VM list...'.PHP_EOL;
 		
 		$ch = curl_init(VK_NOVA_URL.'/servers/detail');
 
@@ -212,5 +213,43 @@
 			));
 
 			$i++;
+		}
+
+		echo 'Loading backups list...'.PHP_EOL;
+		//echo 'Token: '.$token.PHP_EOL;
+		
+		$ch = curl_init(VK_KARBOII_URL.'/'.$project_id.'/providers/37997f75-0637-4a69-bf7e-49ff2ff11fa5/checkpoints');
+
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-Auth-Token: '.$token));
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		$result = curl_exec($ch);
+		curl_close($ch);
+
+		$result_json = @json_decode($result, true);
+		
+		if(!isset($result_json['checkpoints']))
+		{
+			echo 'ERROR: Invalid answer from server: '.$result.PHP_EOL;
+			return;
+		}
+		
+		$i = 0;
+		foreach($result_json['checkpoints'] as &$checkpoint)
+		{
+			foreach($checkpoint['resources'] as &$resource)
+			{
+				$backup_date = date('Y-m-d H:i:s', $checkpoint['timestamp']);
+
+				if(($resource['type'] == 'OS::Nova::Server')
+					&& ($resource['status'] == 'available')
+				)
+				{
+					echo 'Date: '.$backup_date.', Name: '.$resource['name'].', Status: '.$resource['status'].', Type: '.$resource['type'].PHP_EOL;
+
+					$db->put(rpv('UPDATE @vm SET `backup_date` = {s1} WHERE `name` = {s0} AND (`backup_date` IS NULL OR `backup_date` < {s1}) LIMIT 1', $resource['name'], $backup_date));
+				}
+			}
 		}
 	}

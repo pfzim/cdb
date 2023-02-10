@@ -105,7 +105,7 @@ EOT;
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_MOVE}) AS `o_iimv`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_INV_DUP}) AS `o_dup`,
 
-			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `p_inv_add`,
+			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_INV_ACTIVE} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}) AS `p_inv_add`,
 			(SELECT COUNT(*) FROM @mac AS m WHERE (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = ({%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV}) AND m.`status` = 7) AS `p_inv_add_decomis`,
 			(
 				SELECT COUNT(*)
