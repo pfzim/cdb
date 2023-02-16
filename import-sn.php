@@ -103,9 +103,9 @@
 	{
 		$mac_fake_address = MAC_FAKE_ADDRESS;
 	}
-	else if(isset($config['mac_fake_address']))
+	else
 	{
-		$mac_fake_address = $config['mac_fake_address'];
+		$mac_fake_address = get_config('mac_fake_address');
 	}
 
 	$code = 0;
