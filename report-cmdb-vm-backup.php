@@ -32,11 +32,11 @@
 		</style>
 	</head>
 	<body>
-	<h1>Отчёт по резевным копиям виртуальных машин (VK)</h1>
+	<h1>Отчёт по резервным копиям виртуальных машин (VK)</h1>
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Backup date</th></tr>';
+	$table .= '<tr><th>Name</th><th>Backup date &#9650;</th></tr>';
 
 	$i = 0;
 	$cmdb = 0;
@@ -50,7 +50,9 @@ EOT;
 		FROM @vm AS vm
 		WHERE
 			vm.`flags` & ({%VMF_EXIST_VK})
-		ORDER BY vm.`backup_date`
+		ORDER BY
+			vm.`backup_date`,
+			vm.`name`			
 	")))
 	{
 		foreach($result as &$row)

@@ -38,6 +38,8 @@ EOT;
 	$table = '<table>';
 	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th></tr>';
 
+	$scan_period = time() - 9*24*60*60;
+	$recently_scanned = 0;
 	$i = 0;
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
@@ -57,6 +59,15 @@ EOT;
 	{
 		foreach($result as &$row)
 		{
+			if(!empty($row['audit_time']))
+			{
+				$audit_time = strtotime($row['audit_time']);
+				if($audit_time > $scan_period)
+				{
+					$recently_scanned++;
+				}
+			}
+
 			$table .= '<tr>';
 			$table .= '<td>'.$row['name'].'</td>';
 			$table .= '<td>'.$row['audit_time'].'</td>';
@@ -69,11 +80,16 @@ EOT;
 
 	$table .= '</table>';
 
+	$html .= '<p>';
+	$html .= 'Всего: '.$i.'<br />';
+	$html .= 'Cканировалось за последние 9 дней: '.$recently_scanned;
+	$html .= '</p>';
+
 	$html .= $table;
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-cmdb-maxpatrol">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
-	if(php_mailer(REPORT_CMDB_MAXPATROL_MAIL_TO, CDB_TITLE.': Report CMDB MaxPatrol', $html, 'You client does not support HTML'))
+	if(php_mailer(REPORT_CMDB_MAXPATROL_MAIL_TO, CDB_TITLE.': Report CMDB MaxPatrol (servers)', $html, 'You client does not support HTML'))
 	{
 		echo 'Send mail: OK'.PHP_EOL;
 	}

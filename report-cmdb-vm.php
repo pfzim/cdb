@@ -13,7 +13,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nreport-cmdb-vm:\n";
+	echo PHP_EOL.'report-cmdb-vm:'.PHP_EOL;
 
 	global $g_cmdb_vmm_flags;
 	global $g_cmdb_vmm_short_flags;
@@ -62,6 +62,7 @@ EOT;
 		FROM @vm AS vm
 		WHERE
 			(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK} | {%VMF_EXIST_VSPHERE}))
+			AND (vm.`flags` & ({%VMF_BAREMETAL} | {%VMF_EQUIPMENT})) = 0
 			AND (
 				(vm.`flags` & {%VMF_EXIST_CMDB}) = 0
 				OR (vm.`flags` & ({%VMF_EXIST_VMM} | {%VMF_EXIST_DTLN} | {%VMF_EXIST_VK} | {%VMF_EXIST_VSPHERE})) = 0

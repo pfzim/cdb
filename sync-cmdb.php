@@ -48,7 +48,7 @@
 	$sess_id = $result_json['data']['_id'];
 	//echo 'SessionID: '. $sess_id.PHP_EOL;
 
-	echo 'Loading servers...'.PHP_EOL;
+	echo 'Loading virtual servers...'.PHP_EOL;
 	
 	//$ch = curl_init(CMDB_URL.'/classes/brlVirtualSrv?scope=service');
 	//$ch = curl_init(CMDB_URL.'/classes/brlVirtualSrv?scope=service');
@@ -74,7 +74,8 @@
 		return;
 	}
 	
-	$db->put(rpv("UPDATE @vm SET `flags` = ((`flags` & ~{%VMF_EXIST_CMDB})) WHERE (`flags` & {%VMF_EXIST_CMDB}) = {%VMF_EXIST_CMDB}"));
+	// Clear flags before sync
+	$db->put(rpv("UPDATE @vm SET `flags` = (`flags` & ~({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT})) WHERE `flags` & ({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT})"));
 
 	$i = 0;
 	foreach($result_json['data'] as &$card)
@@ -84,12 +85,96 @@
 				VALUES ({s0}, {s1}, {d2}, {d3}, {d4}, {s5}, {%VMF_EXIST_CMDB})
 				ON DUPLICATE KEY UPDATE `cmdb_type` = {s1}, `cmdb_cpu` = {d2}, `cmdb_ram_size` = {d3}, `cmdb_hdd_size` = {d4}, `cmdb_os` = {s5}, `flags` = (`flags` | {%VMF_EXIST_CMDB})
 			",
-			$card['brlVSrvHostname'],
+			$card['brlCIName'],
 			$card['_brlVirtualization_description'],
 			$card['brlVSrvCPU'],
 			$card['brlVSrvRAM'],
 			0,  // hdd_size
 			$card['brlVSrvOSVersion'] // _brlSrvOS_description OR _brlSrvOS_description_translation
+		));
+		$i++;
+	}
+
+	echo 'Count: '.$i.PHP_EOL;
+
+	echo 'Loading baremetal servers...'.PHP_EOL;
+	
+	$ch = curl_init(CMDB_URL.'/classes/brlPhyServ/cards');
+
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;', 'Cmdbuild-authorization: '.$sess_id));
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$result = curl_exec($ch);
+	curl_close($ch);
+
+	$result_json = @json_decode($result, true);
+	
+	if(!isset($result_json['success'])
+		|| ($result_json['success'] != 1)
+		|| !isset($result_json['data'])
+	)
+	{
+		echo 'ERROR: Invalid answer from server!'.PHP_EOL;
+		return;
+	}
+	
+	$i = 0;
+	foreach($result_json['data'] as &$card)
+	{
+		$db->put(rpv("
+				INSERT INTO @vm (`name`, `cmdb_type`, `cmdb_cpu`, `cmdb_ram_size`, `cmdb_hdd_size`, `cmdb_os`, `flags`)
+				VALUES ({s0}, {s1}, {d2}, {d3}, {d4}, {s5}, {%VMF_EXIST_CMDB} | {%VMF_BAREMETAL})
+				ON DUPLICATE KEY UPDATE `cmdb_type` = {s1}, `cmdb_cpu` = {d2}, `cmdb_ram_size` = {d3}, `cmdb_hdd_size` = {d4}, `cmdb_os` = {s5}, `flags` = (`flags` | {%VMF_EXIST_CMDB} | {%VMF_BAREMETAL})
+			",
+			$card['brlCIName'],
+			'Baremetal',
+			$card['brlPhSrvvCPU'],
+			$card['brlPhSrvRAM'],
+			0,  // hdd_size
+			$card['brlPhSrvOSversion'] // _brlSrvOS_description OR _brlSrvOS_description_translation
+		));
+		$i++;
+	}
+
+	echo 'Count: '.$i.PHP_EOL;
+
+	echo 'Loading servers equipment...'.PHP_EOL;
+
+	$ch = curl_init(CMDB_URL.'/classes/brlSrvHardware/cards');
+
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;', 'Cmdbuild-authorization: '.$sess_id));
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$result = curl_exec($ch);
+	curl_close($ch);
+
+	$result_json = @json_decode($result, true);
+	
+	if(!isset($result_json['success'])
+		|| ($result_json['success'] != 1)
+		|| !isset($result_json['data'])
+	)
+	{
+		echo 'ERROR: Invalid answer from server!'.PHP_EOL;
+		return;
+	}
+
+	$i = 0;
+	foreach($result_json['data'] as &$card)
+	{
+		$db->put(rpv("
+				INSERT INTO @vm (`name`, `cmdb_type`, `cmdb_cpu`, `cmdb_ram_size`, `cmdb_hdd_size`, `cmdb_os`, `flags`)
+				VALUES ({s0}, {s1}, {d2}, {d3}, {d4}, {s5}, {%VMF_EXIST_CMDB} | {%VMF_EQUIPMENT})
+				ON DUPLICATE KEY UPDATE `cmdb_type` = {s1}, `cmdb_cpu` = {d2}, `cmdb_ram_size` = {d3}, `cmdb_hdd_size` = {d4}, `cmdb_os` = {s5}, `flags` = (`flags` | {%VMF_EXIST_CMDB} | {%VMF_EQUIPMENT})
+			",
+			$card['brlCIName'],
+			'Baremetal',
+			0,
+			0,
+			0,  // hdd_size
+			'' // _brlSrvOS_description OR _brlSrvOS_description_translation
 		));
 		$i++;
 	}

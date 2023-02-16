@@ -202,6 +202,8 @@
 	define('VMF_EXIST_DTLN',      0x0040);
 	define('VMF_EXIST_VK',        0x0080);
 	define('VMF_EXIST_VSPHERE',   0x0100);
+	define('VMF_BAREMETAL',       0x0200);
+	define('VMF_EQUIPMENT',       0x0400);
 
 	// `flags` from `vm` table
 
