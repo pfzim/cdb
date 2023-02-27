@@ -14,6 +14,7 @@
 		  - port   - порт коммутатора в который подключено оборудование
 		  - vlan   - VLAN ID (integer) for device
 		  - desc   - описание порта
+		  - minutes_ago - сколько минут назад была добавлена запись в ARP таблицу маршрутизатора
 		  
 		Исключения не применяются к коммутаторам и маршрутизаторам, которые идентифицируются по наличию
 		серийного номера вместо MAC адреса.
@@ -24,6 +25,8 @@
 		  - по MAC адресу и имени маршрутизатора и имени порта (все значения
 			являются регулярными выражениями, если значение NULL, то оно
 			игнорируется)
+		
+		Добавлено: Если запись старее, чем в БД, то обновлени данных не происходит
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -120,8 +123,8 @@
 
 			// Парсим сторку
 			
-			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port[,vlan,port_desc]
-			if(count($row) > 7 || count($row) < 5)
+			$row = explode(',', $line);  // format: mac,name,ip,sw_id,port[,vlan,port_desc,minutes_ago]
+			if(count($row) > 8 || count($row) < 5)
 			{
 				$code = 1;
 				$error_msg .= 'Warning: Incorrect line format (count:'.count($row).'). Line '.$line_no.';';
@@ -212,6 +215,7 @@
 			$vlan = intval(@$row[5]);
 			$port = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', $row[4]);
 			$port_desc = preg_replace('/[^0-9a-z!@№&#$%^&*()_+=\\-~<>?\\/\\\\,.:\\[\\]]/i', '', @$row[6]);
+			$minutes_ago = intval(@$row[7]);
 
 			// Сами коммутаторы и маршрутизаторы не исключаем, только оборудование подключенное в них
 
@@ -225,12 +229,14 @@
 				}
 			}
 			
+			$new_time = (time() - ($minutes_ago * 60));
+
 			$row_id = 0;
-			if(!$db->select_ex($result, rpv("SELECT m.`id` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $mac, $is_sn ? MF_SERIAL_NUM : 0x0000 )))
+			if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`date` FROM @mac AS m WHERE m.`mac` = ! AND ((`flags` & {%MF_SERIAL_NUM}) = #) LIMIT 1", $mac, $is_sn ? MF_SERIAL_NUM : 0x0000 )))
 			{
 				if($db->put(rpv("
 						INSERT INTO @mac (`pid`, `name`, `mac`, `ip`, `port`, `port_desc`, `vlan`, `first`, `date`, `flags`)
-						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {s5}, {d6}, NOW(), NOW(), {d7})
+						VALUES ({d0}, {s1}, {s2}, {s3}, {s4}, {s5}, {d6}, {s7}, {s7}, {d8})
 					",
 					$pid,
 					$row[1],  // name
@@ -239,6 +245,7 @@
 					$port,    // port
 					$port_desc,
 					$vlan,
+					date('Y-m-d H:i:s', $new_time),
 					MF_FROM_NETDEV | $excluded | ($is_sn ? MF_SERIAL_NUM : 0x0000)
 				)))
 				{
@@ -247,6 +254,18 @@
 			}
 			else
 			{
+				$last_time = strtotime($row[1]);
+				if($last_time >= $new_time)
+				{
+					$code = 1;
+					$error_msg .= 'Skipped: Database entry is more recent '.$line_no.';';
+
+					error_log(date('c').'  Skipped: Database entry '.$row[1].' is more recent ('.$line_no.'): '.$line."\n", 3, $path_log);
+
+					$line = strtok("\n");
+					continue;
+				}
+
 				$row_id = $result[0][0];
 				$db->put(rpv("
 						UPDATE @mac
@@ -257,9 +276,11 @@
 							`port` = {s3},
 							`port_desc` = {s4},
 							`vlan` = {d5},
-							`first` = IFNULL(`first`, NOW()), `date` = NOW(), `flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d6})
+							`first` = IFNULL(`first`, {s6}),
+							`date` = {s6},
+							`flags` = ((`flags` & ~{%MF_TEMP_EXCLUDED}) | {d7})
 						WHERE
-							`id` = {d7}
+							`id` = {d8}
 						LIMIT 1
 					",
 					$pid,
@@ -268,6 +289,7 @@
 					$port,    // port
 					$port_desc,
 					$vlan,
+					date('Y-m-d H:i:s', $new_time),
 					MF_FROM_NETDEV | $excluded,
 					$row_id
 				));

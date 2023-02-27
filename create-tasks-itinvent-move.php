@@ -256,7 +256,7 @@
 						'port_desc'		=> $row['port_desc'],
 						'regtime'		=> $row['regtime'],
 						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),
+						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),
 						'm_name'		=> $row['m_name'],
 						'm_status_name'	=> $row['m_status_name'],
 						'm_type_name'	=> $row['m_type_name'],

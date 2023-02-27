@@ -276,7 +276,7 @@ function get_config_int(string $name)
 			'sync-sccm',
 			'mark-after-sync',         // Компьютеры отсутствующие во всех системах посмечаем флагом CF_DELETED
 			'sync-itinvent',
-			'sync-itinvent-sw',
+			//'sync-itinvent-sw',
 			'sync-zabbix'
 			//'sync-nessus'
 		),
