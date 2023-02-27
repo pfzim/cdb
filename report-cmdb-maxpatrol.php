@@ -36,7 +36,7 @@
 EOT;
 
 	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th></tr>';
+	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th><th>Root Access</th></tr>';
 
 	$scan_period = time() - 9*24*60*60;
 	$recently_scanned = 0;
@@ -45,7 +45,8 @@ EOT;
 		SELECT
 			vm.`name`,
 			DATE_FORMAT(mp.`audit_time`, '%d.%m.%Y %H:%i:%s') AS `audit_time`,
-			vm.`cmdb_os`
+			vm.`cmdb_os`,
+			vm.`flags`
 		FROM @vm AS vm
 		LEFT JOIN @maxpatrol AS mp
 			ON mp.`name` = vm.`name`
@@ -72,6 +73,7 @@ EOT;
 			$table .= '<td>'.$row['name'].'</td>';
 			$table .= '<td>'.$row['audit_time'].'</td>';
 			$table .= '<td>'.$row['cmdb_os'].'</td>';
+			$table .= '<td>'.((intval($row['flags']) & VMF_HAVE_ROOT) ? '&#x2713;' : '&#x2717;').'</td>';
 			$table .= '</tr>';
 
 			$i++;

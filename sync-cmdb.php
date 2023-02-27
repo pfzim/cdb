@@ -75,22 +75,23 @@
 	}
 	
 	// Clear flags before sync
-	$db->put(rpv("UPDATE @vm SET `flags` = (`flags` & ~({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT})) WHERE `flags` & ({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT})"));
+	$db->put(rpv("UPDATE @vm SET `flags` = (`flags` & ~({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT} | {%VMF_HAVE_ROOT})) WHERE `flags` & ({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT} | {%VMF_HAVE_ROOT})"));
 
 	$i = 0;
 	foreach($result_json['data'] as &$card)
 	{
 		$db->put(rpv("
 				INSERT INTO @vm (`name`, `cmdb_type`, `cmdb_cpu`, `cmdb_ram_size`, `cmdb_hdd_size`, `cmdb_os`, `flags`)
-				VALUES ({s0}, {s1}, {d2}, {d3}, {d4}, {s5}, {%VMF_EXIST_CMDB})
-				ON DUPLICATE KEY UPDATE `cmdb_type` = {s1}, `cmdb_cpu` = {d2}, `cmdb_ram_size` = {d3}, `cmdb_hdd_size` = {d4}, `cmdb_os` = {s5}, `flags` = (`flags` | {%VMF_EXIST_CMDB})
+				VALUES ({s0}, {s1}, {d2}, {d3}, {d4}, {s5}, {d6})
+				ON DUPLICATE KEY UPDATE `cmdb_type` = {s1}, `cmdb_cpu` = {d2}, `cmdb_ram_size` = {d3}, `cmdb_hdd_size` = {d4}, `cmdb_os` = {s5}, `flags` = (`flags` | {d6})
 			",
 			$card['brlCIName'],
 			$card['_brlVirtualization_description'],
 			$card['brlVSrvCPU'],
 			$card['brlVSrvRAM'],
 			0,  // hdd_size
-			$card['brlVSrvOSVersion'] // _brlSrvOS_description OR _brlSrvOS_description_translation
+			$card['brlVSrvOSVersion'], // _brlSrvOS_description OR _brlSrvOS_description_translation
+			((@$card['_brlVSrvRootAccess_description'] === 'true') ? VMF_HAVE_ROOT : 0) | VMF_EXIST_CMDB
 		));
 		$i++;
 	}
@@ -139,6 +140,8 @@
 
 	echo 'Count: '.$i.PHP_EOL;
 
+	/* Temporary disabled - Not required now
+
 	echo 'Loading servers equipment...'.PHP_EOL;
 
 	$ch = curl_init(CMDB_URL.'/classes/brlSrvHardware/cards');
@@ -180,6 +183,7 @@
 	}
 
 	echo 'Count: '.$i.PHP_EOL;
+	*/
 
 	echo 'Loading VPN groups...'.PHP_EOL;
 
@@ -245,16 +249,25 @@
 	$i = 0;
 	foreach($result_json['data'] as &$card)
 	{
-		echo 'Server: '.strtoupper($card['_brlVirSrvRef_description']).', Share: '.$card['brlSMBName'].PHP_EOL;
+		if(!empty($card['_brlVirSrvRef_description']))
+		{
+			$srv_name = strtoupper($card['_brlVirSrvRef_description']);
+		}
+		else
+		{
+			$srv_name = strtoupper($card['_brlSrvRef_description']);
+		}
+		
+		echo 'Server: '.$srv_name.', Share: '.$card['brlSMBName'].PHP_EOL;
 
 		$id = 0;
-		if(!$db->select_ex($result, rpv("SELECT ms.`id` FROM @maxpatrol_smb AS ms WHERE ms.`hostname` = ! AND ms.`share` = ! LIMIT 1", strtoupper($card['_brlVirSrvRef_description']), $card['brlSMBName'])))
+		if(!$db->select_ex($result, rpv("SELECT ms.`id` FROM @maxpatrol_smb AS ms WHERE ms.`hostname` = ! AND ms.`share` = ! LIMIT 1", $srv_name, $card['brlSMBName'])))
 		{
 			$db->put(rpv("
 					INSERT INTO @maxpatrol_smb (`hostname`, `share`, `flags`)
 					VALUES ({s0}, {s1}, {%MSF_EXIST_CMDB})
 				",
-				strtoupper($card['_brlVirSrvRef_description']),
+				$srv_name,
 				$card['brlSMBName']
 			));
 		}
