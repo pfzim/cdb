@@ -254,13 +254,13 @@
 			}
 			else
 			{
-				$last_time = strtotime($row[1]);
+				$last_time = strtotime($result[0][1]);
 				if($last_time >= $new_time)
 				{
 					$code = 1;
 					$error_msg .= 'Skipped: Database entry is more recent '.$line_no.';';
 
-					error_log(date('c').'  Skipped: Database entry '.$row[1].' is more recent ('.$line_no.'): '.$line."\n", 3, $path_log);
+					error_log(date('c').'  Skipped: Database entry '.$result[0][1].' is more recent ('.$line_no.'): '.$line."\n", 3, $path_log);
 
 					$line = strtok("\n");
 					continue;
