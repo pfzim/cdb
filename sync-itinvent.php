@@ -159,10 +159,9 @@
 	);
 
 	$conn = sqlsrv_connect(ITINVENT_DB_HOST, $params);
-	if($conn === false)
+	if($conn === FALSE)
 	{
-		print_r(sqlsrv_errors());
-		exit;
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
 
 	// Загрузка названий статусов
@@ -175,29 +174,46 @@
 		FROM [dbo].[STATUS]
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
-
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
-		{
-			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_STATUSES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
-				$row['STATUS_NO'],
-				$row['DESCR']
-			));
-
-			$i++;
-		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
 
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_STATUSES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+			$row['STATUS_NO'],
+			$row['DESCR']
+		));
+
+		$i++;
+	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
+
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
 
 	// Загрузка названий типа оборудования
 
@@ -211,35 +227,49 @@
 		WHERE [CI_TYPE] = 1
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
-
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
-		{
-			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_TYPES}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
-				$row['CI_TYPE'],
-				$row['TYPE_NO'],
-				$row['TYPE_NAME']
-			));
-
-			$i++;
-		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_TYPES}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
+			$row['CI_TYPE'],
+			$row['TYPE_NO'],
+			$row['TYPE_NAME']
+		));
+
+		$i++;
+	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	// Загрузка названий моделей оборудования
 
@@ -253,35 +283,49 @@
 		WHERE [CI_TYPE] = 1
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
-
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
-		{
-			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_MODELS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
-				$row['CI_TYPE'],
-				$row['MODEL_NO'],
-				$row['MODEL_NAME']
-			));
-
-			$i++;
-		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_CI_MODELS}, {d0}, {d1}, {s2}) ON DUPLICATE KEY UPDATE `name` = {s2}",
+			$row['CI_TYPE'],
+			$row['MODEL_NO'],
+			$row['MODEL_NAME']
+		));
+
+		$i++;
+	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	// Загрузка названий филиалов
 
@@ -293,34 +337,48 @@
 		FROM [dbo].[BRANCHES]
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
-
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
-		{
-			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_BRANCHES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
-				$row['BRANCH_NO'],
-				$row['BRANCH_NAME']
-			));
-
-			$i++;
-		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_BRANCHES}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+			$row['BRANCH_NO'],
+			$row['BRANCH_NAME']
+		));
+
+		$i++;
+	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	// Загрузка названий местоположений
 
@@ -332,34 +390,48 @@
 		FROM [dbo].[LOCATIONS]
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
-
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
-		{
-			$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_LOCATIONS}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
-				$row['LOC_NO'],
-				$row['DESCR']
-			));
-
-			$i++;
-		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		$db->put(rpv("INSERT INTO @names (`type`, `pid`, `id`, `name`) VALUES ({%NT_LOCATIONS}, 0, {d0}, {s1}) ON DUPLICATE KEY UPDATE `name` = {s1}",
+			$row['LOC_NO'],
+			$row['DESCR']
+		));
+
+		$i++;
+	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	// Загрузка оборудования
 
@@ -453,194 +525,209 @@
 			)
 	");
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
 
-		$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
-		
-		$i = 0;
-		while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	sqlsrv_free_stmt($invent_result);
+
+	$invent_result = sqlsrv_query($conn, 'SELECT * FROM #tmptable');
+	
+	if($invent_result === FALSE)
+	{
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
+	}
+
+	$i = 0;
+	
+	while($row = sqlsrv_fetch_array($invent_result, SQLSRV_FETCH_ASSOC))
+	{
+		//if(in_array(intval($row['STATUS_NO']), $active_statuses)) // Временно отключил проверку статусов
 		{
-			//if(in_array(intval($row['STATUS_NO']), $active_statuses)) // Временно отключил проверку статусов
+			//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
+			$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
+			$mobile = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 2) ? MF_INV_MOBILEDEV : 0x0000);
+			$bcc = ((intval($row['STATUS_NO']) == 1 && intval($row['CI_TYPE']) == 1 && (intval($row['TYPE_NO']) == 85 || intval($row['TYPE_NO']) == 45)) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
+			$duplicate = 0;
+
+			$inv_active = ($active ? IF_INV_ACTIVE : 0x0000);
+			$inv_mobile = ($mobile ? IF_INV_MOBILEDEV : 0x0000);
+			$inv_bcc = ($bcc ? IF_INV_BCCDEV : 0x0000);
+
+			// Load SN and MACs
+
+			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
+
+			if(strcasecmp($sn, 'N/A') == 0)
 			{
-				//$active = 0x0040; //(in_array(intval($row['STATUS_NO']), $active_statuses) ? 0x0040 : 0x0000);
-				$active = (in_array(intval($row['STATUS_NO']), $active_statuses) ? MF_INV_ACTIVE : 0x0000);
-				$mobile = ((intval($row['CI_TYPE']) == 1 && intval($row['TYPE_NO']) == 2) ? MF_INV_MOBILEDEV : 0x0000);
-				$bcc = ((intval($row['STATUS_NO']) == 1 && intval($row['CI_TYPE']) == 1 && (intval($row['TYPE_NO']) == 85 || intval($row['TYPE_NO']) == 45)) ? MF_INV_BCCDEV : 0x0000); //backup communication channel (ДКС)
+				$sn = '';
+			}
+			
+			$macs = array();
+			
+			for($k = 1; $k <= 17; $k++)    // mac* fields count
+			{
+				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
+
+				if(!empty($mac) && strlen($mac) == 12)
+				{
+					$macs[] = $mac;
+				}
+			}
+			
+			if(!empty($sn) || count($macs) > 0)
+			{
+				$inv_id = 0;
+				if(!$db->select_ex($result, rpv("SELECT i.`id`, i.`inv_no`, i.`flags` FROM @inv AS i WHERE i.`inv_no` = ! LIMIT 1", $row['INV_NO'])))
+				{
+					if($db->put(rpv("INSERT INTO @inv (`inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, #, #, #, #, #, #)",
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc
+					)))
+					{
+						$inv_id = $db->last_id();
+					}
+				}
+				else
+				{
+					$inv_id = $result[0][0];
+
+					$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc,
+						$inv_id
+					));
+				}
+			}
+
+			// Save SN
+			
+			if(!empty($sn))
+			{
+				$mac_id = 0;
+				if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $sn)))
+				{
+					if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+						$sn,
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
+					)))
+					{
+						$mac_id = $db->last_id();
+					}
+				}
+				else
+				{
+					$mac_id = $result[0][0];
+
+					if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $sn !== 'N/A' && $sn !== 'N\A' && $sn !== 'NA')    // Exist in IT Invent?
+					{
+						$duplicate = MF_DUPLICATE;
+						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$sn.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+					}
+
+					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
+						$mac_id
+					));
+				}
+
+				$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
+
+				$i++;
+			}
+
+			// Save MACs
+			foreach($macs as &$mac)    // mac* fields count
+			{
 				$duplicate = 0;
 
-				$inv_active = ($active ? IF_INV_ACTIVE : 0x0000);
-				$inv_mobile = ($mobile ? IF_INV_MOBILEDEV : 0x0000);
-				$inv_bcc = ($bcc ? IF_INV_BCCDEV : 0x0000);
-
-				// Load SN and MACs
-
-				$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
-
-				if(strcasecmp($sn, 'N/A') == 0)
+				$mac_id = 0;
+				if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
 				{
-					$sn = '';
-				}
-				
-				$macs = array();
-				
-				for($k = 1; $k <= 17; $k++)    // mac* fields count
-				{
-					$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
-
-					if(!empty($mac) && strlen($mac) == 12)
+					if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
+						$mac,
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						MF_EXIST_IN_ITINV | $active | $mobile | $bcc
+					)))
 					{
-						$macs[] = $mac;
+						$mac_id = $db->last_id();
 					}
 				}
-				
-				if(!empty($sn) || count($macs) > 0)
+				else
 				{
-					$inv_id = 0;
-					if(!$db->select_ex($result, rpv("SELECT i.`id`, i.`inv_no`, i.`flags` FROM @inv AS i WHERE i.`inv_no` = ! LIMIT 1", $row['INV_NO'])))
-					{
-						if($db->put(rpv("INSERT INTO @inv (`inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, #, #, #, #, #, #)",
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc
-						)))
-						{
-							$inv_id = $db->last_id();
-						}
-					}
-					else
-					{
-						$inv_id = $result[0][0];
+					$mac_id = $result[0][0];
 
-						$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							IF_EXIST_IN_ITINV | $inv_active | $inv_mobile| $inv_bcc,
-							$inv_id
-						));
+					if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
+					{
+						$duplicate = MF_DUPLICATE;
+						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 					}
+
+					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+						$row['INV_NO'],
+						$row['TYPE_NO'],
+						$row['MODEL_NO'],
+						$row['STATUS_NO'],
+						$row['BRANCH_NO'],
+						$row['LOC_NO'],
+						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
+						$mac_id
+					));
 				}
 
-				// Save SN
-				
-				if(!empty($sn))
-				{
-					$mac_id = 0;
-					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = {%MF_SERIAL_NUM} LIMIT 1", $sn)))
-					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
-							$sn,
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | MF_SERIAL_NUM | $active | $mobile| $bcc
-						)))
-						{
-							$mac_id = $db->last_id();
-						}
-					}
-					else
-					{
-						$mac_id = $result[0][0];
+				$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
 
-						if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $sn !== 'N/A' && $sn !== 'N\A' && $sn !== 'NA')    // Exist in IT Invent?
-						{
-							$duplicate = MF_DUPLICATE;
-							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$sn.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
-						}
-
-						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
-							$mac_id
-						));
-					}
-
-					$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
-
-					$i++;
-				}
-
-				// Save MACs
-				foreach($macs as &$mac)    // mac* fields count
-				{
-					$duplicate = 0;
-
-					$mac_id = 0;
-					if(!$db->select_ex($result, rpv("SELECT m.`id`, m.`inv_no`, m.`flags` FROM @mac AS m WHERE m.`mac` = ! AND (`flags` & {%MF_SERIAL_NUM}) = 0 LIMIT 1", $mac)))
-					{
-						if($db->put(rpv("INSERT INTO @mac (`mac`, `inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, !, #, #, #, #, #, #)",
-							$mac,
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | $active | $mobile | $bcc
-						)))
-						{
-							$mac_id = $db->last_id();
-						}
-					}
-					else
-					{
-						$mac_id = $result[0][0];
-
-						if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
-						{
-							$duplicate = MF_DUPLICATE;
-							echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
-						}
-
-						$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
-							$row['INV_NO'],
-							$row['TYPE_NO'],
-							$row['MODEL_NO'],
-							$row['STATUS_NO'],
-							$row['BRANCH_NO'],
-							$row['LOC_NO'],
-							MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
-							$mac_id
-						));
-					}
-
-					$db->put(rpv("INSERT INTO @mac_inv (`mac_id`, `inv_id`) VALUES ({d0}, {d1}) ON DUPLICATE KEY UPDATE `inv_id` = `inv_id`", $mac_id, $inv_id));
-
-					$i++;
-				}
-
-				unset($mac);
+				$i++;
 			}
+
+			unset($mac);
 		}
-
-		echo 'Count: '.$i."\r\n";
-
-		sqlsrv_free_stmt($invent_result);
 	}
+
+	echo 'Count: '.$i."\r\n";
+
+	if($row === FALSE)
+	{
+		throw new Exception('ERROR: sqlsrv_fetch_array complete with error: '.print_r(sqlsrv_errors(), true));
+	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	$invent_result = sqlsrv_query($conn, 'DROP TABLE #tmptable');
 
-	if($invent_result !== FALSE)
+	if($invent_result === FALSE)
 	{
-		sqlsrv_free_stmt($invent_result);
+		throw new Exception('ERROR: '.print_r(sqlsrv_errors(), true));
 	}
+
+	sqlsrv_free_stmt($invent_result);
 
 	sqlsrv_close($conn);
