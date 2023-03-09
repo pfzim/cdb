@@ -66,7 +66,7 @@
 	$ch = curl_init(MAXPATROL_URL.'/api/assets_temporal_readmodel/v1/assets_grid');
 
 	$post_data = json_encode(array(
-		'pdql' => 'select(Host.@Id, Host.Hostname, Host.IpAddress, Host.@AuditTime)',
+		'pdql' => 'select(Host.@Id, Host.Hostname, Host.Fqdn, Host.IpAddress, Host.@AuditTime)',
 		'selectedGroupIds' => array(),
 		'additionalFilterParameters' => array(
 			'groupIds' => array(),
@@ -145,8 +145,18 @@
 			{
 				$date = '\''.DateTime::createFromFormat(DateTime::ISO8601, $record['Host.@AuditTime'])->format('Y-m-d H:i:s').'\'';
 			}
+
+			$hostname = '';
+			if(!empty($record['Host.Hostname']))
+			{
+				$hostname = strtoupper($record['Host.Hostname']);
+			}
+			elseif(!empty($record['Host.Fqdn']))
+			{
+				$hostname = strtoupper(preg_replace('/\..*$/', '', $record['Host.Fqdn']));
+			}
 			
-			echo 'Id: '.$record['Host.@Id'].', Hostname: '.$record['Host.Hostname'].', IP: '.$record['Host.IpAddress'].', AuditTime: '.$date.PHP_EOL;
+			echo 'Id: '.$record['Host.@Id'].', Hostname: '.$hostname.', IP: '.$record['Host.IpAddress'].', AuditTime: '.$date.PHP_EOL;
 
 			$db->put(rpv("
 					INSERT INTO @maxpatrol (`guid`, `name`, `ip`, `audit_time`, `flags`)
@@ -154,7 +164,7 @@
 					ON DUPLICATE KEY UPDATE `name` = {s1}, `ip` = {s2}, `audit_time` = {r3}, `flags` = (`flags` | {%MPF_EXIST})
 				",
 				$record['Host.@Id'],
-				strtoupper($record['Host.Hostname']),
+				$hostname,
 				$record['Host.IpAddress'],
 				$date
 			));
