@@ -91,7 +91,7 @@
 			$card['brlVSrvRAM'],
 			0,  // hdd_size
 			$card['brlVSrvOSVersion'], // _brlSrvOS_description OR _brlSrvOS_description_translation
-			((@$card['_brlVSrvRootAccess_description'] === 'true') ? VMF_HAVE_ROOT : 0) | VMF_EXIST_CMDB
+			((@$card['_brlVSrvRootAccess_description'] === 'false') ? 0 : VMF_HAVE_ROOT) | VMF_EXIST_CMDB
 		));
 		$i++;
 	}

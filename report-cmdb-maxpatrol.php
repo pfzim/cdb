@@ -73,7 +73,7 @@ EOT;
 			$table .= '<td>'.$row['name'].'</td>';
 			$table .= '<td>'.$row['audit_time'].'</td>';
 			$table .= '<td>'.$row['cmdb_os'].'</td>';
-			$table .= '<td>'.((intval($row['flags']) & VMF_HAVE_ROOT) ? '&#x2713;' : '&#x2717;').'</td>';
+			$table .= '<td>'. ((stripos($row['cmdb_os'], 'win') !== FALSE) ? '' : ((intval($row['flags']) & VMF_HAVE_ROOT) ? '&#x2713;' : '&#x2717;')).'</td>';
 			$table .= '</tr>';
 
 			$i++;
