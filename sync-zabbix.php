@@ -108,7 +108,7 @@
 		{
 			if(call_user_func($func, $el, $payload))
 			{
-				return TRUE;
+				return $el;
 			}
 		}
 
@@ -439,6 +439,7 @@
 	// Удаляем из таблицы хосты, которые не должны мониторится и уже отсутствуют в Zabbix
 
 	$db->put(rpv("DELETE FROM @zabbix_hosts WHERE (`flags` & ({%ZHF_MUST_BE_MONITORED} | {%ZHF_EXIST_IN_ZABBIX})) = 0"));
+
 	echo 'Starting export to Zabbix...'.PHP_EOL;
 
 //*/
@@ -1015,17 +1016,49 @@
 						$auth_key,
 						array(
 							'hostids'                   => $row['host_id'],
-							'output'                    => ['hostid', 'host', 'status', 'description'],
+							'output'                    => ['hostid', 'host', 'status'],
+							'selectTags'                => 'extend',
 						)
 					);
 
 					foreach($zabbix_result as &$host)
 					{
-						if(intval($host['status']) == 0)
+						$delete_tag = NULL;
+
+						foreach($host['tags'] as &$tag)
+						{
+							if($tag['tag'] == 'delete')
+							{
+								$delete_tag = &$tag;
+								break;
+							}
+						}
+
+						if(
+							(intval($host['status']) != 1)
+							|| !$delete_tag
+							|| !preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d+)$/', $delete_tag['value'], $matches)
+							|| !checkdate(intval($matches[2]), intval($matches[1]), intval($matches[3]))
+						)
 						{
 							echo 'Disable in Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
 
 							$removed++;
+							
+							$delete_date = new DateTime();
+							$delete_date->add(new DateInterval('P7D'));
+
+							if($delete_tag)
+							{
+								$delete_tag['value'] = $delete_date->format('d.m.Y');
+							}
+							else
+							{
+								$host['tags'][] = array(
+									'tag'   => 'delete',
+									'value' => $delete_date->format('d.m.Y')
+								);
+							}
 
 							zabbix_api_request(
 								'host.update',
@@ -1033,43 +1066,32 @@
 								array(
 									'hostid'          => $row['host_id'],
 									'status'          => 1,
+									'tags'            => $host['tags'],
 									'description'     => 'Disabled: '.date('d.m.Y H:i:s')."\nWill be deleted after 7 days"
 								)
 							);
 						}
-						elseif(preg_match('/^Disabled: (\d{1,2})\.(\d{1,2})\.(\d+)/', $host['description'], $matches))
+						else
 						{
-							if(checkdate(intval($matches[2]), intval($matches[1]), intval($matches[3])))
+							$today = new DateTime();
+							$delete_date = DateTime::createFromFormat('Y-m-d H:i:s', sprintf('%04d-%02d-%02d 00:00:00', $matches[3], $matches[2], $matches[1]));
+
+							if($delete_date < $today)
 							{
-								$today = new DateTime();
-								$delete_date = DateTime::createFromFormat('Y-m-d H:i:s', sprintf('%04d-%02d-%02d 00:00:00', $matches[3], $matches[2], $matches[1]));
-								$delete_date->add(new DateInterval('P7D'));
+								echo 'Remove from Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
 
-								if($delete_date > $today)
-								{
-									echo 'Remove from Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+								$removed++;
 
-									$removed++;
-
-									$zabbix_result = zabbix_api_request(
-										'host.delete',
-										$auth_key,
-										array($row['host_id'])
-									);
-								}
-								else
-								{
-									echo 'Host '.$row['name'].' ('.$row['host_id'].') will be deleted on '.($delete_date->format('d.m.Y')).PHP_EOL;
-								}
+								$zabbix_result = zabbix_api_request(
+									'host.delete',
+									$auth_key,
+									array($row['host_id'])
+								);
 							}
 							else
 							{
-								echo 'Host '.$row['name'].' ('.$row['host_id'].') has invalid date in description'.PHP_EOL;
+								echo 'Host '.$row['name'].' ('.$row['host_id'].') will be deleted on '.($delete_date->format('d.m.Y')).PHP_EOL;
 							}
-						}
-						else
-						{
-							echo 'Host '.$row['name'].' ('.$row['host_id'].') has invalid date format in description'.PHP_EOL;
 						}
 					}
 				}
