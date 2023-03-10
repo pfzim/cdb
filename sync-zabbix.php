@@ -65,6 +65,10 @@
 		Добавлен флаг ZHF_DONT_SYNC. Хосты помеченные этим флагом
 		не будут изменяться этим скриптом. Для установки этого флага и
 		отключения синхронизациии, у хоста требуется добавить тэг nosync.
+		
+		Добавлено двухэтапное удаление хостов, чтобы избежать потери данных.
+		Сначала хост отключается. А спустя 7 дней удаляется.
+		
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -627,7 +631,8 @@
 			$reg_code = 'unknown';
 			$obj_code = 'unknown';
 
-			if(intval($row['type_no']) == ITINVENT_TYPE_COMPUTER)  // Компьютеры
+			// Компьютеры
+			if(intval($row['type_no']) == ITINVENT_TYPE_COMPUTER)
 			{
 				// TT: 00-0000-0
 				if(preg_match('/^(\\d{2})-(\\d{4})-(\\d+)/i', $host_name, $matches))
@@ -666,7 +671,8 @@
 					$template_ids[] = ZABBIX_TEMPLATE_WORKSTATION_GENERAL;
 				}
 			}
-			else // Коммутаторы и маршрутизаторы
+			// Коммутаторы и маршрутизаторы
+			else
 			{
 				// TT: RU-00-0000-XXX
 				if(preg_match('/^RU-(\\d{2})-(\\d{4})-\\w{3}/i', $host_name, $matches))
@@ -701,14 +707,16 @@
 					$obj_code = $matches[2];
 				}
 				
-				// Выбираем шаблон
-
-				if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)  // Коммутатор (switch)
+				// Выбираем шаблон мониторинга Zabbix по типу оборудования, указанному в карточке ИТ Инвент
+				
+				// Коммутатор (switch)
+				if(intval($row['type_no']) == ITINVENT_TYPE_SWITCH)
 				{
 					$type_code = ZABBIX_TYPE_SWITCH;
 					$template_ids[] = ZABBIX_TEMPLATE_SWITCH;
 				}
-				else // Маршрутизатор
+				// Маршрутизатор
+				else
 				{
 					// Маршрутизатор РЦ или ЦО НН
 					if(($location_code == ZABBIX_OBJECT_RC) || ($location_code == ZABBIX_OBJECT_CO))
@@ -716,13 +724,8 @@
 						$template_ids[] = ZABBIX_TEMPLATE_FOR_RC;
 						
 						if((
-								($location_code == ZABBIX_OBJECT_RC)
-								&& (intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
-								&& preg_match('/-02$/', $host_name)				// В РЦ РКС установлен на маршрутизаторах *-02
-							) || (
-								($location_code == ZABBIX_OBJECT_CO)
-								&& (intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
-								&& preg_match('/-01$/', $host_name)					// В ЦО РКС установлен на маршрутизаторах *-01
+								(intval($row['flags']) & ZHF_TEMPLATE_WITH_BCC)
+								&& preg_match('/-02$/', $host_name)					// В ЦО и РЦ РКС установлен на маршрутизаторах *-02
 							)
 						)
 						{
@@ -792,7 +795,7 @@
 				|| ($type_code == ZABBIX_TYPE_WORKSTATION_KASSA)
 			)
 			{
-				$zabbix_proxy = ZABBIX_HOST_PROXY;
+				$zabbix_proxy = ZABBIX_HOST_PROXY_2;
 				$host_interface = array(
 					'type'    => '1',
 					'main'    => '1',
@@ -804,7 +807,7 @@
 			}
 			else
 			{
-				$zabbix_proxy = ZABBIX_HOST_PROXY;
+				$zabbix_proxy = ZABBIX_HOST_PROXY_1;
 				$host_interface = array(
 					'type'    => '2',
 					'main'    => '1',
@@ -823,7 +826,7 @@
 				);
 			}
 
-			// Добавляем, обновляем и удаляем в Zabbix
+			// Добавляем, обновляем или удаляем хост в Zabbix
 
 			switch(intval($row['flags']) & (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX))
 			{
@@ -831,7 +834,7 @@
 
 				case ZHF_MUST_BE_MONITORED:
 				{
-					// Временно на этапе перевода клиентов на новый сервер пропускаем создание
+					// Временно на этапе перевода клиентов на новый сервер пропускаем создание (работает авторегистрация, здесь только привязываем шаблоны)
 					if(preg_match('/^(\\d{2})-(\\d{4})-(\\d+)/i', $host_name)
 						|| preg_match('/^(\\d{2})(\\d{2})-[WN](\\d{4})/i', $host_name))
 					{
@@ -859,7 +862,8 @@
 							'templates'    => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
 							'tags'         => $tags,
 							'proxy_hostid' => $zabbix_proxy,
-							'interfaces'   => array(&$host_interface)
+							'interfaces'   => array(&$host_interface),
+							'description'  => 'Created: '.date('d.m.Y H:i:s')
 						)
 					);
 					
@@ -916,6 +920,8 @@
 						);
 						*/
 
+						$interfaces_updated = FALSE;
+						
 						// Сделать более детальное сравнение настроек интерфейса
 						foreach($host['interfaces'] as &$interface)
 						{
@@ -938,6 +944,8 @@
 										'dns'           => $host_interface['dns']
 									)
 								);
+								
+								$interfaces_updated = TRUE;
 							}
 						}
 
@@ -948,6 +956,7 @@
 						
 						if($host['proxy_hostid'] !== $zabbix_proxy
 							|| $host['host'] !== $host_name
+							|| intval($host['status']) != 0
 							|| count(array_diff($template_ids, $exist_templates))
 							|| count(array_diff($exist_templates, $template_ids))
 							|| count(array_diff($group_ids, $exist_groups))
@@ -972,11 +981,24 @@
 								array(
 									'hostid'          => $row['host_id'],
 									'host'            => $host_name,
+									'status'          => 0,
 									'groups'          => array_reduce($group_ids, function($result, $value) { $result[] = array('groupid'   => $value); return $result; }, array()),
 									'templates'       => array_reduce($template_ids, function($result, $value) { $result[] = array('templateid'   => $value); return $result; }, array()),
 									'tags'            => $tags,
 									'templates_clear' => &$templates_to_clear,
-									'proxy_hostid'    => $zabbix_proxy
+									'proxy_hostid'    => $zabbix_proxy,
+									'description'     => 'Updated: '.date('d.m.Y H:i:s')."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+								)
+							);
+						}
+						elseif($interfaces_updated)
+						{
+							zabbix_api_request(
+								'host.update',
+								$auth_key,
+								array(
+									'hostid'          => $row['host_id'],
+									'description'     => 'Interfaces updated: '.date('d.m.Y H:i:s')."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
 								)
 							);
 						}
@@ -988,15 +1010,68 @@
 
 				default:
 				{
-					echo 'Remove from Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
-
-					$removed++;
-
 					$zabbix_result = zabbix_api_request(
-						'host.delete',
+						'host.get',
 						$auth_key,
-						array($row['host_id'])
+						array(
+							'hostids'                   => $row['host_id'],
+							'output'                    => ['hostid', 'host', 'status', 'description'],
+						)
 					);
+
+					foreach($zabbix_result as &$host)
+					{
+						if(intval($host['status']) == 0)
+						{
+							echo 'Disable in Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+
+							$removed++;
+
+							zabbix_api_request(
+								'host.update',
+								$auth_key,
+								array(
+									'hostid'          => $row['host_id'],
+									'status'          => 1,
+									'description'     => 'Disabled: '.date('d.m.Y H:i:s')."\nWill be deleted after 7 days"
+								)
+							);
+						}
+						elseif(preg_match('/^Disabled: (\d{1,2})\.(\d{1,2})\.(\d+)/', $host['description'], $matches))
+						{
+							if(checkdate(intval($matches[2]), intval($matches[1]), intval($matches[3])))
+							{
+								$today = new DateTime();
+								$delete_date = DateTime::createFromFormat('Y-m-d H:i:s', sprintf('%04d-%02d-%02d 00:00:00', $matches[3], $matches[2], $matches[1]));
+								$delete_date->add(new DateInterval('P7D'));
+
+								if($delete_date > $today)
+								{
+									echo 'Remove from Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+
+									$removed++;
+
+									$zabbix_result = zabbix_api_request(
+										'host.delete',
+										$auth_key,
+										array($row['host_id'])
+									);
+								}
+								else
+								{
+									echo 'Host '.$row['name'].' ('.$row['host_id'].') will be deleted on '.($delete_date->format('d.m.Y')).PHP_EOL;
+								}
+							}
+							else
+							{
+								echo 'Host '.$row['name'].' ('.$row['host_id'].') has invalid date in description'.PHP_EOL;
+							}
+						}
+						else
+						{
+							echo 'Host '.$row['name'].' ('.$row['host_id'].') has invalid date format in description'.PHP_EOL;
+						}
+					}
 				}
 			}
 			
