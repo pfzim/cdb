@@ -1011,6 +1011,8 @@
 
 				default:
 				{
+					echo 'Check before remove from Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+
 					$zabbix_result = zabbix_api_request(
 						'host.get',
 						$auth_key,
@@ -1082,7 +1084,7 @@
 
 								$removed++;
 
-								$zabbix_result = zabbix_api_request(
+								zabbix_api_request(
 									'host.delete',
 									$auth_key,
 									array($row['host_id'])
