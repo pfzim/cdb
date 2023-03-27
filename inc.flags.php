@@ -195,6 +195,10 @@
 
 	define('MPF_EXIST',       0x0010);
 	
+	// `flags` from `cmdb_assets` table
+
+	define('CAF_NETWORK_ENTITY',     0x0010);
+
 	// `flags` from `vm` table
 
 	define('VMF_EXIST_VMM',       0x0010);

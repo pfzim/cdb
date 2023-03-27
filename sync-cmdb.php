@@ -76,6 +76,7 @@
 	
 	// Clear flags before sync
 	$db->put(rpv("UPDATE @vm SET `flags` = (`flags` & ~({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT} | {%VMF_HAVE_ROOT})) WHERE `flags` & ({%VMF_EXIST_CMDB} | {%VMF_BAREMETAL} | {%VMF_EQUIPMENT} | {%VMF_HAVE_ROOT})"));
+	$db->put(rpv("UPDATE @cmdb_assets SET `flags` = (`flags` & ~({%CAF_NETWORK_ENTITY})) WHERE `flags` & ({%CAF_NETWORK_ENTITY})"));
 
 	$i = 0;
 	foreach($result_json['data'] as &$card)
@@ -280,3 +281,81 @@
 	}
 
 	echo 'Count: '.$i.PHP_EOL;
+
+
+	echo 'Loading routers...'.PHP_EOL;
+	
+	$ch = curl_init(CMDB_URL.'/classes/brlRouter/cards');
+
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;', 'Cmdbuild-authorization: '.$sess_id));
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$result = curl_exec($ch);
+	curl_close($ch);
+
+	$result_json = @json_decode($result, true);
+	
+	if(!isset($result_json['success'])
+		|| ($result_json['success'] != 1)
+		|| !isset($result_json['data'])
+	)
+	{
+		echo 'ERROR: Invalid answer from server!'.PHP_EOL;
+		return;
+	}
+	
+	$i = 0;
+	foreach($result_json['data'] as &$card)
+	{
+		$db->put(rpv("
+				INSERT INTO @cmdb_assets (`name`, `value1`, `flags`)
+				VALUES ({s0}, {s1}, {%CAF_NETWORK_ENTITY})
+				ON DUPLICATE KEY UPDATE `value1` = {s1}, `flags` = (`flags` | {%CAF_NETWORK_ENTITY})
+			",
+			$card['brlCIName'],
+			$card['brlIPAddress'],
+		));
+		$i++;
+	}
+
+	echo 'Count: '.$i.PHP_EOL;
+
+	echo 'Loading switches...'.PHP_EOL;
+	
+	$ch = curl_init(CMDB_URL.'/classes/brlSwitch/cards');
+
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;', 'Cmdbuild-authorization: '.$sess_id));
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$result = curl_exec($ch);
+	curl_close($ch);
+
+	$result_json = @json_decode($result, true);
+	
+	if(!isset($result_json['success'])
+		|| ($result_json['success'] != 1)
+		|| !isset($result_json['data'])
+	)
+	{
+		echo 'ERROR: Invalid answer from server!'.PHP_EOL;
+		return;
+	}
+	
+	$i = 0;
+	foreach($result_json['data'] as &$card)
+	{
+		$db->put(rpv("
+				INSERT INTO @cmdb_assets (`name`, `value1`, `flags`)
+				VALUES ({s0}, {s1}, {%CAF_NETWORK_ENTITY})
+				ON DUPLICATE KEY UPDATE `value1` = {s1}, `flags` = (`flags` | {%CAF_NETWORK_ENTITY})
+			",
+			$card['brlCIName'],
+			$card['brlIPAddress'],
+		));
+		$i++;
+	}
+
+	echo 'Count: '.$i.PHP_EOL;
+

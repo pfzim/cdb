@@ -322,6 +322,7 @@ function get_config_int(string $name)
 			'report-cmdb-vm-backup',
 			'report-cmdb-vpn',
 			'report-cmdb-maxpatrol',
+			'report-cmdb-maxpatrol-net',
 			'report-cmdb-relations',
 			//'report-maxpatrol-smb',  // moved to orchestrator
 			'report-itinvent-bcc'
@@ -482,6 +483,9 @@ function get_config_int(string $name)
 		),
 		'report-cmdb-maxpatrol' => array(
 			'@report-cmdb-maxpatrol.php'
+		),
+		'report-cmdb-maxpatrol-net' => array(
+			'@report-cmdb-maxpatrol-net.php'
 		),
 		'report-maxpatrol-smb' => array(
 			'@report-maxpatrol-smb.php'
