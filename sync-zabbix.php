@@ -864,7 +864,7 @@
 							'tags'         => $tags,
 							'proxy_hostid' => $zabbix_proxy,
 							'interfaces'   => array(&$host_interface),
-							'description'  => 'Created: '.date('d.m.Y H:i:s')
+							'description'  => 'Created: '.date('d.m.Y H:i:s')."\nInvNo: ".$row['inv_no']
 						)
 					);
 					
@@ -988,7 +988,7 @@
 									'tags'            => $tags,
 									'templates_clear' => &$templates_to_clear,
 									'proxy_hostid'    => $zabbix_proxy,
-									'description'     => 'Updated: '.date('d.m.Y H:i:s')."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+									'description'     => 'Updated: '.date('d.m.Y H:i:s')."\nInvNo: ".$row['inv_no']."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
 								)
 							);
 						}
@@ -999,7 +999,7 @@
 								$auth_key,
 								array(
 									'hostid'          => $row['host_id'],
-									'description'     => 'Interfaces updated: '.date('d.m.Y H:i:s')."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+									'description'     => 'Interfaces updated: '.date('d.m.Y H:i:s')."\nInvNo: ".$row['inv_no']."\nPrevious config:\n".json_encode($host, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
 								)
 							);
 						}
