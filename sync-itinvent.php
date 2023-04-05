@@ -29,6 +29,12 @@
 		адресов с инвентарными карточками. Одна карточка (инвентарный номер)
 		может иметь множество MAC адресов и MAC адрес может иметь множество
 		карточек (инвентарных номеров) из-за ошибочных дубликатов в ИТ Инвент.
+		
+		Если обнаружена смена статуса в ИТ Инвент с активного на не активный,
+		то у MAC адреса обновляется дата последнего его обнаружения и
+		проставляется флаг MF_TEMP_EXCLUDED, чтобы не выставлялись заявки по
+		выведенному из работы оборудованию и не примимались фантомные записи
+		из ARP кэша коммутаторов скриптом import-mac.
 	*/
 
 	/*
@@ -437,7 +443,8 @@
 
 	// Before sync remove marks: 0x0010 - Exist in IT Invent, 0x0040 - Active, 0x0100 - Mobile, 0x0200 - Duplicate, 0x0400 - BCC, set status = 0
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` & ~({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%MF_EXIST_IN_ITINV} | {%MF_INV_ACTIVE} | {%MF_INV_MOBILEDEV} | {%MF_DUPLICATE} | {%MF_INV_BCCDEV})"));
-	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})"));
+	$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%IF_EXIST_IN_ITINV} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})"));
+	//$db->put(rpv("UPDATE @inv SET `flags` = (`flags` & ~({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})), `status` = 0 WHERE `flags` & ({%IF_EXIST_IN_ITINV} | {%IF_INV_ACTIVE} | {%IF_INV_MOBILEDEV} | {%IF_DUPLICATE} | {%IF_INV_BCCDEV})"));
 
 	// Temporarily exclude MAC addresses from checks that not seen in network more than 60 days
 	$db->put(rpv("UPDATE @mac SET `flags` = (`flags` | {%MF_TEMP_EXCLUDED}) WHERE `flags` & {%MF_FROM_NETDEV} AND `date` < DATE_SUB(NOW(), INTERVAL 60 DAY)"));
@@ -555,6 +562,8 @@
 			$inv_mobile = ($mobile ? IF_INV_MOBILEDEV : 0x0000);
 			$inv_bcc = ($bcc ? IF_INV_BCCDEV : 0x0000);
 
+			$mac_exclude = 0;
+
 			// Load SN and MACs
 
 			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
@@ -581,6 +590,12 @@
 				$inv_id = 0;
 				if(!$db->select_ex($result, rpv("SELECT i.`id`, i.`inv_no`, i.`flags` FROM @inv AS i WHERE i.`inv_no` = ! LIMIT 1", $row['INV_NO'])))
 				{
+					// Пометить MAC исключенным, если статус в ИТ Инвент сменился на "не рабочий"
+					if(!$inv_active && ((intval($result[0][2]) & IF_INV_ACTIVE) == 0))
+					{
+						$mac_exclude = MF_TEMP_EXCLUDED;
+					}
+					
 					if($db->put(rpv("INSERT INTO @inv (`inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, #, #, #, #, #, #)",
 						$row['INV_NO'],
 						$row['TYPE_NO'],
@@ -598,7 +613,7 @@
 				{
 					$inv_id = $result[0][0];
 
-					$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+					$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = ((`flags` & ~{%IF_INV_ACTIVE}) | #) WHERE `id` = # LIMIT 1",
 						$row['INV_NO'],
 						$row['TYPE_NO'],
 						$row['MODEL_NO'],
@@ -691,14 +706,15 @@
 						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
 					}
 
-					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
+					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `date` = IF(#, NOW(), `date`), `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
 						$row['INV_NO'],
 						$row['TYPE_NO'],
 						$row['MODEL_NO'],
 						$row['STATUS_NO'],
 						$row['BRANCH_NO'],
 						$row['LOC_NO'],
-						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
+						$mac_exclude,		// reset date if status was changed in IT Invent
+						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate | $mac_exclude,
 						$mac_id
 					));
 				}
