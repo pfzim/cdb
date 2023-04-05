@@ -133,12 +133,13 @@ $template_helpdesk_messages = array(
 		,
 
 	TT_INV_ADD =>
-		'Обнаружено сетевое устройство %data_type% которого не зафиксирован в IT Invent'
+		'%message%'
 		."\n\n%mac_or_sn%"
 		."\nDNS name: %dns_name%"
 		."\nIP: %ip%"
+		."\nИнвентарный номер оборудования: %inv_no%"
 		."\nСтатус: %status_code% %status_name%"
-		."\nFlags: %flags%"
+		."\nFlags M: %m_flags%; I: %i_flags%"
 		."\n\nУстройство подключено к: %host%"
 		."\nПорт: %port%"
 		."\nОписание порта: %port_desc%"
@@ -190,14 +191,14 @@ $template_helpdesk_messages = array(
 		,
 
 	TT_INV_ADD_DECOMIS =>
-		'Списанное оборудование появилось в сети'
+		'В сети обнаружено списанное оборудование. Необходимо разобраться по какой причине оборудование со статусом "Списан" продолжает эксплуатироваться.'
 		."\n\n%mac_or_sn%"
 		."\nИнвентарный номер оборудования: %inv_no%"
 		."\nТип: %type_name%"
 		."\nСтатус: %status_code% %status_name%"
 		."\nDNS name: %dns_name%"
 		."\nIP: %ip%"
-		."\nFlags: %flags%"
+		."\nFlags M: %m_flags%; I: %i_flags%"
 		."\n\nУстройство подключено к: %host%"
 		."\nПорт: %port%"
 		."\nОписание порта: %port_desc%"

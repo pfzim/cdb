@@ -204,8 +204,8 @@ EOT;
 	{
 		$html .= '<table>';
 		$html .= '<tr><th>Описание</th>                                                   <th>Несоответствий</th>                       <th>Открыто заявок</th>                        <th>Лимит заявок</th></tr>';
-		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD).'</td>             <td>'.$result[0]['p_inv_add'].'</td>          <td>'.$result[0]['o_inv_add'].'</td>           <td rowspan="2">'.TASKS_LIMIT_ITINVENT.'</td></tr>';
-		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD_DECOMIS).'</td>     <td>'.$result[0]['p_inv_add_decomis'].'</td>  <td>'.$result[0]['o_inv_add_decomis'].'</td>   </tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD).'</td>             <td>'.$result[0]['p_inv_add'].'</td>          <td>'.$result[0]['o_inv_add'].'</td>           <td>'.TASKS_LIMIT_ITINVENT.'</td></tr>';
+		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_ADD_DECOMIS).'</td>     <td>'.$result[0]['p_inv_add_decomis'].'</td>  <td>'.$result[0]['o_inv_add_decomis'].'</td>   <td>&infin;</td></tr>';
 		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_MOVE).'</td>            <td>'.$result[0]['p_iimv'].'</td>             <td>'.$result[0]['o_iimv'].'</td>              <td>'.TASKS_LIMIT_ITINVENT_MOVE.'</td></tr>';
 		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_DUP).' (SN)</td>        <td>'.$result[0]['p_dup_sn'].'</td>           <td rowspan="2">'.$result[0]['o_dup'].'</td>   <td rowspan="2">'.TASKS_LIMIT_ITINVENT_DUP.'</td></tr>';
 		$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_INV_DUP).' (MAC)</td>       <td>'.$result[0]['p_dup_mac'].'</td>                                                         </tr>';

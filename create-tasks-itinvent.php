@@ -30,6 +30,7 @@
 	$limit = TASKS_LIMIT_ITINVENT;
 
 	global $g_mac_flags;
+	global $g_inv_flags;
 
 	// Close auto resolved tasks
 
@@ -125,7 +126,8 @@
 			status.`name` AS `status_name`,
 			type.`name` AS `type_name`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `regtime`,
-			m.`flags`
+			m.`flags` AS `m_flags`,
+			i.`flags` AS `i_flags`
 		FROM @mac AS m
 		LEFT JOIN c_mac_inv AS mi
 			ON mi.`mac_id` = m.`id`
@@ -168,10 +170,10 @@
 		// -- (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_EXIST_IN_ITINV} | {%MF_FROM_NETDEV})) = {%MF_FROM_NETDEV}    -- Not Temprary excluded, Not Premanently excluded, imported from netdev, not exist in IT Invent or not Active
 		foreach($result as &$row)
 		{
-			if($i >= $limit)
+			if(($i >= $limit) && (intval($row['status']) != 7))  // Нет ограничения для статуса 7 (списанное оборудование)
 			{
-				echo 'Limit reached: '.$limit."\r\n";
-				break;
+				//echo 'Limit reached: '.$limit."\r\n";
+				continue;
 			}
 
 			//echo 'MAC: '.$row['mac']."\n";
@@ -179,13 +181,27 @@
 			$task_type = TT_INV_ADD;
 			$task_code = 'itinvent';
 			$task_to = 'bynetdev';
+			$data_type = ((intval($row['m_flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес');
+
+			$message = '';
 
 			// Если оборудование находится в статусе Списано, то создаётся отдельный тип заявки
-			if((intval($row['flags']) & MF_EXIST_IN_ITINV) && (intval($row['status']) == 7))
+			if(intval($row['i_flags']) & IF_EXIST_IN_ITINV)
 			{
-				$task_type = TT_INV_ADD_DECOMIS;
-				$task_code = 'itinvstatus';
-				$task_to = 'itinvent';
+				if(intval($row['status']) == 7)
+				{
+					$task_type = TT_INV_ADD_DECOMIS;
+					$task_code = 'itinvstatus';
+					$task_to = 'itinvent';
+				}
+				else
+				{
+					$message = 'Обнаружено сетевое устройство, статус которого не соответствует данным сети. Требуется для УЕ актуализировать статус в IT Invent. Следует учитывать, если устройство светится в сети, то статус по IT Invent должен быть работающим (Работает, Выдан для удаленной работы, Персональное оборудование).';
+				}
+			}
+			else
+			{
+				$message = 'Обнаружено сетевое устройство, '.$data_type.' которого не зафиксирован в IT Invent. Требуется внести в карточку сетевого устройства актуальный '.$data_type.'.';
 			}
 
 			$xml = helpdesk_api_request(
@@ -207,11 +223,13 @@
 						'port'			=> $row['port'],
 						'port_desc'		=> $row['port_desc'],
 						'regtime'		=> $row['regtime'],
-						'data_type'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер' : 'MAC адрес'),
-						'mac_or_sn'		=> ((intval($row['flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),					
+						'data_type'		=> $data_type,
+						'mac_or_sn'		=> ((intval($row['m_flags']) & MF_SERIAL_NUM) ? 'Серийный номер коммутатора: '.$row['mac'] : 'MAC: '.implode(':', str_split($row['mac'], 2))),
+						'message'		=> $message,
 						'dns_name'		=> $row['name'],
 						'ip'			=> $row['ip'],
-						'flags'			=> flags_to_string(intval($row['flags']), $g_mac_flags, ', ')
+						'm_flags'		=> flags_to_string(intval($row['m_flags']), $g_mac_flags, ', '),
+						'i_flags'		=> flags_to_string(intval($row['i_flags']), $g_inv_flags, ', ')
 					)
 				)
 			);
