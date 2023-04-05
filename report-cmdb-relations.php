@@ -133,7 +133,7 @@ EOT;
 
 			foreach($result_json2['data'] as &$rel)
 			{
-				if($rel['_type'] === 'brlVirtualCIIS')
+				if($rel['_destinationType'] === 'brlVirtualCIIS')
 				{
 					$relation_founded = TRUE;
 					break;
@@ -152,7 +152,7 @@ EOT;
 			}
 			else
 			{
-				echo $class_name.' - relation founded!'.PHP_EOL;
+				echo $class_name.' - '.$card['Description'].' - relation founded!'.PHP_EOL;
 			}
 
 			$i++;
