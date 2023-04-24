@@ -293,6 +293,7 @@ function get_config_int(string $name)
 			//'create-tasks-rmss',
 			//'create-tasks-rmsv',
 			'create-tasks-edge',
+			'create-tasks-browsers',
 			'create-tasks-rename',
 			'create-tasks-sccm',
 			'create-tasks-epwd',
@@ -360,6 +361,9 @@ function get_config_int(string $name)
 		),
 		'create-tasks-edge' => array(
 			'@create-tasks-edge.php'
+		),
+		'create-tasks-browsers' => array(
+			'@create-tasks-browsers.php'
 		),
 		'create-tasks-sccm' => array(
 			'@create-tasks-sccm.php'

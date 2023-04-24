@@ -5,6 +5,9 @@
 		\file
 		\brief Создание заявок на сканирование операционной системы на
 		уязвимости MaxPatrol.
+		
+		Заявки выставляются, если сервер не сканировался (audit_time == NULL)
+		и имеет root доступ
 	*/
 
 	if(!defined('Z_PROTECTED')) exit;
@@ -97,9 +100,9 @@
 				AND t.`type` = {%TT_MAXPATROL_AUDIT}
 				AND (t.`flags` & {%TF_CLOSED}) = 0
 			WHERE
-				vm.`flags` & {%VMF_EXIST_CMDB}
+				(vm.`flags` & ({%VMF_EXIST_CMDB} | {%VMF_HAVE_ROOT})) = ({%VMF_EXIST_CMDB} | {%VMF_HAVE_ROOT})
 				AND mp.`audit_time` IS NULL
-				AND vm.`cmdb_os` LIKE 'Windows%'
+				AND vm.`cmdb_os` REGEXP 'win|linux|ubuntu|debian|centos'
 			GROUP BY vi.`id`
 			HAVING
 				COUNT(t.`id`) = 0
@@ -124,6 +127,7 @@
 					TT_MAXPATROL_AUDIT,
 					array(
 						'host'			=> $row['name'],
+						'os'			=> $row['cmdb_os']
 					)
 				)
 			);

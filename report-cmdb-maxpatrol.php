@@ -35,12 +35,32 @@
 	<h1>Время последнего сканирования MaxPatrol серверов по списку из CMDB</h1>
 EOT;
 
-	$table = '<table>';
-	$table .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th><th>Root Access</th></tr>';
+	$maxpatrol_audit_max_age_days = get_config_int('maxpatrol_audit_max_age_days');
+	$scan_period = time() - $maxpatrol_audit_max_age_days*24*60*60;
 
-	$scan_period = time() - 9*24*60*60;
-	$recently_scanned = 0;
 	$i = 0;
+
+	$data = array(
+		'linux' => array(
+			'table' => '',
+			'total' => 0,
+			'scanned' => 0,
+			'unscanned_root' => 0
+		),
+		'windows' => array(
+			'table' => '',
+			'total' => 0,
+			'scanned' => 0,
+			'unscanned_root' => 0
+		),
+		'other' => array(
+			'table' => '',
+			'total' => 0,
+			'scanned' => 0,
+			'unscanned_root' => 0
+		),
+	);
+	
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
 			vm.`name`,
@@ -60,34 +80,74 @@ EOT;
 	{
 		foreach($result as &$row)
 		{
+			$recently_scanned = FALSE;
+
 			if(!empty($row['audit_time']))
 			{
 				$audit_time = strtotime($row['audit_time']);
 				if($audit_time > $scan_period)
 				{
-					$recently_scanned++;
+					$recently_scanned = TRUE;
 				}
 			}
 
-			$table .= '<tr>';
-			$table .= '<td>'.$row['name'].'</td>';
-			$table .= '<td>'.$row['audit_time'].'</td>';
-			$table .= '<td>'.$row['cmdb_os'].'</td>';
-			$table .= '<td>'. ((stripos($row['cmdb_os'], 'win') !== FALSE) ? '' : ((intval($row['flags']) & VMF_HAVE_ROOT) ? '&#x2713;' : '&#x2717;')).'</td>';
-			$table .= '</tr>';
+			$os = 'other';
+			if(stripos($row['cmdb_os'], 'win') !== FALSE)
+			{
+				$os = 'windows';
+			}
+			else if(preg_match('/linux|ubuntu|debian|centos/i', $row['cmdb_os']))
+			{
+				$os = 'linux';
+			}
+
+			$data[$os]['total']++;
+			if($recently_scanned)
+			{
+				$data[$os]['scanned']++;
+			}
+			else
+			{
+				if(intval($row['flags']) & VMF_HAVE_ROOT)
+				{
+					$data[$os]['unscanned_root']++;
+				}
+				
+				$data[$os]['table'] .= '<tr>';
+				$data[$os]['table'] .= '<td>'.$row['name'].'</td>';
+				$data[$os]['table'] .= '<td>'.$row['audit_time'].'</td>';
+				$data[$os]['table'] .= '<td>'.$row['cmdb_os'].'</td>';
+				$data[$os]['table'] .= '<td>'. (($os == 'windows') ? '' : ((intval($row['flags']) & VMF_HAVE_ROOT) ? '&#x2713;' : '&#x2717;')).'</td>';
+				$data[$os]['table'] .= '</tr>';
+			}
 
 			$i++;
 		}
 	}
 
-	$table .= '</table>';
-
 	$html .= '<p>';
-	$html .= 'Всего: '.$i.'<br />';
-	$html .= 'Cканировалось за последние 9 дней: '.$recently_scanned;
+	$html .= 'Актуальность сканирования: '.$maxpatrol_audit_max_age_days.' дней';
 	$html .= '</p>';
+	
+	$html .= '<table>';
+	$html .= '<tr><th>-</th><th>Всего активов</th><th>Сканируется</th><th>Не сканируется (с root доступом)</th></tr>';
+	$html .= '<tr><td>Серверы Windows</td><td>'.$data['windows']['total'].'</td><td>'.$data['windows']['scanned'].'</td><td>'.($data['windows']['total'] - $data['windows']['scanned']).'</td></tr>';
+	$html .= '<tr><td>Серверы Linux</td><td>'.$data['linux']['total'].'</td><td>'.$data['linux']['scanned'].'</td><td>'.($data['linux']['total'] - $data['linux']['scanned']).' ('.$data['linux']['unscanned_root'].')</td></tr>';
+	$html .= '<tr><td>Остальные серверы</td><td>'.$data['other']['total'].'</td><td>'.$data['other']['scanned'].'</td><td>'.($data['other']['total'] - $data['other']['scanned']).'</td></tr>';
+	$html .= '</table>';
 
-	$html .= $table;
+	$html .= '<br />';
+
+	$html .= '<table>';
+	$html .= '<tr><th>Name</th><th>Audit time &#9650;</th><th>OS</th><th>Root Access</th></tr>';
+	$html .= '<tr><th colspan="4">Windows</th></tr>';
+	$html .= $data['windows']['table'];
+	$html .= '<tr><th colspan="4">Linux</th></tr>';
+	$html .= $data['linux']['table'];
+	$html .= '<tr><th colspan="4">Other</th></tr>';
+	$html .= $data['other']['table'];
+	$html .= '</table>';
+
 	$html .= '<br /><small><a href="'.CDB_URL.'/cdb.php?action=report-cmdb-maxpatrol">Сформировать отчёт заново</a></small>';
 	$html .= '</body>';
 
