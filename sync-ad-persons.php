@@ -161,7 +161,7 @@
 								$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
 									$row_id,
 									CDB_PROP_LASTLOGONTIMESTAMP,
-									date("Y-m-d H:i:s", $account['lastlogontimestamp'][0]/10000000-11644473600)
+									date("Y-m-d H:i:s", ((int) ($account['lastlogontimestamp'][0] / 10000000)) - 11644473600)
 								));
 							}
 
@@ -170,7 +170,7 @@
 								$db->put(rpv("INSERT INTO @properties_date (`tid`, `pid`, `oid`, `value`) VALUES (2, #, #, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}",
 									$row_id,
 									CDB_PROP_PWDLASTSET,
-									date("Y-m-d H:i:s", $account['pwdlastset'][0]/10000000-11644473600)
+									date("Y-m-d H:i:s", ((int) ($account['pwdlastset'][0] / 10000000)) - 11644473600)
 								));
 							}
 						}

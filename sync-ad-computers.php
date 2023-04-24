@@ -79,7 +79,7 @@
 						$laps_exp = '0000-00-00 00:00:00';
 						if(!empty($account['ms-mcs-admpwdexpirationtime'][0]))
 						{
-							$laps_exp = date("Y-m-d H:i:s", $account['ms-mcs-admpwdexpirationtime'][0]/10000000-11644473600);
+							$laps_exp = date("Y-m-d H:i:s", ((int) ($account['ms-mcs-admpwdexpirationtime'][0] / 10000000)) - 11644473600);
 						}
 
 						$db->start_transaction();

@@ -763,7 +763,7 @@ function rpv()
 						$out_string .= intval($data[intval($param) + 1]);
 						break;
 					case 's':
-						$out_string .= '\''.sql_escape(trim($data[intval($param) + 1])).'\'';
+						$out_string .= '\''.sql_escape(trim((string) $data[intval($param) + 1])).'\'';
 						break;
 					case 'f':
 						$out_string .= floatval($data[intval($param) + 1]);
