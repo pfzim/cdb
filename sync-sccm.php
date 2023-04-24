@@ -84,6 +84,7 @@
 			rmsv.ComplianceState AS rmsv_value,
 			msdt.ComplianceState AS msdt_value,
 			edge.ComplianceState AS edge_value,
+			brws.ComplianceState AS brws_value,
 			CASE
 				WHEN ReportsIgnore.Value IS NULL THEN 0
 				WHEN ReportsIgnore.Value = '' THEN 0
@@ -123,6 +124,11 @@
 			ON edge.ItemKey = m.ItemKey
 			AND edge.CI_ID = {%SCCM_EDGE_CI_ID}
 			AND edge.CIVersion = {%SCCM_EDGE_CI_VERSION}
+
+		LEFT JOIN [dbo].[vCICurrentComplianceStatus] AS brws
+			ON brws.ItemKey = m.ItemKey
+			AND brws.CI_ID = {%SCCM_BROWSERS_CI_ID}
+			AND brws.CIVersion = {%SCCM_BROWSERS_CI_VERSION}
 
 		LEFT JOIN [dbo].[DeviceExtensionData] AS ReportsIgnore
 			ON ReportsIgnore.ResourceID = m.ItemKey
@@ -290,6 +296,12 @@
 				$row_id,
 				CDB_PROP_SCCM_CLIENT_VERSION,
 				$row['ClientVersion']
+			));
+
+			$db->put(rpv("INSERT INTO @properties_int (`tid`, `pid`, `oid`, `value`) VALUES ({%TID_COMPUTERS}, {d0}, {d1}, {d2}) ON DUPLICATE KEY UPDATE `value` = {d2}",
+				$row_id,
+				CDB_PROP_BASELINE_COMPLIANCE_BROWSERS,
+				(intval($row['brws_value']) == 1) ? 1 : 0
 			));
 
 			// Сравниваем версию ОС (формат строки: 0.0.0.0)

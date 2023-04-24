@@ -23,6 +23,7 @@
 	define('CDB_PROP_BASELINE_COMPLIANCE_EDGE',			115);  // CI - Check - Regkey: Edge Version
 	define('CDB_PROP_OPERATINGSYSTEMVERSION_SCCM_CMP',	116);  // Результат сравнения версии ОС
 	define('CDB_PROP_SCCM_CLIENT_VERSION',				117);  // SCCM agent version
+	define('CDB_PROP_BASELINE_COMPLIANCE_BROWSERS',		118);  // CI - Software - Browsers check unsupported
 
 	// `flags` from `persons` table
 
@@ -92,6 +93,7 @@
 	define('TT_MSDT',               24);
 	define('TT_INV_DUP',            25);
 	define('TT_MAXPATROL_AUDIT',    26);
+	define('TT_BRWS_UNINSTALL',     27);
 	define('TT_TEST',               999);
 
 	$g_tasks_types = array(
@@ -122,6 +124,7 @@
 		TT_MSDT					=>	'Уязвимость CVE-2022-30190 MSDT',
 		TT_INV_DUP				=>	'Обнаружены дубликаты в ИТ Инвент',
 		TT_MAXPATROL_AUDIT		=>	'Операционная система не сканировалась MaxPatrol',
+		TT_BRWS_UNINSTALL		=>	'Обнаружен неподдерживаемый браузер',
 		TT_TEST 				=>	'Тестовая заявка. Не должна появляться'
 	);
 

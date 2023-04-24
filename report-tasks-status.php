@@ -98,6 +98,7 @@ EOT;
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_RMS_SETT}) AS `o_rmss`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_RMS_VERS}) AS `o_rmsv`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_EDGE_INSTALL}) AS `o_edge`,
+			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_BRWS_UNINSTALL}) AS `o_brws`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_PC_RENAME}) AS `o_name`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_TMAO_DLP}) AS `o_tmao_dlp`,
 			(SELECT COUNT(*) FROM @tasks AS t WHERE (t.`flags` & ({%TF_CLOSED} | {%TF_FAKE_TASK})) = 0 AND t.`type` = {%TT_OS_REINSTALL})  AS `o_os`,
@@ -273,6 +274,21 @@ EOT;
 			) AS `p_edge`,
 
 			(
+				SELECT
+					COUNT(*)
+				FROM @properties_int AS brws_value
+				LEFT JOIN @computers AS c
+					ON c.`id` = brws_value.`pid`
+				WHERE
+					brws_value.`tid` = {%TID_COMPUTERS}
+					AND brws_value.`oid` = {%CDB_PROP_BASELINE_COMPLIANCE_BROWSERS}
+					AND (c.`flags` & ({%CF_AD_DISABLED} | {%CF_DELETED} | {%CF_HIDED})) = 0
+					AND c.`delay_checks` < CURDATE()
+					AND brws_value.`value` <> 1
+					AND c.`name` NOT REGEXP {s0}
+			) AS `p_brws`,
+
+			(
 				SELECT COUNT(*)
 				FROM @persons AS p
 				LEFT JOIN @properties_int AS j_quota
@@ -317,6 +333,7 @@ EOT;
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_RMS_VERS).' (CI: '.SCCM_RMSV_CI_ID.', VER: '.SCCM_RMSV_CI_VERSION.')</td>     <td>'.$result[0]['p_rmsv'].'</td>                                    <td>'.$result[0]['o_rmsv'].'</td>     <td>'.TASKS_LIMIT_RMS_V.'</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_MSDT).' (CI: '.SCCM_MSDT_CI_ID.', VER: '.SCCM_MSDT_CI_VERSION.')</td>         <td>'.$result[0]['p_msdt'].'</td>                                    <td>0</td>                            <td>0</td></tr>';
 	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_EDGE_INSTALL).' (CI: '.SCCM_EDGE_CI_ID.', VER: '.SCCM_EDGE_CI_VERSION.')</td> <td>'.$result[0]['p_edge'].'</td>                                    <td>'.$result[0]['o_edge'].'</td>     <td>'.TASKS_LIMIT_EDGE.'</td></tr>';
+	$html .= '<tr><td>'.code_to_string($g_tasks_types, TT_BRWS_UNINSTALL).' (CI: '.SCCM_BROWSERS_CI_ID.', VER: '.SCCM_BROWSERS_CI_VERSION.')</td> <td>'.$result[0]['p_brws'].'</td>                          <td>'.$result[0]['o_brws'].'</td>     <td>'.TASKS_LIMIT_BROWSERS.'</td></tr>';
 	$html .= '</table>';
 
 	$html .= '<br /><table>';
