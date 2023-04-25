@@ -612,6 +612,14 @@ function sql_escape($value)
     return $result;
 }
 
+function sql_like_escape($value)
+{
+    $escapers = array('\\', '%', '_');
+    $replacements = array('\\\\', '\\%', '\\_');
+    $result = str_replace($escapers, $replacements, $value);
+    return $result;
+}
+
 function rpv_old()
 {
 	$data = func_get_args();
@@ -724,7 +732,7 @@ function rpv()
 		}
 		else if($string[$i] === '!')
 		{
-			$out_string .= '\''.sql_escape(trim($data[$n])).'\'';
+			$out_string .= '\''.sql_escape(trim((string) $data[$n])).'\'';
 			$n++;
 		}
 		else if($string[$i] === '{')

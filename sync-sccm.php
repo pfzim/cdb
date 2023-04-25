@@ -55,6 +55,8 @@
 		'Database' =>				SCCM_DB_NAME,
 		'UID' =>					SCCM_DB_USER,
 		'PWD' =>					SCCM_DB_PASSWD,
+		'Encrypt' =>				true,
+		'TrustServerCertificate' =>	true,
 		'ReturnDatesAsStrings' =>	true
 	);
 
@@ -309,7 +311,7 @@
 			// установленная версия = ожидаемой = 0
 			// установленная версия > ожидаемой = 1
 
-			$os_ver = explode('.', $row['BuildExt']);
+			$os_ver = explode('.', (string) $row['BuildExt']);
 			$expected_ver = explode('.', CHECK_OPERATION_SYSTEM_VERSION_SCCM);
 			
 			$len = min(count($os_ver), count($expected_ver));

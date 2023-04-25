@@ -10,6 +10,9 @@
 
 	echo "\nreport-tasks-status:\n";
 
+	global $g_comp_short_flags;
+	global $g_tasks_types;
+
 	$html = <<<'EOT'
 <html>
 <head>
@@ -67,9 +70,6 @@ EOT;
 		ORDER BY c.`name`
 	")))
 	{
-		global $g_comp_short_flags;
-		global $g_tasks_types;
-
 		foreach($result as &$row)
 		{
 			$table .= '<tr>';
