@@ -167,6 +167,8 @@
 		'Database' =>				ITINVENT_DB_NAME,
 		'UID' =>					ITINVENT_DB_USER,
 		'PWD' =>					ITINVENT_DB_PASSWD,
+		'Encrypt' =>				true,
+		'TrustServerCertificate' =>	true,
 		'ReturnDatesAsStrings' =>	true
 	);
 
@@ -582,7 +584,7 @@
 
 			// Load SN and MACs
 
-			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', $row['SERIAL_NO']));
+			$sn = strtoupper(preg_replace('/[-:;., ]/i', '', (string) $row['SERIAL_NO']));
 
 			if(strcasecmp($sn, 'N/A') == 0)
 			{
@@ -593,7 +595,7 @@
 			
 			for($k = 1; $k <= 17; $k++)    // mac* fields count
 			{
-				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', $row['mac'.$k]));
+				$mac = strtolower(preg_replace('/[^0-9a-f]/i', '', (string) $row['mac'.$k]));
 
 				if(!empty($mac) && strlen($mac) == 12)
 				{
@@ -606,12 +608,6 @@
 				$inv_id = 0;
 				if(!$db->select_ex($result, rpv("SELECT i.`id`, i.`inv_no`, i.`flags` FROM @inv AS i WHERE i.`inv_no` = ! LIMIT 1", $row['INV_NO'])))
 				{
-					// Пометить MAC исключенным, если статус в ИТ Инвент сменился на "не рабочий"
-					if(!$inv_active && ((intval($result[0][2]) & IF_INV_ACTIVE) == 0))
-					{
-						$mac_exclude = MF_TEMP_EXCLUDED;
-					}
-					
 					if($db->put(rpv("INSERT INTO @inv (`inv_no`, `type_no`, `model_no`, `status`, `branch_no`, `loc_no`, `flags`) VALUES (!, #, #, #, #, #, #)",
 						$row['INV_NO'],
 						$row['TYPE_NO'],
@@ -629,6 +625,12 @@
 				{
 					$inv_id = $result[0][0];
 
+					// Пометить MAC исключенным, если статус в ИТ Инвент сменился на "не рабочий"
+					if(!$inv_active && ((intval($result[0][2]) & IF_INV_ACTIVE) == 0))
+					{
+						$mac_exclude = MF_TEMP_EXCLUDED;
+					}
+					
 					$db->put(rpv("UPDATE @inv SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = ((`flags` & ~{%IF_INV_ACTIVE}) | #) WHERE `id` = # LIMIT 1",
 						$row['INV_NO'],
 						$row['TYPE_NO'],
@@ -643,7 +645,7 @@
 			}
 
 			// Save SN
-			
+
 			if(!empty($sn))
 			{
 				$mac_id = 0;
