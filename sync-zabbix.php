@@ -290,7 +290,7 @@
 		}
 	}
 
-	// Добавляем в список Компьютеры, Коммутаторы
+	// Добавляем в список Компьютеры, Коммутаторы, Ноутбуки
 
 	if($db->select_assoc_ex($result, rpv("
 		SELECT
@@ -306,6 +306,7 @@
 			AND (
 				i.`type_no` = {%ITINVENT_TYPE_SWITCH}
 				OR i.`type_no` = {%ITINVENT_TYPE_COMPUTER}
+				OR i.`type_no` = {%ITINVENT_TYPE_LAPTOP}
 			)
 			AND (m.`flags` & ({%MF_TEMP_EXCLUDED} | {%MF_PERM_EXCLUDED} | {%MF_FROM_NETDEV}) = ({%MF_FROM_NETDEV}))
 			AND m.`name` <> ''
@@ -477,6 +478,7 @@
 	define('ZABBIX_TYPE_WORKSTATION_ADMIN',    4);
 	define('ZABBIX_TYPE_WORKSTATION_KASSA',    5);
 	define('ZABBIX_TYPE_SWITCH',               6);
+	define('ZABBIX_TYPE_WORKSTATION_LAPTOP',   7);
 
 	$zabbix_groups_objects_templates = array(
 		ZABBIX_OBJECT_CO  => ZABBIX_CO_GROUP_PREFIX,
@@ -492,6 +494,7 @@
 		ZABBIX_TYPE_WORKSTATION_GENERAL  => 'WORKSTATION/GENERAL',
 		ZABBIX_TYPE_WORKSTATION_ADMIN    => 'WORKSTATION/ADMIN',
 		ZABBIX_TYPE_WORKSTATION_KASSA    => 'WORKSTATION/KASSA',
+		ZABBIX_TYPE_WORKSTATION_LAPTOP   => 'WORKSTATION/LAPTOP',
 		ZABBIX_TYPE_SWITCH               => 'SWITCH'
 	);
 
@@ -502,6 +505,7 @@
 		ZABBIX_TYPE_WORKSTATION_GENERAL  => 'wks',
 		ZABBIX_TYPE_WORKSTATION_ADMIN    => 'wks_admin',
 		ZABBIX_TYPE_WORKSTATION_KASSA    => 'wks_kassa',
+		ZABBIX_TYPE_WORKSTATION_LAPTOP   => 'wks_laptop',
 		ZABBIX_TYPE_SWITCH               => 'switch'
 	);
 
@@ -593,8 +597,8 @@
 			i.`model_no`,
 			DATE_FORMAT(m.`date`, '%d.%m.%Y %H:%i:%s') AS `last_update`,
 			zh.`host_id`,
-			zh.`flags`,
-			(COUNT(m.`id`) OVER (PARTITION BY m.`id`)) AS `duplicates`
+			(COUNT(*) OVER (PARTITION BY zh.`name`)) AS `duplicates`,
+			zh.`flags`
 		FROM @zabbix_hosts AS zh
 		LEFT JOIN @mac AS m
 			ON m.`id` = zh.`pid`
@@ -614,7 +618,7 @@
 		{
 			$host_name = strtoupper($row['name']);
 
-			// Пропускаем хост, если он имеет дубликаты
+			// Пропускаем хост, если он имеет дубликаты, для исключения многократной перезаписи настроек в рамках одной синхронизации
 			if(intval($row['duplicates']) > 1)
 			{
 				echo 'Skipped host '.$row['name'].' having '.$row['duplicates'].' duplicates. (InvNo: '.$row['inv_no'].', Type: '.$row['type_no'].', Model: '.$row['model_no'].')'.PHP_EOL;
@@ -633,7 +637,7 @@
 			$obj_code = 'unknown';
 
 			// Компьютеры
-			if(intval($row['type_no']) == ITINVENT_TYPE_COMPUTER)
+			if((intval($row['type_no']) == ITINVENT_TYPE_COMPUTER) || (intval($row['type_no']) == ITINVENT_TYPE_LAPTOP))
 			{
 				// TT: 00-0000-0
 				if(preg_match('/^(\\d{2})-(\\d{4})-(\\d+)/i', $host_name, $matches))
@@ -655,7 +659,7 @@
 					}
 				}
 				// Office: 0000-W0000
-				else if(preg_match('/^(\\d{2})(\\d{2})-[WN](\\d{4})/i', $host_name, $matches))
+				else if(preg_match('/^(\\d{2})(\\d{2})-W(\\d{4})/i', $host_name, $matches))
 				{
 					$location_code = ZABBIX_OBJECT_TOF;
 					$obj_type = 'tof';
@@ -663,6 +667,17 @@
 					$obj_code = $matches[2];
 					$type_code = ZABBIX_TYPE_WORKSTATION_GENERAL;
 					$template_ids[] = ZABBIX_TEMPLATE_WORKSTATION_GENERAL;
+					$group_ids[] = zabbix_get_or_create_maintenance_group_id($auth_key, $zabbix_maintenance_groups, intval($reg_code));
+				}
+				// Laptop: 0000-N0000
+				else if(preg_match('/^(\\d{2})(\\d{2})-N(\\d{4})/i', $host_name, $matches))
+				{
+					$location_code = ZABBIX_OBJECT_TOF;
+					$obj_type = 'tof';
+					$reg_code = $matches[1];
+					$obj_code = $matches[2];
+					$type_code = ZABBIX_TYPE_WORKSTATION_LAPTOP;
+					$template_ids[] = ZABBIX_TEMPLATE_WORKSTATION_LAPTOP;
 					$group_ids[] = zabbix_get_or_create_maintenance_group_id($auth_key, $zabbix_maintenance_groups, intval($reg_code));
 				}
 				// Unknown hostname mask
@@ -842,7 +857,7 @@
 						break;
 					}
 
-					echo 'Add to Zabbix: '.$row['name'].PHP_EOL;
+					echo 'Add to Zabbix: '.$row['name'].', IP: '.$row['ip'].PHP_EOL;
 
 					if(empty($row['name']) || empty($row['ip']))
 					{
@@ -878,7 +893,7 @@
 
 				case (ZHF_MUST_BE_MONITORED | ZHF_EXIST_IN_ZABBIX):
 				{
-					echo 'Check before update at Zabbix: '.$row['name'].' ('.$row['host_id'].')'.PHP_EOL;
+					echo 'Check before update at Zabbix: '.$row['name'].' ('.$row['host_id'].')'.', IP: '.$row['ip'].PHP_EOL;
 
 					if(empty($row['name']) || empty($row['ip']))
 					{
