@@ -463,7 +463,7 @@
 	$invent_result = sqlsrv_query($conn, "
 		SELECT
 			[ID]
-			,[INV_NO]
+			,CAST(CAST([INV_NO] AS DECIMAL(20)) AS VARCHAR(20)) AS [INV_NO]
 			,[CI_TYPE]
 			,[TYPE_NO]
 			,[MODEL_NO]
