@@ -123,7 +123,7 @@ EOT;
 			if(!empty($check_result))
 			{
 				$table .= '<tr>';
-				$table .= '<td>'.$row['name'].'</td>';
+				$table .= '<td><a href="'.NETBOX_URL.'/search/?obj_types=virtualization.virtualmachine&q='.$row['name'].'">'.$row['name'].'</a></td>';
 				$table .= '<td>'.$row['cpu'].'</td>';
 				$table .= '<td>'.$row['ram_size'].'</td>';
 				$table .= '<td>'.$row['hdd_size'].'</td>';
