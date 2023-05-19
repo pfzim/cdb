@@ -155,7 +155,7 @@
 
 	if(!defined('Z_PROTECTED')) exit;
 
-	echo "\nsync-itinvent:\n";
+	echo PHP_EOL.'sync-itinvent:'.PHP_EOL;
 
 	$active_statuses = array(
 		1,    // Работает
@@ -213,7 +213,7 @@
 		$i++;
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
@@ -267,7 +267,7 @@
 		$i++;
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
@@ -323,7 +323,7 @@
 		$i++;
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
@@ -376,7 +376,7 @@
 		$i++;
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
@@ -429,7 +429,7 @@
 		$i++;
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
@@ -574,12 +574,13 @@
 
 			// Пометить MAC исключенным, если в ИТ Инвент Тип УЕ = РКС (ID  45) & Местоположение = Склад (ID 1) & Статус = ЗИП (ID 16)
 			if(
-				(intval($row['CI_TYPE']) == 45)
-				&& (intval($row['LOC_NO']) == 1)
+				(intval($row['LOC_NO']) == 1)
+				&& (intval($row['TYPE_NO']) == 45)
 				&& (intval($row['STATUS_NO']) == 16)
 			)
 			{
 				$mac_exclude = MF_TEMP_EXCLUDED;
+				echo 'Excluded by type: INV_NO: '.$row['INV_NO'].', LOC_NO: '.intval($row['LOC_NO']).', TYPE_NO: '.intval($row['TYPE_NO']).', STATUS_NO: '.intval($row['STATUS_NO']).PHP_EOL;
 			}
 
 			// Load SN and MACs
@@ -672,7 +673,7 @@
 					if(intval($result[0][2]) & MF_EXIST_IN_ITINV && $sn !== 'N/A' && $sn !== 'N\A' && $sn !== 'NA')    // Exist in IT Invent?
 					{
 						$duplicate = MF_DUPLICATE;
-						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$sn.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', SN: '.$sn.', STATUS_NO: '.intval($row['STATUS_NO']).PHP_EOL;
 					}
 
 					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
@@ -682,7 +683,7 @@
 						$row['STATUS_NO'],
 						$row['BRANCH_NO'],
 						$row['LOC_NO'],
-						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate,
+						MF_EXIST_IN_ITINV | $active | $mobile | $bcc | $duplicate | $mac_exclude,
 						$mac_id
 					));
 				}
@@ -721,7 +722,7 @@
 					if(intval($result[0][2]) & MF_EXIST_IN_ITINV)    // Exist in IT Invent?
 					{
 						$duplicate = MF_DUPLICATE;
-						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO'])."\r\n";
+						echo 'Possible duplicate: ID: '.$mac_id.' INV_NO: '.$row['INV_NO'].' and '.$result[0][1].', MAC: '.$mac.', STATUS_NO: '.intval($row['STATUS_NO']).PHP_EOL;
 					}
 
 					$db->put(rpv("UPDATE @mac SET `inv_no` = !, `type_no` = #, `model_no` = #, `status` = #, `branch_no` = #, `loc_no` = #, `date` = IF(#, NOW(), `date`), `flags` = (`flags` | #) WHERE `id` = # LIMIT 1",
@@ -746,7 +747,7 @@
 		}
 	}
 
-	echo 'Count: '.$i."\r\n";
+	echo 'Count: '.$i.PHP_EOL;
 
 	if($row === FALSE)
 	{
