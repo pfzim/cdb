@@ -464,7 +464,7 @@
 					$date_IssueTime,
 					$date_DiscoveryTime,
 					$date_StatusUpdateTime,
-					str_replace(',', '.', $record['Host.@Vulners.CVSS3Score']),
+					str_replace(',', '.', (string) $record['Host.@Vulners.CVSS3Score']),
 					($record['Host.@Vulners.IsTrend'] == 'True'),
 					($record['Host.@Vulners.Metrics.HasNetworkAttackVector'] == 'True'),
 					($record['Host.@Vulners.Metrics.Exploitable'] == 'True'),
