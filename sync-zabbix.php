@@ -807,6 +807,7 @@
 			// Назначаем параметры хоста
 
 			if(($type_code == ZABBIX_TYPE_WORKSTATION_GENERAL)
+				|| ($type_code == ZABBIX_TYPE_WORKSTATION_LAPTOP)
 				|| ($type_code == ZABBIX_TYPE_WORKSTATION_ADMIN)
 				|| ($type_code == ZABBIX_TYPE_WORKSTATION_KASSA)
 			)
